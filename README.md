@@ -1,4 +1,4 @@
-# Aida
+# A.I.D.A. (Artificially Intelligent Digital Assistant)
 
 To start your Phoenix server:
 
