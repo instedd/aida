@@ -1,0 +1,28 @@
+sudo: required
+services:
+  - docker
+
+env:
+  COMPOSE_VERSION: 1.16.1
+
+before_install:
+ - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+ - chmod +x docker-compose
+ - sudo mv docker-compose /usr/local/bin
+
+install:
+  - docker-compose pull
+
+before_script:
+  - docker-compose build
+  - docker-compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
+
+script:
+  - docker-compose run --rm app mix test
+
+notifications:
+  slack:
+    on_success: change
+    on_failure: always
+    rooms:
+      secure: QqADwG+carVFvZ27qb4cJvuuHyJAFR+efIkyucohuugqWVyFCxd/wov1erSCCTQeY/e2hnMUv9WHtqhmxbKJbmdlIyKpV1CxoanUKUESsGo467iqUTgnzBuxr46ezboOditkX9iIBe7m+cli6vseDMS0VGPB9q5Eq/dnWjhgVDplEjVe72oJssCVcEHR3puA3WCoRW04rhXE2aKq/IW9qPh12VEkxLZ5pc8rcTxqvzfrmPWkTsRcfaj+f2lNXsHnylRZ32+nE5sK1iRnQ1a2DnmAfLmdTnhVlUR92k78xvXzyut86qvrwMYVtNK0jvGBpbK6Bu5UfDpkZAucVKVH7efyDWtHxduv2Bl485F7rzonL7l77FW5p8l1hhvOEnNaja2zVrSvLEaEX614LiUaoUhsk8VALBtsUypTjKWheDkOCMqhFWvTiNseqwNiYNzkBcJzNEos8WKIpfF2GYS8l1Sci4AJuWuL4aiw7ECbN7/l/CX/MN+ElJW0DJJ0Nm7AhqGgsHe4k28pHgsyx+fL/98pz3IcAQE41DEDEh3RZOKaEOQt9yglDvET2uqGwb72ohiZGiJoC+Nd7nz9zI1attq9PUoaMWibFn1VKpAp0UBiKUWGsR0omECEcFQw2HpF5YsEvhfY4+YsLhKmyvSVLeFgJadkCjZGtP9gHvsHa6Y=
