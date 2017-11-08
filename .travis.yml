@@ -1,6 +1,9 @@
 sudo: required
 services:
   - docker
+cache:
+  directories:
+    - .travis
 
 env:
   COMPOSE_VERSION: 1.16.1
@@ -15,10 +18,11 @@ install:
 
 before_script:
   - docker-compose build
-  - docker-compose run --rm -e MIX_ENV=test app mix do deps.get, deps.compile
+  - export TRAVIS_VOLUMES="-v $TRAVIS_BUILD_DIR/.travis/deps:/app/deps -v $TRAVIS_BUILD_DIR/.travis/build:/app/_build"
+  - docker-compose run --rm -e MIX_ENV=test $TRAVIS_VOLUMES app mix do deps.get, deps.compile
 
 script:
-  - docker-compose run --rm app mix test
+  - docker-compose run --rm $TRAVIS_VOLUMES app mix test
 
 notifications:
   slack:
