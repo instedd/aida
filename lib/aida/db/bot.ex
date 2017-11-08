@@ -1,0 +1,21 @@
+defmodule Aida.DB.Bot do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias Aida.Ecto.Type.JSON
+  alias __MODULE__
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+  schema "bots" do
+    field :manifest, JSON
+
+    timestamps()
+  end
+
+  @doc false
+  def changeset(%Bot{} = bot, attrs) do
+    bot
+    |> cast(attrs, [:manifest])
+    |> validate_required([:manifest])
+  end
+end
