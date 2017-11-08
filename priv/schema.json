@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Aida JSON Schemas",
+  "type": "object",
+  "oneOf": [{"$ref": "#/definitions/manifest_v1"}],
+
+  "definitions": {
+    "manifest_v1": {
+      "type": "object",
+      "properties": {
+        "version": { "enum": [1] },
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "pattern": "^[a-z]{2,3}$"}
+        },
+        "front_desk": {"$ref": "#/definitions/front_desk"},
+        "skills": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/definitions/skill"}
+        },
+        "variables": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/variable"}
+        }
+      },
+      "additionalProperties": false,
+      "required": ["version", "languages", "front_desk", "skills", "variables"]
+    },
+
+    "front_desk": {
+      "type": "object",
+      "properties": {
+        "greeting": {"$ref": "#/definitions/message"},
+        "introduction": {"$ref": "#/definitions/message"},
+        "not_understood": {"$ref": "#/definitions/message"},
+        "clarification": {"$ref": "#/definitions/message"},
+        "threshold": { "maximum": 1, "minimum": 0 }
+      },
+      "additionalProperties": false,
+      "required": ["greeting", "introduction", "not_understood", "clarification", "threshold"]
+    },
+
+    "message": {
+      "type": "object",
+      "properties": {
+        "message": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["message"]
+    },
+
+    "skill": {
+      "oneOf": [
+        {"$ref": "#/definitions/keyword_responder"}
+      ]
+    },
+
+    "keyword_responder": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["keyword_responder"]},
+        "explanation": {"$ref": "#/definitions/localized_string"},
+        "clarification": {"$ref": "#/definitions/localized_string"},
+        "responses": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/definitions/response"}
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "explanation", "clarification", "responses"]
+    },
+
+    "response": {
+      "type": "object",
+      "properties": {
+        "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "response": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["keywords", "response"]
+    },
+
+    "variable": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "values": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["name", "values"]
+    },
+
+    "localized_string": {
+      "type": "object",
+      "patternProperties": {"^[a-z]{2,3}$": {"type": "string"}},
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+
+    "localized_keywords": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z]{2,3}$": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    }
+  }
+}

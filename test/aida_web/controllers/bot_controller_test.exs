@@ -3,9 +3,46 @@ defmodule AidaWeb.BotControllerTest do
 
   alias Aida.DB
   alias Aida.DB.Bot
+  alias Aida.JsonSchema
 
-  @create_attrs %{manifest: "some manifest"}
-  @update_attrs %{manifest: "some updated manifest"}
+  @valid_localized_string %{"en" => ""}
+  @valid_message %{"message" => @valid_localized_string}
+  @valid_front_desk %{
+    "greeting" => @valid_message,
+    "introduction" => @valid_message,
+    "not_understood" => @valid_message,
+    "clarification" => @valid_message,
+    "threshold" => 0.1
+  }
+  @valid_localized_keywords %{"en" => [""]}
+  @valid_response %{
+    "keywords" => @valid_localized_keywords,
+    "response" => @valid_localized_string
+  }
+  @valid_keyword_responder %{
+    "type" => "keyword_responder",
+    "explanation" => @valid_localized_string,
+    "clarification" => @valid_localized_string,
+    "responses" => [@valid_response]
+  }
+  @valid_manifest %{
+    "version" => 1,
+    "languages" => ["en"],
+    "front_desk" => @valid_front_desk,
+    "skills" => [@valid_keyword_responder],
+    "variables" => []
+  }
+
+  @updated_manifest %{
+    "version" => 1,
+    "languages" => ["es"],
+    "front_desk" => @valid_front_desk,
+    "skills" => [@valid_keyword_responder],
+    "variables" => []
+  }
+
+  @create_attrs %{manifest: @valid_manifest}
+  @update_attrs %{manifest: @updated_manifest}
   @invalid_attrs %{manifest: nil}
 
   def fixture(:bot) do
@@ -14,6 +51,8 @@ defmodule AidaWeb.BotControllerTest do
   end
 
   setup %{conn: conn} do
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
@@ -32,7 +71,7 @@ defmodule AidaWeb.BotControllerTest do
       conn = get conn, bot_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
-        "manifest" => "some manifest"}
+        "manifest" => @valid_manifest}
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
@@ -51,7 +90,7 @@ defmodule AidaWeb.BotControllerTest do
       conn = get conn, bot_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
-        "manifest" => "some updated manifest"}
+        "manifest" => @updated_manifest}
     end
 
     test "renders errors when data is invalid", %{conn: conn, bot: bot} do

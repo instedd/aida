@@ -16,6 +16,14 @@ defmodule Aida.Application do
       # worker(Aida.Worker, [arg1, arg2, arg3]),
     ]
 
+    children = if Mix.env != :test && !IEx.started? do
+      [
+        worker(Aida.JsonSchema, [])
+      | children]
+    else
+      children
+    end
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Aida.Supervisor]

@@ -40,7 +40,8 @@ defmodule Aida.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false}
+      {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
+      {:ex_json_schema, "~> 0.5.5"},
     ]
   end
 
