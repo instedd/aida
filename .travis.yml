@@ -24,6 +24,7 @@ before_script:
 
 script:
   - docker-compose run --rm $TRAVIS_VOLUMES app mix test
+  - docker-compose run --rm $TRAVIS_VOLUMES app mix dialyzer --halt-exit-status
 
 notifications:
   slack:
