@@ -9,12 +9,14 @@ defmodule AidaWeb.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> render(AidaWeb.ChangesetView, "error.json", changeset: changeset)
+    |> put_view(AidaWeb.ChangesetView)
+    |> render("error.json", changeset: changeset)
   end
 
   def call(conn, {:error, :not_found}) do
     conn
     |> put_status(:not_found)
-    |> render(AidaWeb.ErrorView, :"404")
+    |> put_view(AidaWeb.ErrorView)
+    |> render(:"404")
   end
 end
