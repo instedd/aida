@@ -10,20 +10,20 @@ defmodule Aida.BotConfig do
 
   @spec start(bot :: Bot.t) :: :ok
   def start(bot) do
-    @table |> :ets.insert({bot.uuid, bot})
+    @table |> :ets.insert({bot.id, bot})
     :ok
   end
 
   @spec stop(bot :: Bot.t) :: :ok
   def stop(bot) do
-    @table |> :ets.delete(bot.uuid)
+    @table |> :ets.delete(bot.id)
     :ok
   end
 
-  @spec find(uuid :: String.t) :: Bot.t | :not_found
-  def find(uuid) do
-    case @table |> :ets.lookup(uuid) do
-      [{_uuid, bot}] -> bot
+  @spec find(id :: String.t) :: Bot.t | :not_found
+  def find(id) do
+    case @table |> :ets.lookup(id) do
+      [{_id, bot}] -> bot
       [] -> :not_found
     end
   end

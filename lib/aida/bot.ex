@@ -1,7 +1,7 @@
 defmodule Aida.Bot do
   @type t :: %__MODULE__{
-    uuid: String.t
+    id: String.t
   }
 
-  defstruct [:uuid]
+  defstruct [:id]
 end

@@ -13,13 +13,13 @@ defmodule Aida.BotConfigTest do
   end
 
   test "start and find bot" do
-    bot = %Bot{uuid: @uuid}
+    bot = %Bot{id: @uuid}
     assert BotConfig.start(bot) == :ok
     assert BotConfig.find(@uuid) == bot
   end
 
   test "stop bot" do
-    bot = %Bot{uuid: @uuid}
+    bot = %Bot{id: @uuid}
     assert BotConfig.start(bot) == :ok
     assert BotConfig.stop(bot) == :ok
     assert BotConfig.find(@uuid) == :not_found
