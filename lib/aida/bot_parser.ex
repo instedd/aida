@@ -35,12 +35,8 @@ defmodule Aida.BotParser do
     %KeywordResponder{
       explanation: skill["explanation"],
       clarification: skill["clarification"],
-      responses: skill["responses"] |> Enum.map(fn response ->
-        %KeywordResponder.Response{
-          keywords: response["keywords"],
-          response: response["response"]
-        }
-      end)
+      keywords: skill["keywords"],
+      response: skill["response"]
     }
   end
 end

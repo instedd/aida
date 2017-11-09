@@ -18,15 +18,12 @@ defmodule Aida.JsonSchemaTest do
     "threshold": 0.1
   })
   @valid_localized_keywords ~s({"en": [""]})
-  @valid_response ~s({
-    "keywords": #{@valid_localized_keywords},
-    "response": #{@valid_localized_string}
-  })
   @valid_keyword_responder ~s({
     "type": "keyword_responder",
     "explanation": #{@valid_localized_string},
     "clarification": #{@valid_localized_string},
-    "responses": [#{@valid_response}]
+    "keywords": #{@valid_localized_keywords},
+    "response": #{@valid_localized_string}
   })
   @valid_variable ~s({
     "name": "",
@@ -138,9 +135,8 @@ defmodule Aida.JsonSchemaTest do
     assert_required("type", :keyword_responder)
     assert_required("explanation", :keyword_responder)
     assert_required("clarification", :keyword_responder)
-    assert_required("responses", :keyword_responder)
-    assert_array("responses", :keyword_responder)
-    reject_empty_array("responses", :keyword_responder)
+    assert_required("response", :keyword_responder)
+    assert_required("keywords", :keyword_responder)
 
     @valid_keyword_responder
     |> assert_valid(:keyword_responder)
@@ -176,14 +172,6 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_message
     |> assert_valid(:message)
-  end
-
-  test "response" do
-    assert_required("response", :response)
-    assert_required("keywords", :response)
-
-    @valid_response
-    |> assert_valid(:response)
   end
 
   test "variable" do

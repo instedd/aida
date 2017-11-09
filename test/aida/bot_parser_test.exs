@@ -33,35 +33,39 @@ defmodule Aida.BotParserTest do
       skills: [
         %KeywordResponder{
           explanation: %{
-            "en" => "I can give you information about our menu or opening hours",
-            "es" => "Te puedo dar información sobre nuestro menu u horario"
+            "en" => "I can give you information about our menu",
+            "es" => "Te puedo dar información sobre nuestro menu"
           },
           clarification: %{
-            "en" => "For menu options, write 'menu', for opening hours say 'hours'",
-            "es" => "Para información sobre nuestro menu, escribe 'menu', para horario escribe 'horario'"
+            "en" => "For menu options, write 'menu'",
+            "es" => "Para información sobre nuestro menu, escribe 'menu'"
           },
-          responses: [
-            %KeywordResponder.Response{
-              keywords: %{
-                "en" => ["menu", "food"],
-                "es" => ["menu", "comida"]
-              },
-              response: %{
-                "en" => "We have {food_options}",
-                "es" => "Tenemos {food_options}"
-              }
-            },
-            %KeywordResponder.Response{
-              keywords: %{
-                "en" => ["hours","time"],
-                "es" => ["horario","hora"]
-              },
-              response: %{
-                "en" => "We are open every day from 7pm to 11pm",
-                "es" => "Abrimos todas las noches de 19 a 23"
-              }
-            }
-          ]
+          keywords: %{
+            "en" => ["menu", "food"],
+            "es" => ["menu", "comida"]
+          },
+          response: %{
+            "en" => "We have {food_options}",
+            "es" => "Tenemos {food_options}"
+          }
+        },
+        %KeywordResponder{
+          explanation: %{
+            "en" => "I can give you information about our opening hours",
+            "es" => "Te puedo dar información sobre nuestro horario"
+          },
+          clarification: %{
+            "en" => "For opening hours say 'hours'",
+            "es" => "Para información sobre nuestro horario escribe 'horario'"
+          },
+          keywords: %{
+            "en" => ["hours","time"],
+            "es" => ["horario","hora"]
+          },
+          response: %{
+            "en" => "We are open every day from 7pm to 11pm",
+            "es" => "Abrimos todas las noches de 19 a 23"
+          }
         }
       ],
       variables: [

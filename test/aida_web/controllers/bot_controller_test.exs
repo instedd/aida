@@ -15,15 +15,12 @@ defmodule AidaWeb.BotControllerTest do
     "threshold" => 0.1
   }
   @valid_localized_keywords %{"en" => [""]}
-  @valid_response %{
-    "keywords" => @valid_localized_keywords,
-    "response" => @valid_localized_string
-  }
   @valid_keyword_responder %{
     "type" => "keyword_responder",
     "explanation" => @valid_localized_string,
     "clarification" => @valid_localized_string,
-    "responses" => [@valid_response]
+    "keywords" => @valid_localized_keywords,
+    "response" => @valid_localized_string
   }
   @valid_manifest %{
     "version" => 1,
