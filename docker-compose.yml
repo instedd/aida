@@ -31,3 +31,10 @@ services:
       TERM: xterm
     ports:
       - 4000:80
+
+  ngrok:
+    image: wernight/ngrok
+    ports:
+      - 4041:4040
+    environment:
+      NGROK_PORT: 'app:80'
