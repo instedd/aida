@@ -20,4 +20,9 @@ defmodule Aida.MessageTest do
       reply: []
     } = message
   end
+
+  test "append response to message" do
+    message = Message.new("Hi!") |> Message.respond("Hello")
+    assert message.reply == ["Hello"]
+  end
 end

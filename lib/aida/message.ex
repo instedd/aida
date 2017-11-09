@@ -17,4 +17,9 @@ defmodule Aida.Message do
       content: content
     }
   end
+
+  @spec respond(message :: t, response :: String.t) :: t
+  def respond(message, response) do
+    %{message | reply: message.reply ++ [response]}
+  end
 end
