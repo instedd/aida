@@ -4,6 +4,8 @@ volumes:
   db:
   deps:
   build:
+  node_modules:
+  yarn-cache:
 
 services:
   db:
@@ -38,3 +40,18 @@ services:
       - 4041:4040
     environment:
       NGROK_PORT: 'app:80'
+
+  node:
+    image: node:9.1
+    command: yarn start
+    depends_on:
+      - app
+    working_dir: /app
+    volumes:
+      - './assets/aida_web:/app'
+      - 'node_modules:/app/node_modules'
+      - 'yarn-cache:/usr/local/share/.cache/yarn'
+    environment:
+      SERVER_HOST: app
+    ports:
+      - 3000:3000

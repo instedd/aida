@@ -1,0 +1,42 @@
+.logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.header {
+  grid-area: header;
+  background-color: #404040;
+  padding: 20px;
+  color: #9a9a9a;
+  h1 {
+    color: white;
+  }
+}
+.main {
+  grid-area: main;
+  padding: 20px;
+}
+.sidebar {
+  grid-area: sidebar;
+  padding: 20px;
+}
+.footer {
+  padding: 20px;
+  grid-area: footer;
+  background-color: #404040;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr 20% 70% 1fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "header header header header"
+    ". sidebar main ."
+    "footer footer footer footer";
+}
