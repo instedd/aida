@@ -31,12 +31,19 @@ defmodule Aida.JsonSchemaTest do
       "en": ""
     }
   })
+  @valid_facebook_channel ~s({
+    "type": "facebook",
+    "page_id": "1234567890",
+    "verify_token": "qwertyuiopasdfghjklzxcvbnm",
+    "access_token": "qwertyuiopasdfghjklzxcvbnm"
+  })
   @valid_manifest ~s({
     "version" : 1,
     "languages" : ["en"],
     "front_desk" : #{@valid_front_desk},
     "skills" : [#{@valid_keyword_responder}],
-    "variables" : []
+    "variables" : [],
+    "channels" : [#{@valid_facebook_channel}]
   })
 
   defp validate(json_thing, type, fun) do
@@ -122,6 +129,8 @@ defmodule Aida.JsonSchemaTest do
     assert_array("variables", :manifest_v1)
     assert_array("languages", :manifest_v1)
     reject_empty_array("languages", :manifest_v1)
+    assert_required("channels", :manifest_v1)
+    assert_array("channels", :manifest_v1)
 
     @valid_manifest
     |> assert_valid(:manifest_v1)
@@ -196,5 +205,24 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_localized_keywords
     |> assert_valid(:localized_keywords)
+  end
+
+  test "facebook_channel" do
+    assert_enum("type", "foo", :facebook_channel)
+    assert_required("type", :facebook_channel)
+    assert_required("page_id", :facebook_channel)
+    assert_required("verify_token", :facebook_channel)
+    assert_required("access_token", :facebook_channel)
+
+    @valid_facebook_channel
+    |> assert_valid(:facebook_channel)
+  end
+
+  test "channel" do
+    @valid_facebook_channel
+    |> assert_valid(:channel)
+
+    ~s({})
+    |> reject_sub_type(:channel)
   end
 end

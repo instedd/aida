@@ -23,10 +23,14 @@
         "variables": {
           "type": "array",
           "items": {"$ref": "#/definitions/variable"}
+        },
+        "channels": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/channel"}
         }
       },
       "additionalProperties": false,
-      "required": ["version", "languages", "front_desk", "skills", "variables"]
+      "required": ["version", "languages", "front_desk", "skills", "variables", "channels"]
     },
 
     "front_desk": {
@@ -68,6 +72,24 @@
       },
       "additionalProperties": false,
       "required": ["type", "explanation", "clarification", "keywords", "response"]
+    },
+
+    "channel": {
+      "oneOf": [
+        {"$ref": "#/definitions/facebook_channel"}
+      ]
+    },
+
+    "facebook_channel": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["facebook"]},
+        "page_id": {"type": "string"},
+        "verify_token": {"type": "string"},
+        "access_token": {"type": "string"}
+      },
+      "additionalProperties": false,
+      "required": ["type", "page_id", "verify_token", "access_token"]
     },
 
     "variable": {
