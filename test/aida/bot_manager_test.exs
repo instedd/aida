@@ -1,11 +1,12 @@
 defmodule Aida.BotManagerTest do
   use Aida.DataCase
-  alias Aida.{DB, Bot, BotManager, BotParser, TestChannel}
+  alias Aida.{DB, Bot, BotManager, BotParser, TestChannel, ChannelRegistry}
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
 
   describe "with BotManager running" do
     setup do
+      ChannelRegistry.start_link
       BotManager.start_link
       :ok
     end
@@ -61,6 +62,7 @@ defmodule Aida.BotManagerTest do
 
     bot = BotParser.parse(db_bot.id, manifest)
 
+    ChannelRegistry.start_link
     BotManager.start_link
 
     assert BotManager.find(bot.id) == bot
