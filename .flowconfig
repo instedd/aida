@@ -1,0 +1,7 @@
+[ignore]
+<PROJECT_ROOT>/assets/aida_web/node_modules/
+[include]
+[libs]
+assets/aida_web/decls/
+[options]
+munge_underscores=true
