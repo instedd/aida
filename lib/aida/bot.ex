@@ -23,16 +23,27 @@ defmodule Aida.Bot do
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
     cond do
-      Enum.count(bot.languages) == 1 ->
+      new_session?(message) && !get_session(message, "language") && Enum.count(bot.languages) == 1 ->
         message
         |> put_session("language", bot.languages |> List.first)
         |> greet(bot)
+      get_session(message, "language") ->
+        message
+        |> respond(bot.front_desk.not_understood)
+        |> introduction(bot)
     end
   end
 
+  @spec greet(message :: Message.t, bot :: t) :: Message.t
   defp greet(%Message{} = message, bot) do
-    message = message
+    message
     |> respond(bot.front_desk.greeting)
+    |> introduction(bot)
+  end
+
+  @spec introduction(message :: Message.t, bot :: t) :: Message.t
+  defp introduction(message, bot) do
+    message = message
     |> respond(bot.front_desk.introduction)
 
     bot.skills

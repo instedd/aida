@@ -26,11 +26,18 @@ defmodule Aida.Session do
     }
   end
 
+  @spec get(session :: Session.t, key :: String.t) :: String.t
   def get(%Session{values: values}, key) do
     Map.get(values, key)
   end
 
+  @spec put(session :: Session.t, key :: String.t, value :: String.t) :: t
   def put(%Session{values: values} = session, key, value) do
     %{session | values: Map.put(values, key, value)}
+  end
+
+  @spec is_new?(session :: Session.t) :: boolean
+  def is_new?(%Session{is_new?: value}) do
+    value
   end
 end

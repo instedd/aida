@@ -24,5 +24,16 @@ defmodule Aida.BotTest do
         "I can give you information about our opening hours"
       ]
     end
+
+    test "replies with explanation when message not understood and is not the first message", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!"))
+      output = bot |> Bot.chat(Message.new("foobar", response.session))
+      assert output.reply == [
+        "Sorry, I didn't understand that",
+        "I can do a number of things",
+        "I can give you information about our menu",
+        "I can give you information about our opening hours"
+      ]
+    end
   end
 end
