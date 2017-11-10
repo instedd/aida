@@ -80,6 +80,7 @@ defmodule Aida.BotParserTest do
       ],
       channels: [
         %Facebook{
+          bot_id: @uuid,
           page_id: "1234567890",
           verify_token: "qwertyuiopasdfghjklzxcvbnm",
           access_token: "QWERTYUIOPASDFGHJKLZXCVBNM"

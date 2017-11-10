@@ -9,7 +9,7 @@ defmodule Aida.BotParser do
       front_desk: parse_front_desk(manifest["front_desk"]),
       skills: manifest["skills"] |> Enum.map(&parse_skill/1),
       variables: manifest["variables"] |> Enum.map(&parse_variable/1),
-      channels: manifest["channels"] |> Enum.map(&parse_channel/1)
+      channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
     }
   end
 
@@ -41,11 +41,12 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_channel(%{"type" => "facebook"} = skill) do
+  defp parse_channel(bot_id, %{"type" => "facebook"} = channel) do
     %Facebook{
-      page_id: skill["page_id"],
-      verify_token: skill["verify_token"],
-      access_token: skill["access_token"]
+      bot_id: bot_id,
+      page_id: channel["page_id"],
+      verify_token: channel["verify_token"],
+      access_token: channel["access_token"]
     }
   end
 end
