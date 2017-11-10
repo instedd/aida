@@ -17,10 +17,10 @@ defmodule Aida.Application do
     ]
 
     children = if Mix.env != :test && !IEx.started? do
-      [
+      children ++ [
         worker(Aida.JsonSchema, []),
         worker(Aida.BotManager, [])
-      | children]
+      ]
     else
       children
     end
