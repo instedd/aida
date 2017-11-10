@@ -21,6 +21,7 @@
   grid-area: main;
   padding: 20px;
 }
+
 .sidebar {
   grid-area: sidebar;
   padding: 20px;
@@ -29,14 +30,40 @@
   padding: 20px;
   grid-area: footer;
   background-color: #404040;
+  color: #9a9a9a;
+  align-self: end;
 }
 
 .body {
   display: grid;
-  grid-template-columns: 1fr 20% 70% 1fr;
+  grid-template-columns: 1fr 20% 40% 3fr;
   grid-template-rows: auto;
+  justify-items: stretch;
+  align-items: center;
   grid-template-areas:
     "header header header header"
     ". sidebar main ."
     "footer footer footer footer";
+}
+
+.main-container {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "tabvar"
+    "content"
+    "actions";
+}
+
+.tabvar {
+  grid-area: tabvar;
+}
+.content {
+  grid-area: content;
+  justify-self: stretch;
+}
+.actions {
+  grid-area: actions;
+  justify-self: right;
 }

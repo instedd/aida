@@ -1,22 +1,25 @@
 import React, { Component } from 'react'
-import logo from './logo.svg'
 import './App.css'
-import ManifestForm from './ManifestForm'
-import ManifestIndex from './ManifestIndex'
+import '../node_modules/react-md/dist/react-md.light_blue-deep_orange.min.css'
+import BotIndex from './BotIndex'
+import { Toolbar } from 'react-md'
 
 class App extends Component {
 
   render() {
     return (
       <div className='body'>
-        <div className='header'>
-          <img src={logo} className='logo' alt='logo' />
-          <h1>Welcome to React</h1>
-        </div>
+        <Toolbar className='header'
+          colored
+          prominent
+          // nav={}
+          title='Aida Admin'
+          // actions={}
+        />
         <div className='sidebar' />
         <div className='main'>
-          <ManifestIndex />
-          <ManifestForm />
+          <BotIndex />
+
         </div>
         <div className='footer'>
           This is the footer

@@ -36,6 +36,8 @@ defmodule AidaWeb.Endpoint do
     key: "_aida_key",
     signing_salt: "BSEJjDIi"
 
+  plug CORSPlug
+
   plug AidaWeb.Router
 
   @doc """

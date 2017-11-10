@@ -44,9 +44,15 @@ defmodule AidaWeb.BotController do
   end
 
   defp validate_params(conn, _params) do
-    bot = conn.params["bot"]["manifest"]
+    manifest = conn.params["bot"]["manifest"]
 
-    case JsonSchema.validate(bot, :manifest_v1) do
+    manifest = if (is_binary(manifest)) do
+      {:ok, manifest} = Poison.decode(manifest)
+      manifest
+    else
+      manifest
+    end
+    case JsonSchema.validate(manifest, :manifest_v1) do
       [] ->
         conn
       errors ->
