@@ -97,6 +97,14 @@ class BotForm extends Component {
                     "es": "parrilla y pasta"
                   }
                 }
+              ],
+              "channels": [
+                {
+                  "type": "facebook",
+                  "page_id": "1234567890",
+                  "verify_token": "qwertyuiopasdfghjklzxcvbnm",
+                  "access_token": "QWERTYUIOPASDFGHJKLZXCVBNM"
+                }
               ]
             }`}
           />
