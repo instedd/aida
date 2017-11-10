@@ -1,5 +1,5 @@
 defmodule Aida.Skill.KeywordResponder do
-  alias Aida.Bot
+  alias Aida.{Bot, Message}
 
   @type t :: %__MODULE__{
     explanation: Bot.message,
@@ -14,12 +14,12 @@ defmodule Aida.Skill.KeywordResponder do
             response: %{}
 
   defimpl Aida.Skill, for: __MODULE__ do
-    def explain(_skill, msg) do
-      msg
+    def explain(%{explanation: explanation}, message) do
+      message |> Message.respond(explanation)
     end
 
-    def clarify(_skill, msg) do
-      msg
+    def clarify(_skill, message) do
+      message
     end
   end
 end

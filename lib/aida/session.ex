@@ -25,4 +25,12 @@ defmodule Aida.Session do
       values: values
     }
   end
+
+  def get(%Session{values: values}, key) do
+    Map.get(values, key)
+  end
+
+  def put(%Session{values: values} = session, key, value) do
+    %{session | values: Map.put(values, key, value)}
+  end
 end

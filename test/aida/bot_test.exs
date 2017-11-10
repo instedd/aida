@@ -19,7 +19,9 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == [
         "Hello, I'm a Restaurant bot",
-        "I can do a number of things"
+        "I can do a number of things",
+        "I can give you information about our menu",
+        "I can give you information about our opening hours"
       ]
     end
   end

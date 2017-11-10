@@ -18,8 +18,20 @@ defmodule Aida.Message do
     }
   end
 
-  @spec respond(message :: t, response :: String.t) :: t
+  @spec respond(message :: t, response :: String.t | map) :: t
+  def respond(message, %{} = response) do
+    %{message | reply: message.reply ++ [response[get_session(message, "language")]]}
+  end
+
   def respond(message, response) do
     %{message | reply: message.reply ++ [response]}
+  end
+
+  def get_session(%{session: session}, key) do
+    Session.get(session, key)
+  end
+
+  def put_session(%{session: session} = message, key, value) do
+    %{message | session: Session.put(session, key, value)}
   end
 end

@@ -1,5 +1,6 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message}
+  alias Aida.{FrontDesk, Variable, Message, Skill}
+  alias __MODULE__
   import Message
   @type message :: map
 
@@ -20,11 +21,23 @@ defmodule Aida.Bot do
             channels: []
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
-  def chat(bot, message) do
-    language = bot.languages |> List.first
+  def chat(%Bot{} = bot, %Message{} = message) do
+    cond do
+      Enum.count(bot.languages) == 1 ->
+        message
+        |> put_session("language", bot.languages |> List.first)
+        |> greet(bot)
+    end
+  end
 
-    message
-    |> respond(bot.front_desk.greeting[language])
-    |> respond(bot.front_desk.introduction[language])
+  defp greet(%Message{} = message, bot) do
+    message = message
+    |> respond(bot.front_desk.greeting)
+    |> respond(bot.front_desk.introduction)
+
+    bot.skills
+    |> Enum.reduce(message, fn(skill, message) ->
+      Skill.explain(skill, message)
+    end)
   end
 end
