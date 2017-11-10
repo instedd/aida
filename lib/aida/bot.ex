@@ -7,12 +7,14 @@ defmodule Aida.Bot do
     languages: [String.t],
     front_desk: FrontDesk.t,
     skills: [map],
-    variables: [Variable.t]
+    variables: [Variable.t],
+    channels: []
   }
 
   defstruct id: nil,
             languages: [],
             front_desk: %FrontDesk{},
             skills: [],
-            variables: []
+            variables: [],
+            channels: []
 end

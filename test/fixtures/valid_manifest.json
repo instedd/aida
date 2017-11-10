@@ -82,7 +82,7 @@
       "type": "facebook",
       "page_id": "1234567890",
       "verify_token": "qwertyuiopasdfghjklzxcvbnm",
-      "access_token": "qwertyuiopasdfghjklzxcvbnm"
+      "access_token": "QWERTYUIOPASDFGHJKLZXCVBNM"
     }
   ]
 }

@@ -1,6 +1,7 @@
 defmodule Aida.BotParserTest do
   use ExUnit.Case
   alias Aida.{Bot, BotParser, FrontDesk, Skill.KeywordResponder, Variable}
+  alias Aida.Channel.Facebook
 
   @uuid "f905a698-310f-473f-b2d0-00d30ad58b0c"
 
@@ -75,6 +76,13 @@ defmodule Aida.BotParserTest do
             "en" => "barbecue and pasta",
             "es" => "parrilla y pasta"
           }
+        }
+      ],
+      channels: [
+        %Facebook{
+          page_id: "1234567890",
+          verify_token: "qwertyuiopasdfghjklzxcvbnm",
+          access_token: "QWERTYUIOPASDFGHJKLZXCVBNM"
         }
       ]
     }

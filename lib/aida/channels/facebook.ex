@@ -2,9 +2,12 @@ defmodule Aida.Channel.Facebook do
   alias Aida.Channel.Facebook
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
+    page_id: String.t,
+    verify_token: String.t,
+    access_token: String.t
   }
 
-  defstruct []
+  defstruct [:page_id, :verify_token, :access_token]
 
   def init do
     :ok
