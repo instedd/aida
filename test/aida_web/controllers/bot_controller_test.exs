@@ -27,7 +27,8 @@ defmodule AidaWeb.BotControllerTest do
     "languages" => ["en"],
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
-    "variables" => []
+    "variables" => [],
+    "channels" => []
   }
 
   @updated_manifest %{
@@ -35,7 +36,8 @@ defmodule AidaWeb.BotControllerTest do
     "languages" => ["es"],
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
-    "variables" => []
+    "variables" => [],
+    "channels" => []
   }
 
   @create_attrs %{manifest: @valid_manifest}
