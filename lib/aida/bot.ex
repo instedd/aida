@@ -1,5 +1,6 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable}
+  alias Aida.{FrontDesk, Variable, Message}
+  import Message
   @type message :: map
 
   @type t :: %__MODULE__{
@@ -17,4 +18,13 @@ defmodule Aida.Bot do
             skills: [],
             variables: [],
             channels: []
+
+  @spec chat(bot :: t, message :: Message.t) :: Message.t
+  def chat(bot, message) do
+    language = bot.languages |> List.first
+
+    message
+    |> respond(bot.front_desk.greeting[language])
+    |> respond(bot.front_desk.introduction[language])
+  end
 end
