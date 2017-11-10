@@ -19,6 +19,7 @@ defmodule Aida.Channel.Facebook do
     %Facebook{}
   end
 
+  @spec find_channel_for_page_id(page_id :: String.t) :: t | :not_found
   def find_channel_for_page_id(page_id) do
     ChannelRegistry.find({:facebook, page_id})
   end
