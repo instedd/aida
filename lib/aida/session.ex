@@ -10,10 +10,10 @@ defmodule Aida.Session do
             is_new?: false,
             values: %{}
 
-  @spec new() :: t
-  def new do
+  @spec new(id :: String.t) :: t
+  def new(id \\ Ecto.UUID.generate) do
     %Session{
-      id: Ecto.UUID.generate,
+      id: id,
       is_new?: true
     }
   end
