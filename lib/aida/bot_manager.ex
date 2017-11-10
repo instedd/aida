@@ -1,6 +1,6 @@
 defmodule Aida.BotManager do
   use GenServer
-  alias Aida.DB
+  alias Aida.{DB, Channel, Bot, BotParser}
   @server_ref {:global, __MODULE__}
   @table :bots
 
@@ -29,7 +29,11 @@ defmodule Aida.BotManager do
 
   def init([]) do
     @table |> :ets.new([:named_table])
-    DB.list_bots |> Enum.each(&start_bot/1)
+    DB.list_bots
+    |> Enum.map(fn db_bot ->
+      BotParser.parse(db_bot.id, db_bot.manifest)
+    end)
+    |> Enum.each(&start_bot/1)
 
     {:ok, nil}
   end
@@ -40,11 +44,23 @@ defmodule Aida.BotManager do
   end
 
   def handle_call({:stop, bot_id}, _from, state) do
-    @table |> :ets.delete(bot_id)
-    {:reply, :ok, state}
+    result = stop_bot(bot_id)
+    {:reply, result, state}
   end
 
   defp start_bot(bot) do
+    stop_bot(bot.id)
     @table |> :ets.insert({bot.id, bot})
+    bot.channels |> Enum.each(&Channel.start/1)
+  end
+
+  defp stop_bot(bot_id) do
+    case @table |> :ets.lookup(bot_id) do
+      [{_id, bot}] ->
+        bot.channels |> Enum.each(&Channel.stop/1)
+        @table |> :ets.delete(bot_id)
+        :ok
+      _ -> :not_found
+    end
   end
 end
