@@ -12,4 +12,14 @@ defmodule Aida.Skill.KeywordResponder do
             clarification: %{},
             keywords: %{},
             response: %{}
+
+  defimpl Aida.Skill, for: __MODULE__ do
+    def explain(_skill, msg) do
+      msg
+    end
+
+    def clarify(_skill, msg) do
+      msg
+    end
+  end
 end
