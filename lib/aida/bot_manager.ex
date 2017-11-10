@@ -1,5 +1,6 @@
 defmodule Aida.BotManager do
   use GenServer
+  alias Aida.DB
   @server_ref {:global, __MODULE__}
   @table :bots
 
@@ -28,16 +29,22 @@ defmodule Aida.BotManager do
 
   def init([]) do
     @table |> :ets.new([:named_table])
+    DB.list_bots |> Enum.each(&start_bot/1)
+
     {:ok, nil}
   end
 
   def handle_call({:start, bot}, _from, state) do
-    @table |> :ets.insert({bot.id, bot})
+    start_bot(bot)
     {:reply, :ok, state}
   end
 
   def handle_call({:stop, bot_id}, _from, state) do
     @table |> :ets.delete(bot_id)
     {:reply, :ok, state}
+  end
+
+  defp start_bot(bot) do
+    @table |> :ets.insert({bot.id, bot})
   end
 end
