@@ -45,6 +45,7 @@ defmodule Aida.Message do
     Session.is_new?(session)
   end
 
+  @spec language(message :: t) :: String.t
   def language(message) do
     get_session(message, "language")
   end
