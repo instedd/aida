@@ -23,14 +23,12 @@ defmodule Aida.Bot do
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
     cond do
-      new_session?(message) && !get_session(message, "language") && Enum.count(bot.languages) == 1 ->
+      new_session?(message) && !language(message) && Enum.count(bot.languages) == 1 ->
         message
         |> put_session("language", bot.languages |> List.first)
         |> greet(bot)
-      get_session(message, "language") ->
-        message
-        |> respond(bot.front_desk.not_understood)
-        |> introduction(bot)
+      language(message) ->
+        handle(bot, message)
     end
   end
 
@@ -50,5 +48,39 @@ defmodule Aida.Bot do
     |> Enum.reduce(message, fn(skill, message) ->
       Skill.explain(skill, message)
     end)
+  end
+
+  defp clarification(message, bot, skills) do
+    message = message
+    |> respond(bot.front_desk.clarification)
+
+    skills
+    |> Enum.reduce(message, fn(skill, message) ->
+      Skill.clarify(skill, message)
+    end)
+  end
+
+  defp not_understood(message, bot) do
+    message
+    |> respond(bot.front_desk.not_understood)
+    |> introduction(bot)
+  end
+
+  defp handle(bot, message) do
+    skills = bot.skills
+    |> Enum.filter(fn(skill) ->
+      Skill.can_handle?(skill, message)
+    end)
+
+    case skills do
+      [skill] ->
+        Skill.respond(skill, message)
+      [] ->
+        message
+        |> not_understood(bot)
+      skills ->
+        message
+        |> clarification(bot, skills)
+    end
   end
 end

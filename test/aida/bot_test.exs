@@ -35,5 +35,23 @@ defmodule Aida.BotTest do
         "I can give you information about our opening hours"
       ]
     end
+
+    test "replies with clarification when message matches more than one skill", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!"))
+      output = bot |> Bot.chat(Message.new("food hours", response.session))
+      assert output.reply == [
+        "I'm not sure exactly what you need.",
+        "For menu options, write 'menu'",
+        "For opening hours say 'hours'"
+      ]
+    end
+
+    test "replies with skill when message matches one skill", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!"))
+      output = bot |> Bot.chat(Message.new("hours", response.session))
+      assert output.reply == [
+        "We are open every day from 7pm to 11pm"
+      ]
+    end
   end
 end

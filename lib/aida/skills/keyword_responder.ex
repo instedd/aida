@@ -18,8 +18,20 @@ defmodule Aida.Skill.KeywordResponder do
       message |> Message.respond(explanation)
     end
 
-    def clarify(_skill, message) do
-      message
+    def clarify(%{clarification: clarification}, message) do
+      message |> Message.respond(clarification)
+    end
+
+    def respond(%{response: response}, message) do
+      message |> Message.respond(response)
+    end
+
+    def can_handle?(%{keywords: keywords}, message) do
+      Message.content(message)
+      |> String.split
+      |> Enum.any?(fn(word) ->
+        Enum.member?(keywords[Message.language(message)], word)
+      end)
     end
   end
 end

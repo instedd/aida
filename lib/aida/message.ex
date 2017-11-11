@@ -18,9 +18,13 @@ defmodule Aida.Message do
     }
   end
 
+  def content(%{content: content}) do
+    content
+  end
+
   @spec respond(message :: t, response :: String.t | map) :: t
   def respond(message, %{} = response) do
-    %{message | reply: message.reply ++ [response[get_session(message, "language")]]}
+    %{message | reply: message.reply ++ [response[language(message)]]}
   end
   def respond(message, response) do
     %{message | reply: message.reply ++ [response]}
@@ -39,5 +43,9 @@ defmodule Aida.Message do
   @spec new_session?(message :: t) :: boolean
   def new_session?(%{session: session}) do
     Session.is_new?(session)
+  end
+
+  def language(message) do
+    get_session(message, "language")
   end
 end
