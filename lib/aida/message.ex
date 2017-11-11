@@ -24,7 +24,7 @@ defmodule Aida.Message do
 
   @spec respond(message :: t, response :: String.t | map) :: t
   def respond(message, %{} = response) do
-    %{message | reply: message.reply ++ [response[language(message)]]}
+    respond(message, response[language(message)])
   end
   def respond(message, response) do
     %{message | reply: message.reply ++ [response]}
