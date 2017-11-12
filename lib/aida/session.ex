@@ -3,7 +3,7 @@ defmodule Aida.Session do
   @type t :: %__MODULE__{
     id: String.t,
     is_new?: boolean,
-    values: map
+    values: %{required(String.t) => String.t}
   }
 
   defstruct id: nil,
@@ -26,7 +26,7 @@ defmodule Aida.Session do
     }
   end
 
-  @spec get(session :: Session.t, key :: String.t) :: String.t
+  @spec get(session :: Session.t, key :: String.t) :: String.t | nil
   def get(%Session{values: values}, key) do
     Map.get(values, key)
   end
