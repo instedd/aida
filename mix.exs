@@ -11,7 +11,11 @@ defmodule Aida.Mixfile do
       start_permanent: Mix.env == :prod,
       aliases: aliases(),
       deps: deps(),
-      dialyzer: [plt_add_deps: :transitive]
+      dialyzer: [
+        plt_add_deps: :transitive,
+        plt_add_apps: [:mix, :iex],
+        ignore_warnings: ".dialyzer_ignore"
+      ]
     ]
   end
 
