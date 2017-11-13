@@ -43,6 +43,7 @@ defmodule Aida.Mixfile do
       {:phoenix_ecto, "~> 3.2"},
       {:postgrex, ">= 0.0.0"},
       {:gettext, "~> 0.11"},
+      {:httpoison, "~> 0.13"},
       {:cowboy, "~> 1.0"},
       {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
       {:ex_json_schema, "~> 0.5.5"},
