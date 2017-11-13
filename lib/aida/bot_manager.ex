@@ -19,6 +19,11 @@ defmodule Aida.BotManager do
     GenServer.call(@server_ref, {:stop, bot_id})
   end
 
+  @spec flush() :: :ok
+  def flush() do
+    GenServer.call(@server_ref, :flush)
+  end
+
   @spec find(id :: String.t) :: Bot.t | :not_found
   def find(id) do
     case @table |> :ets.lookup(id) do
@@ -30,11 +35,10 @@ defmodule Aida.BotManager do
   def init([]) do
     @table |> :ets.new([:named_table])
     DB.list_bots
-    |> Enum.map(fn db_bot ->
-      BotParser.parse(db_bot.id, db_bot.manifest)
-    end)
+    |> Enum.map(&parse_bot/1)
     |> Enum.each(&start_bot/1)
 
+    Aida.PubSub.subscribe_bot_changes
     {:ok, nil}
   end
 
@@ -46,6 +50,29 @@ defmodule Aida.BotManager do
   def handle_call({:stop, bot_id}, _from, state) do
     result = stop_bot(bot_id)
     {:reply, result, state}
+  end
+
+  def handle_call(:flush, _from, state) do
+    {:reply, :ok, state}
+  end
+
+  def handle_info({:bot_created, bot_id}, state) do
+    reload_bot(bot_id)
+    {:noreply, state}
+  end
+
+  def handle_info({:bot_updated, bot_id}, state) do
+    reload_bot(bot_id)
+    {:noreply, state}
+  end
+
+  def handle_info({:bot_deleted, bot_id}, state) do
+    reload_bot(bot_id)
+    {:noreply, state}
+  end
+  
+  defp parse_bot(db_bot) do
+    BotParser.parse(db_bot.id, db_bot.manifest)
   end
 
   defp start_bot(bot) do
@@ -61,6 +88,17 @@ defmodule Aida.BotManager do
         @table |> :ets.delete(bot_id)
         :ok
       _ -> :not_found
+    end
+  end
+
+  defp reload_bot(bot_id) do
+    stop_bot(bot_id)
+    case DB.get_bot(bot_id) do
+      nil -> :ignore
+      db_bot ->
+        db_bot
+        |> parse_bot
+        |> start_bot
     end
   end
 end

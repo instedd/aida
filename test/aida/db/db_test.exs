@@ -1,13 +1,13 @@
 defmodule Aida.DBTest do
   use Aida.DataCase
 
-  alias Aida.DB
+  alias Aida.{DB, BotManager, ChannelRegistry}
 
   describe "bots" do
     alias Aida.DB.Bot
 
-    @manifest "some manifest"
-    @updated_manifest "some updated manifest"
+    @manifest File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+    @updated_manifest %{skills: [], variables: [], channels: []}
 
     @valid_attrs %{manifest: @manifest}
     @update_attrs %{manifest: @updated_manifest}
@@ -37,6 +37,15 @@ defmodule Aida.DBTest do
       assert bot.manifest == @manifest
     end
 
+    test "create_bot/1 registers bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+
+      {:ok, bot} = DB.create_bot(@valid_attrs)
+      :timer.sleep(100)
+      assert %Aida.Bot{} = BotManager.find(bot.id)
+    end
+
     test "create_bot/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = DB.create_bot(@invalid_attrs)
     end
@@ -46,6 +55,19 @@ defmodule Aida.DBTest do
       assert {:ok, bot} = DB.update_bot(bot, @update_attrs)
       assert %Bot{} = bot
       assert bot.manifest == @updated_manifest
+    end
+
+    test "update_bot/2 notifies the manager about the change" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+
+      bot = bot_fixture()
+      BotManager.flush()
+      assert %Aida.Bot{channels: [_]} = BotManager.find(bot.id)
+      
+      assert {:ok, bot} = DB.update_bot(bot, @update_attrs)
+      BotManager.flush()
+      assert %Aida.Bot{channels: []} = BotManager.find(bot.id)
     end
 
     test "update_bot/2 with invalid data returns error changeset" do
@@ -58,6 +80,19 @@ defmodule Aida.DBTest do
       bot = bot_fixture()
       assert {:ok, %Bot{}} = DB.delete_bot(bot)
       assert_raise Ecto.NoResultsError, fn -> DB.get_bot!(bot.id) end
+    end
+
+    test "delete_bot/1 notifies the manager about the change" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+
+      bot = bot_fixture()
+      BotManager.flush()
+      assert %Aida.Bot{} = BotManager.find(bot.id)
+
+      assert {:ok, %Bot{}} = DB.delete_bot(bot)
+      BotManager.flush()
+      assert BotManager.find(bot.id) == :not_found
     end
 
     test "change_bot/1 returns a bot changeset" do

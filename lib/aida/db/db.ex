@@ -5,6 +5,7 @@ defmodule Aida.DB do
 
   import Ecto.Query, warn: false
   alias Aida.Repo
+  alias Aida.PubSub
 
   alias Aida.DB.Bot
 
@@ -38,6 +39,13 @@ defmodule Aida.DB do
   def get_bot!(id), do: Repo.get!(Bot, id)
 
   @doc """
+  Gets a single bot.
+
+  Returns `nil` if the Bot does not exist.
+  """
+  def get_bot(id), do: Repo.get(Bot, id)
+
+  @doc """
   Creates a bot.
 
   ## Examples
@@ -50,9 +58,16 @@ defmodule Aida.DB do
 
   """
   def create_bot(attrs \\ %{}) do
-    %Bot{}
+    result = %Bot{}
     |> Bot.changeset(attrs)
     |> Repo.insert()
+
+    case result do
+      {:ok, bot} -> PubSub.broadcast(bot_created: bot.id)
+      _ -> :ignore
+    end
+
+    result
   end
 
   @doc """
@@ -68,9 +83,16 @@ defmodule Aida.DB do
 
   """
   def update_bot(%Bot{} = bot, attrs) do
-    bot
+    result = bot
     |> Bot.changeset(attrs)
     |> Repo.update()
+
+    case result do
+      {:ok, bot} -> PubSub.broadcast(bot_updated: bot.id)
+      _ -> :ignore
+    end
+
+    result
   end
 
   @doc """
@@ -86,7 +108,14 @@ defmodule Aida.DB do
 
   """
   def delete_bot(%Bot{} = bot) do
-    Repo.delete(bot)
+    result = Repo.delete(bot)
+
+    case result do
+      {:ok, bot} -> PubSub.broadcast(bot_deleted: bot.id)
+      _ -> :ignore
+    end
+
+    result
   end
 
   @doc """
