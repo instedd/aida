@@ -20,6 +20,13 @@ before_script:
 script:
   - docker-compose run --rm app mix test
 
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: ./travis-build.sh
+  on:
+    all_branches: true
+
 notifications:
   slack:
     on_success: change
