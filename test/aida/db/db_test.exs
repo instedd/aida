@@ -99,5 +99,35 @@ defmodule Aida.DBTest do
       bot = bot_fixture()
       assert %Ecto.Changeset{} = DB.change_bot(bot)
     end
+
+    test "save_session/2 stores session data" do
+      data = %{"foo" => 1, "bar" => 2}
+      {:ok, session} = DB.save_session("session_id", data)
+
+      assert session.id == "session_id"
+      assert session.data == data
+    end
+
+    test "get_session/1 returns nil if the session doesn't exist" do
+      assert DB.get_session("session_id") == nil
+    end
+
+    test "get_session/1 returns the session with the given id" do
+      data = %{"foo" => 1, "bar" => 2}
+      {:ok, _session} = DB.save_session("session_id", data)
+
+      session = DB.get_session("session_id")
+      assert session.id == "session_id"
+      assert session.data == data
+    end
+
+    test "save_session/2 replaces existing session" do
+      {:ok, _session} = DB.save_session("session_id", %{"foo" => 1, "bar" => 2})
+      {:ok, _session} = DB.save_session("session_id", %{"foo" => 3, "bar" => 4})
+
+      session = DB.get_session("session_id")
+      assert session.id == "session_id"
+      assert session.data == %{"foo" => 3, "bar" => 4}
+    end
   end
 end

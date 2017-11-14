@@ -7,7 +7,7 @@ defmodule Aida.DB do
   alias Aida.Repo
   alias Aida.PubSub
 
-  alias Aida.DB.Bot
+  alias Aida.DB.{Bot, Session}
 
   @doc """
   Returns the list of bots.
@@ -129,5 +129,21 @@ defmodule Aida.DB do
   """
   def change_bot(%Bot{} = bot) do
     Bot.changeset(bot, %{})
+  end
+
+  @doc """
+  Creates or updates the session data stored for the given session id
+  """
+  def save_session(id, data) do
+    %Session{}
+      |> Session.changeset(%{id: id, data: data})
+      |> Repo.insert(on_conflict: :replace_all, conflict_target: :id)
+  end
+
+  @doc """
+  Returns the session for the given id. If the session does not exist, it returns `nil`.
+  """
+  def get_session(id) do
+    Session |> Repo.get(id)
   end
 end

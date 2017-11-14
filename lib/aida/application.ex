@@ -20,7 +20,8 @@ defmodule Aida.Application do
       children ++ [
         worker(Aida.JsonSchema, []),
         worker(Aida.ChannelRegistry, []),
-        worker(Aida.BotManager, [])
+        worker(Aida.BotManager, []),
+        worker(Aida.SessionStore, [])
       ]
     else
       children

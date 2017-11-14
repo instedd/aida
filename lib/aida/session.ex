@@ -1,5 +1,7 @@
 defmodule Aida.Session do
   alias __MODULE__
+  alias Aida.SessionStore
+
   @type t :: %__MODULE__{
     id: String.t,
     is_new?: boolean,
@@ -24,6 +26,19 @@ defmodule Aida.Session do
       id: id,
       values: values
     }
+  end
+
+  @spec load(id :: String.t) :: t
+  def load(id) do
+    case SessionStore.find(id) do
+      :not_found -> new(id)
+      data -> new(id, data)
+    end
+  end
+
+  @spec save(session :: t) :: :ok
+  def save(session) do
+    SessionStore.save(session.id, session.values)
   end
 
   @spec get(session :: Session.t, key :: String.t) :: String.t | nil
