@@ -58,6 +58,12 @@ config :logger, level: :info
 #     config :aida, AidaWeb.Endpoint, server: true
 #
 
-# Finally import the config/prod.secret.exs
-# which should be versioned separately.
-import_config "prod.secret.exs"
+config :aida, AidaWeb.Endpoint,
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
+
+config :aida, Aida.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "aida",
+  pool_size: 15
