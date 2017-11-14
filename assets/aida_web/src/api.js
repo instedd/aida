@@ -8,7 +8,7 @@ export class Unauthorized {
 }
 
 const apiFetch = (url, options) => {
-  const baseUrl = get(process.env, 'SERVER_HOST') || 'http://app.aida.dev'
+  const baseUrl = get(process.env, 'REACT_APP_API_BASE_URL') || ''
   return fetch(`${baseUrl}/api/${url}`, { ...options, credentials: 'same-origin' })
     .then(response => {
       return handleResponse(response, () =>
