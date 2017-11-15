@@ -116,10 +116,10 @@ defmodule Aida.Channel.Facebook do
     end
 
     def send_message(channel, messages, recipient) do
+      url = "https://graph.facebook.com/v2.6/me/messages?access_token=#{channel.access_token}"
+      headers = [{"Content-type", "application/json"}]
 
       Enum.each(messages, fn message ->
-        url = "https://graph.facebook.com/v2.6/me/messages?access_token=#{channel.access_token}"
-        headers = [{"Content-type", "application/json"}]
         json = %{"recipient": %{"id": recipient}, "message": %{"text": message}, "messaging_type": "RESPONSE"}
         result = HTTPoison.post url, Poison.encode!(json), headers
       end)

@@ -1,6 +1,8 @@
 defmodule Aida.Channel.FacebookConnTest do
   use Aida.DataCase
   use Phoenix.ConnTest
+  import Mock
+
   alias Aida.{ChannelRegistry, BotManager, BotParser}
   alias Aida.Channel.Facebook
 
@@ -29,7 +31,7 @@ defmodule Aida.Channel.FacebookConnTest do
       assert response(conn, 200) == challenge
     end
 
-    test "incoming facebook message" do
+    test_with_mock "incoming facebook message", HTTPoison, [post: fn(_url,_par1,_par2) -> "<html></html>" end] do
       challenge = Ecto.UUID.generate
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 
@@ -37,6 +39,18 @@ defmodule Aida.Channel.FacebookConnTest do
         |> Facebook.callback()
 
       assert response(conn, 200) == "ok"
+
+      assert_message_sent("Hello, I'm a Restaurant bot")
+      assert_message_sent("I can do a number of things")
+      assert_message_sent("I can give you information about our menu")
+      assert_message_sent("I can give you information about our opening hours")
     end
   end
+
+  defp assert_message_sent(message) do
+    headers = [{"Content-type", "application/json"}]
+    json = %{message: %{text: message}, messaging_type: "RESPONSE", recipient: %{id: "1234"}}
+    assert called HTTPoison.post("https://graph.facebook.com/v2.6/me/messages?access_token=QWERTYUIOPASDFGHJKLZXCVBNM", Poison.encode!(json), headers)
+  end
+
 end
