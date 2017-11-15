@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "languages": ["en"],
+  "front_desk": {
+    "greeting": {
+      "message": {
+        "en": "Hello, I'm a Restaurant bot"
+      }
+    },
+    "introduction": {
+      "message": {
+        "en": "I can do a number of things"
+      }
+    },
+    "not_understood": {
+      "message": {
+        "en": "Sorry, I didn't understand that"
+      }
+    },
+    "clarification": {
+      "message": {
+        "en": "I'm not sure exactly what you need."
+      }
+    },
+    "threshold": 0.7
+  },
+  "skills": [
+    {
+      "type": "keyword_responder",
+      "explanation": {
+        "en": "I can give you information about our menu"
+      },
+      "clarification": {
+        "en": "For menu options, write 'menu'"
+      },
+      "keywords": {
+        "en": ["menu","food"]
+      },
+      "response": {
+        "en": "We have {food_options}"
+      }
+    },
+    {
+      "type": "keyword_responder",
+      "explanation": {
+        "en": "I can give you information about our opening hours"
+      },
+      "clarification": {
+        "en": "For opening hours say 'hours'"
+      },
+      "keywords": {
+        "en": ["hours","time"]
+      },
+      "response": {
+        "en": "We are open every day from 7pm to 11pm"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "food_options",
+      "values": {
+        "en": "barbecue and pasta"
+      }
+    }
+  ],
+  "channels": [
+    {
+      "type": "facebook",
+      "page_id": "1234567890",
+      "verify_token": "qwertyuiopasdfghjklzxcvbnm",
+      "access_token": "QWERTYUIOPASDFGHJKLZXCVBNM"
+    }
+  ]
+}
