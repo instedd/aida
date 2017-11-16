@@ -22,6 +22,11 @@ defmodule Aida.SessionStore do
     GenServer.call(@server_ref, {:save, id, data})
   end
 
+  @spec delete(id :: String.t) :: :ok
+  def delete(id) do
+    GenServer.call(@server_ref, {:delete, id})
+  end
+
   def init([]) do
     @table |> :ets.new([:named_table])
     {:ok, nil}
@@ -30,6 +35,12 @@ defmodule Aida.SessionStore do
   def handle_call({:save, id, data}, _from, state) do
     @table |> :ets.insert({id, data})
     DB.save_session(id, data)
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:delete, id}, _from, state) do
+    @table |> :ets.delete(id)
+    DB.delete_session(id)
     {:reply, :ok, state}
   end
 

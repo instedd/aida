@@ -41,4 +41,10 @@ defmodule Aida.SessionStoreTest do
     assert session.data == data
   end
 
+  test "delete session" do
+    data = %{"foo" => 1, "bar" => 2}
+    assert SessionStore.save("session_id", data) == :ok
+    assert SessionStore.delete("session_id") == :ok
+    assert SessionStore.find("session_id") == :not_found
+  end
 end

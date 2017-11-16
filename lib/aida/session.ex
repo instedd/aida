@@ -41,6 +41,11 @@ defmodule Aida.Session do
     SessionStore.save(session.id, session.values)
   end
 
+  @spec delete(id :: String.t) :: t
+  def delete(id) do
+    SessionStore.delete(id)
+  end
+
   @spec get(session :: Session.t, key :: String.t) :: String.t | nil
   def get(%Session{values: values}, key) do
     Map.get(values, key)

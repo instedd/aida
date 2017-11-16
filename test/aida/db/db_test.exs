@@ -129,5 +129,14 @@ defmodule Aida.DBTest do
       assert session.id == "session_id"
       assert session.data == %{"foo" => 3, "bar" => 4}
     end
+
+    test "delete_session/1 deletes a session" do
+      {:ok, _session} = DB.save_session("session_1", %{"foo" => 1, "bar" => 2})
+      {:ok, _session} = DB.save_session("session_2", %{"foo" => 1, "bar" => 2})
+
+      assert :ok = DB.delete_session("session_1")
+      assert DB.get_session("session_1") == nil
+      assert DB.get_session("session_2")
+    end
   end
 end

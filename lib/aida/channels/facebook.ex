@@ -106,16 +106,23 @@ defmodule Aida.Channel.Facebook do
       text = message["message"]["text"]
       recipient_id = message["recipient"]["id"]
       sender_id = message["sender"]["id"]
+      session_id = "facebook/#{recipient_id}/#{sender_id}"
 
-      if text do
-        bot = BotManager.find(channel.bot_id)
-        session = Session.load("facebook/#{recipient_id}/#{sender_id}")
-        reply = Bot.chat(bot, Message.new(text, session))
-        reply.session |> Session.save
+      case text do
+        "##RESET" ->
+          Session.delete(session_id)
+          send_message(channel, ["Session was reset"], sender_id)
 
-        send_message(channel, reply.reply, sender_id)
+        nil -> :ok
+
+        _ ->
+          bot = BotManager.find(channel.bot_id)
+          session = Session.load(session_id)
+          reply = Bot.chat(bot, Message.new(text, session))
+          reply.session |> Session.save
+
+          send_message(channel, reply.reply, sender_id)
       end
-
     end
 
     def send_message(channel, messages, recipient) do

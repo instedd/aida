@@ -146,4 +146,15 @@ defmodule Aida.DB do
   def get_session(id) do
     Session |> Repo.get(id)
   end
+
+  @doc """
+  Deletes the session with the given id
+  """
+  def delete_session(id) do
+    Session
+      |> where([s], s.id == ^id)
+      |> Repo.delete_all
+
+    :ok
+  end
 end
