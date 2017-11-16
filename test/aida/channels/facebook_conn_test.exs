@@ -3,7 +3,7 @@ defmodule Aida.Channel.FacebookConnTest do
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, BotManager, BotParser}
+  alias Aida.{ChannelRegistry, BotManager, BotParser, SessionStore}
   alias Aida.Channel.Facebook
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
@@ -11,6 +11,7 @@ defmodule Aida.Channel.FacebookConnTest do
   setup do
     ChannelRegistry.start_link
     BotManager.start_link
+    SessionStore.start_link
     :ok
   end
   describe "with bot" do

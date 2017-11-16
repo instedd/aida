@@ -4,6 +4,7 @@ defmodule Aida.Channel.Facebook do
   alias Aida.BotManager
   alias Aida.Bot
   alias Aida.Message
+  alias Aida.Session
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
@@ -108,7 +109,9 @@ defmodule Aida.Channel.Facebook do
 
       if text do
         bot = BotManager.find(channel.bot_id)
-        reply = Bot.chat(bot, Message.new(text))
+        session = Session.load("facebook/#{recipient_id}/#{sender_id}")
+        reply = Bot.chat(bot, Message.new(text, session))
+        reply.session |> Session.save
 
         send_message(channel, reply.reply, sender_id)
       end
