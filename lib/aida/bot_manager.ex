@@ -1,6 +1,6 @@
 defmodule Aida.BotManager do
   use GenServer
-  alias Aida.{DB, Channel, Bot, BotParser}
+  alias Aida.{DB, Channel, Bot, BotParser, Logger}
   @server_ref {:global, __MODULE__}
   @table :bots
 
@@ -70,11 +70,17 @@ defmodule Aida.BotManager do
     reload_bot(bot_id)
     {:noreply, state}
   end
-  
+
   defp parse_bot(db_bot) do
     BotParser.parse(db_bot.id, db_bot.manifest)
   end
 
+  defp start_bot({:ok, bot}) do
+    start_bot(bot)
+  end
+  defp start_bot({:error, errors}) do
+    Logger.error(errors)
+  end
   defp start_bot(bot) do
     stop_bot(bot.id)
     @table |> :ets.insert({bot.id, bot})

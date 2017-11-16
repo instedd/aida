@@ -18,7 +18,7 @@ defmodule Aida.Channel.FacebookConnTest do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json") |> Poison.decode!
 
-      bot = BotParser.parse(@uuid, manifest)
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
       BotManager.start(bot)
       :ok
     end
@@ -52,5 +52,4 @@ defmodule Aida.Channel.FacebookConnTest do
     json = %{message: %{text: message}, messaging_type: "RESPONSE", recipient: %{id: "1234"}}
     assert called HTTPoison.post("https://graph.facebook.com/v2.6/me/messages?access_token=QWERTYUIOPASDFGHJKLZXCVBNM", Poison.encode!(json), headers)
   end
-
 end

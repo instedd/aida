@@ -40,10 +40,4 @@ else
 fi
 
 echo "Running Dialyzer"
-DIALYZER_TESTS="$(docker-compose run --rm app mix dialyzer)"
-
-if [ $? -eq 0 ]; then
-  echo "OK";
-else
-  echo "${DIALYZER_TESTS}"
-fi
+docker-compose run --rm app mix dialyzer

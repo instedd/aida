@@ -37,5 +37,9 @@ defmodule Aida.Skill.KeywordResponder do
         Enum.member?(keywords[Message.language(message)], word)
       end)
     end
+
+    def id(%{id: id}) do
+      id
+    end
   end
 end

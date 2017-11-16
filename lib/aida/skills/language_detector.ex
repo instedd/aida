@@ -18,7 +18,6 @@ defmodule Aida.Skill.LanguageDetector do
       message |> Message.respond(response)
     end
 
-
     def can_handle?(%{languages: languages}, message) do
       Message.content(message)
       |> String.split
@@ -28,6 +27,10 @@ defmodule Aida.Skill.LanguageDetector do
           Enum.member?(language, word)
         end)
       end)
+    end
+
+    def id(_) do
+      "language_detector"
     end
   end
 end

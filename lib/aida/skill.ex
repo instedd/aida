@@ -12,4 +12,7 @@ defprotocol Aida.Skill do
 
   @spec respond(skill :: t, msg :: Message.t) :: Message.t
   def respond(skill, message)
+
+  @spec id(skill :: t) :: String.t
+  def id(skill)
 end

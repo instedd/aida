@@ -60,11 +60,71 @@ defmodule Aida.BotManagerTest do
     manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
     {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
 
-    bot = BotParser.parse(db_bot.id, manifest)
+    {:ok, bot} = BotParser.parse(db_bot.id, manifest)
 
     ChannelRegistry.start_link
     BotManager.start_link
 
     assert BotManager.find(bot.id) == bot
+  end
+
+  test "loads valid bots and skips invalid ones on start" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+    {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+    {:ok, bot} = BotParser.parse(db_bot.id, manifest)
+
+    invalid_manifest = manifest
+        |> Map.put("skills", [
+          %{
+            "type" => "keyword_responder",
+            "id" => "this is the same id",
+            "name" => "Food menu",
+            "explanation" => %{
+              "en" => "I can give you information about our menu",
+              "es" => "Te puedo dar información sobre nuestro menu"
+            },
+            "clarification" => %{
+              "en" => "For menu options, write 'menu'",
+              "es" => "Para información sobre nuestro menu, escribe 'menu'"
+            },
+            "keywords" => %{
+              "en" => ["menu","food"],
+              "es" => ["menu","comida"]
+            },
+            "response" => %{
+              "en" => "We have {food_options}",
+              "es" => "Tenemos {food_options}"
+            }
+          },
+          %{
+            "type" => "keyword_responder",
+            "id" => "this is the same id",
+            "name" => "Opening hours",
+            "explanation" => %{
+              "en" => "I can give you information about our opening hours",
+              "es" => "Te puedo dar información sobre nuestro horario"
+            },
+            "clarification" => %{
+              "en" => "For opening hours say 'hours'",
+              "es" => "Para información sobre nuestro horario escribe 'horario'"
+            },
+            "keywords" => %{
+              "en" => ["hours","time"],
+              "es" => ["horario","hora"]
+            },
+            "response" => %{
+              "en" => "We are open every day from 7pm to 11pm",
+              "es" => "Abrimos todas las noches de 19 a 23"
+            }
+          }
+        ])
+    {:ok, invalid_bot} = DB.create_bot(%{manifest: invalid_manifest})
+
+    ChannelRegistry.start_link
+    BotManager.start_link
+
+    assert BotManager.find(bot.id) == bot
+
+    assert BotManager.find(invalid_bot.id) == :not_found
   end
 end

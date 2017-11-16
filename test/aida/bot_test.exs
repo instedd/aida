@@ -9,7 +9,7 @@ defmodule Aida.BotTest do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
         |> Poison.decode!
         |> Map.put("languages", ["en"])
-      bot = BotParser.parse(@bot_id, manifest)
+      {:ok, bot} = BotParser.parse(@bot_id, manifest)
 
       %{bot: bot}
     end

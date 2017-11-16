@@ -41,7 +41,7 @@ defmodule Aida.Session do
     SessionStore.save(session.id, session.values)
   end
 
-  @spec delete(id :: String.t) :: t
+  @spec delete(id :: String.t) :: :ok
   def delete(id) do
     SessionStore.delete(id)
   end
