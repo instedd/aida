@@ -77,7 +77,7 @@ defmodule Aida.BotParser do
 
     case duplicated_skills do
       nil -> :ok
-      {id, _} -> {:error, "duplicated skill id (#{id})"}
+      {id, _} -> {:error, "Duplicated skill (#{id})"}
     end
   end
 end

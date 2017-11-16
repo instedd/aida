@@ -149,6 +149,33 @@ defmodule Aida.BotParserTest do
           }
         ])
 
-    assert {:error, "duplicated skill id (this is the same id)"} == BotParser.parse(@uuid, manifest)
+    assert {:error, "Duplicated skill (this is the same id)"} == BotParser.parse(@uuid, manifest)
   end
+
+  test "parse manifest with duplicated language_detector" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+
+    manifest = manifest
+        |> Map.put("skills", [
+          %{
+            "type" => "language_detector",
+            "explanation" => "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+            "languages" => %{
+              "en" => ["english", "inglés"],
+              "es" => ["español", "spanish"]
+            }
+          },
+          %{
+            "type" => "language_detector",
+            "explanation" => "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+            "languages" => %{
+              "en" => ["english", "inglés"],
+              "es" => ["español", "spanish"]
+            }
+          }
+        ])
+
+    assert {:error, "Duplicated skill (language_detector)"} == BotParser.parse(@uuid, manifest)
+  end
+
 end
