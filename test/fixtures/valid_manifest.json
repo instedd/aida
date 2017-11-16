@@ -39,6 +39,8 @@
     },
     {
       "type": "keyword_responder",
+      "id": "this is a string id",
+      "name": "Food menu",
       "explanation": {
         "en": "I can give you information about our menu",
         "es": "Te puedo dar información sobre nuestro menu"
@@ -58,6 +60,8 @@
     },
     {
       "type": "keyword_responder",
+      "id": "this is a different id",
+      "name": "Opening hours",
       "explanation": {
         "en": "I can give you information about our opening hours",
         "es": "Te puedo dar información sobre nuestro horario"

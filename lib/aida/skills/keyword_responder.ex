@@ -4,12 +4,16 @@ defmodule Aida.Skill.KeywordResponder do
   @type t :: %__MODULE__{
     explanation: Bot.message,
     clarification: Bot.message,
+    id: String.t(),
+    name: String.t(),
     keywords: %{},
     response: %{}
   }
 
   defstruct explanation: %{},
             clarification: %{},
+            id: "",
+            name: "",
             keywords: %{},
             response: %{}
 

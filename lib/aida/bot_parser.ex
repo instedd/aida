@@ -43,6 +43,8 @@ defmodule Aida.BotParser do
     %KeywordResponder{
       explanation: skill["explanation"],
       clarification: skill["clarification"],
+      id: skill["id"],
+      name: skill["name"],
       keywords: skill["keywords"],
       response: skill["response"]
     }

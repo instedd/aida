@@ -20,6 +20,8 @@ defmodule Aida.JsonSchemaTest do
   @valid_localized_keywords ~s({"en": [""]})
   @valid_keyword_responder ~s({
     "type": "keyword_responder",
+    "id" : "1",
+    "name" : "",
     "explanation": #{@valid_localized_string},
     "clarification": #{@valid_localized_string},
     "keywords": #{@valid_localized_keywords},
@@ -149,6 +151,8 @@ defmodule Aida.JsonSchemaTest do
     assert_required("clarification", :keyword_responder)
     assert_required("response", :keyword_responder)
     assert_required("keywords", :keyword_responder)
+    assert_required("name", :keyword_responder)
+    assert_required("id", :keyword_responder)
 
     @valid_keyword_responder
     |> assert_valid(:keyword_responder)

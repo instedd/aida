@@ -17,6 +17,8 @@ defmodule AidaWeb.BotControllerTest do
   @valid_localized_keywords %{"en" => [""]}
   @valid_keyword_responder %{
     "type" => "keyword_responder",
+    "id" => "1",
+    "name" => "",
     "explanation" => @valid_localized_string,
     "clarification" => @valid_localized_string,
     "keywords" => @valid_localized_keywords,

@@ -66,13 +66,15 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["keyword_responder"]},
+        "id": {"type": "string"},
+        "name": {"type": "string"},
         "explanation": {"$ref": "#/definitions/localized_string"},
         "clarification": {"$ref": "#/definitions/localized_string"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
         "response": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,
-      "required": ["type", "explanation", "clarification", "keywords", "response"]
+      "required": ["type", "explanation", "clarification", "keywords", "response", "id", "name"]
     },
 
     "language_detector": {

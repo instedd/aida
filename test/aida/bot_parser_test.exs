@@ -48,6 +48,8 @@ defmodule Aida.BotParserTest do
             "en" => "For menu options, write 'menu'",
             "es" => "Para información sobre nuestro menu, escribe 'menu'"
           },
+          id: "this is a string id",
+          name: "Food menu",
           keywords: %{
             "en" => ["menu", "food"],
             "es" => ["menu", "comida"]
@@ -66,6 +68,8 @@ defmodule Aida.BotParserTest do
             "en" => "For opening hours say 'hours'",
             "es" => "Para información sobre nuestro horario escribe 'horario'"
           },
+          id: "this is a different id",
+          name: "Opening hours",
           keywords: %{
             "en" => ["hours","time"],
             "es" => ["horario","hora"]
