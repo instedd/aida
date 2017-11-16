@@ -33,7 +33,6 @@ defmodule Aida.Channel.FacebookConnTest do
     end
 
     test_with_mock "incoming facebook message", HTTPoison, [post: fn(_url,_par1,_par2) -> "<html></html>" end] do
-      challenge = Ecto.UUID.generate
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 
       conn = build_conn(:post, "/callback/facebook", params)
