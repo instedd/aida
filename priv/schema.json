@@ -57,7 +57,8 @@
 
     "skill": {
       "oneOf": [
-        {"$ref": "#/definitions/keyword_responder"}
+        {"$ref": "#/definitions/keyword_responder"},
+        {"$ref": "#/definitions/language_detector"}
       ]
     },
 
@@ -72,6 +73,17 @@
       },
       "additionalProperties": false,
       "required": ["type", "explanation", "clarification", "keywords", "response"]
+    },
+
+    "language_detector": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["language_detector"]},
+        "explanation": {"^[a-z]{2,3}$": {"type": "string"}},
+        "languages": {"$ref": "#/definitions/languages"}
+      },
+      "additionalProperties": true,
+      "required": ["type", "explanation", "languages"]
     },
 
     "channel": {
@@ -107,6 +119,11 @@
       "patternProperties": {"^[a-z]{2,3}$": {"type": "string"}},
       "minProperties": 1,
       "additionalProperties": false
+    },
+
+    "languages": {
+      "type": "object",
+      "additionalProperties": true
     },
 
     "localized_keywords": {

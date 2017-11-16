@@ -32,6 +32,13 @@ defmodule Aida.BotParserTest do
         }
       },
       skills: [
+        %Aida.Skill.LanguageDetector{
+          explanation: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+          languages: %{
+            "en" => ["english", "inglés"],
+            "es" => ["español", "spanish"]
+          }
+        },
         %KeywordResponder{
           explanation: %{
             "en" => "I can give you information about our menu",

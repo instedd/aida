@@ -6,7 +6,7 @@ defmodule Aida.BotTest do
 
   describe "single language bot" do
     setup do
-      manifest = File.read!("test/fixtures/valid_manifest.json")
+      manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
         |> Poison.decode!
         |> Map.put("languages", ["en"])
       bot = BotParser.parse(@bot_id, manifest)

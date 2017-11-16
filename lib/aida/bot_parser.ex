@@ -1,5 +1,5 @@
 defmodule Aida.BotParser do
-  alias Aida.{Bot, FrontDesk, Skill.KeywordResponder, Variable, Channel.Facebook}
+  alias Aida.{Bot, FrontDesk, Skill.KeywordResponder, Skill.LanguageDetector, Variable, Channel.Facebook}
 
   @spec parse(id :: String.t, manifest :: map) :: Bot.t
   def parse(id, manifest) do
@@ -29,6 +29,13 @@ defmodule Aida.BotParser do
     %Variable{
       name: var["name"],
       values: var["values"]
+    }
+  end
+
+  defp parse_skill(%{"type" => "language_detector"} = skill) do
+    %LanguageDetector{
+      explanation: skill["explanation"],
+      languages: skill["languages"]
     }
   end
 

@@ -30,6 +30,14 @@
   },
   "skills": [
     {
+      "type": "language_detector",
+      "explanation": "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+      "languages": {
+        "en": ["english", "inglés"],
+        "es": ["español", "spanish"]
+      }
+    },
+    {
       "type": "keyword_responder",
       "explanation": {
         "en": "I can give you information about our menu",

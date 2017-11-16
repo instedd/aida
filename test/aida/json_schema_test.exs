@@ -135,6 +135,9 @@ defmodule Aida.JsonSchemaTest do
     @valid_manifest
     |> assert_valid(:manifest_v1)
 
+    File.read!("test/fixtures/valid_manifest_single_lang.json")
+    |> assert_valid(:manifest_v1)
+
     File.read!("test/fixtures/valid_manifest.json")
     |> assert_valid(:manifest_v1)
   end
