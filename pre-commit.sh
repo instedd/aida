@@ -2,8 +2,11 @@
 echo "Running Mix tests"
 MIX_TESTS="$(docker-compose run --rm app mix test)"
 
+NC='\033[0m'
+GREEN='\033[0;32m'
+
 if [ $? -eq 0 ]; then
-   echo "OK";
+  echo "${GREEN}OK${NC}";
 else
   echo "${MIX_TESTS}"
 fi
@@ -12,7 +15,7 @@ echo "Running JS tests"
 JS_TESTS="$(docker-compose run --rm -e CI=true node yarn test)"
 
 if [ $? -eq 0 ]; then
-  echo "OK";
+  echo "${GREEN}OK${NC}";
 else
   echo "${JS_TESTS}"
 fi
@@ -25,7 +28,7 @@ else
 fi
 
 if [ $? -eq 0 ]; then
-  echo "OK";
+  echo "${GREEN}OK${NC}";
 else
   echo "${FLOW_TESTS}"
 fi
@@ -34,7 +37,7 @@ echo "Running Eslint tests"
 ESLINT_TESTS="$(docker-compose run --rm node yarn eslint)"
 
 if [ $? -eq 0 ]; then
-  echo "OK";
+  echo "${GREEN}OK${NC}";
 else
   echo "${ESLINT_TESTS}"
 fi

@@ -22,6 +22,13 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+version = case File.read("VERSION") do
+  {:ok, version} -> String.trim(version)
+  {:error, :enoent} -> "#{Mix.Project.config[:version]}-#{Mix.env}"
+end
+
+config :aida, version: version
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"

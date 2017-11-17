@@ -3,8 +3,22 @@ import './App.css'
 import '../node_modules/react-md/dist/react-md.light_blue-deep_orange.min.css'
 import BotIndex from './BotIndex'
 import { Toolbar } from 'react-md'
+import * as api from './api'
 
 class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      version: ''
+    }
+  }
+
+  componentWillMount() {
+    api.fetchVersion().then((response) => {
+      console.log(response)
+      this.setState({version: response || ''})
+    })
+  }
 
   render() {
     return (
@@ -22,7 +36,7 @@ class App extends Component {
 
         </div>
         <div className='footer'>
-          This is the footer
+          Version: {this.state.version}
         </div>
       </div>
     )

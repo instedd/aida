@@ -8,6 +8,7 @@ defmodule AidaWeb.Router do
   scope "/api", AidaWeb do
     pipe_through :api
     resources "/bots", BotController, except: [:new, :edit]
+    get "/version", VersionController, :version
   end
 
   scope "/", AidaWeb do

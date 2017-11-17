@@ -11,8 +11,7 @@ const apiFetch = (url, options) => {
   const baseUrl = get(process.env, 'REACT_APP_API_BASE_URL') || ''
   return fetch(`${baseUrl}/api/${url}`, { ...options, credentials: 'same-origin' })
     .then(response => {
-      return handleResponse(response, () =>
-        response)
+      return handleResponse(response, () => response)
     })
 }
 
@@ -100,6 +99,10 @@ const apiDelete = (url) => {
 
 export const fetchBots = () => {
   return apiFetchJSON(`bots`)
+}
+
+export const fetchVersion = () => {
+  return apiFetchJSON(`version`)
 }
 
 export const createBot = (manifest) => {
