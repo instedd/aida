@@ -75,9 +75,6 @@ defmodule Aida.Channel.Facebook do
     def callback(channel, %{method: "POST"} = conn) do
 
       params = conn.params
-      mode = params["hub.mode"]
-      verify_token = params["hub.verify_token"]
-
 
       if params["object"] == "page" && params["entry"] do
         params["entry"]
@@ -131,7 +128,7 @@ defmodule Aida.Channel.Facebook do
 
       Enum.each(messages, fn message ->
         json = %{"recipient": %{"id": recipient}, "message": %{"text": message}, "messaging_type": "RESPONSE"}
-        result = HTTPoison.post url, Poison.encode!(json), headers
+        HTTPoison.post url, Poison.encode!(json), headers
       end)
 
     end
