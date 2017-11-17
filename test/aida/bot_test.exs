@@ -3,6 +3,22 @@ defmodule Aida.BotTest do
   use ExUnit.Case
 
   @bot_id "486d6622-225a-42c6-864b-5457687adc30"
+  @english_restaurant_greet [
+    "Hello, I'm a Restaurant bot",
+    "I can do a number of things",
+    "I can give you information about our menu",
+    "I can give you information about our opening hours"
+  ]
+
+  @spanish_restaurant_greet [
+    "Hola, soy un bot de Restaurant",
+    "Puedo ayudarte con varias cosas",
+    "Te puedo dar información sobre nuestro menu",
+    "Te puedo dar información sobre nuestro horario"]
+
+  @language_selection_speech [
+    "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
+  ]
 
   describe "single language bot" do
     setup do
@@ -17,12 +33,7 @@ defmodule Aida.BotTest do
     test "replies with greeting on the first message", %{bot: bot} do
       input = Message.new("Hi!")
       output = bot |> Bot.chat(input)
-      assert output.reply == [
-        "Hello, I'm a Restaurant bot",
-        "I can do a number of things",
-        "I can give you information about our menu",
-        "I can give you information about our opening hours"
-      ]
+      assert output.reply == @english_restaurant_greet
     end
 
     test "replies with explanation when message not understood and is not the first message", %{bot: bot} do
@@ -53,5 +64,52 @@ defmodule Aida.BotTest do
         "We are open every day from 7pm to 11pm"
       ]
     end
+  end
+
+  describe "multiple languages bot" do
+    setup do
+      manifest = File.read!("test/fixtures/valid_manifest.json")
+        |> Poison.decode!
+      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+
+      %{bot: bot}
+    end
+
+    test "replies with language selection on the first message", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+    end
+
+    test "selects language when the user sends 'english'", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("I want to speak in english please")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+    end
+
+    test "selects language when the user sends 'español'", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("Quiero hablar en español por favor")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @spanish_restaurant_greet
+    end
+
+    test "selects the first language when the user sends more than one", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("I want to speak in english or spanish inglés")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+    end
+
   end
 end

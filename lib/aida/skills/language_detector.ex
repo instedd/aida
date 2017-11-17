@@ -14,18 +14,31 @@ defmodule Aida.Skill.LanguageDetector do
       message |> Message.respond(explanation)
     end
 
-    def respond(%{response: response}, message) do
-      message |> Message.respond(response)
+    def clarify(_, message) do
+      message
+    end
+
+    def respond(skill, message) do
+      message
+      |> Message.put_session("language", matching_languages(message, skill.languages) |> List.first)
     end
 
     def can_handle?(%{languages: languages}, message) do
+      !Enum.empty?(matching_languages(message, languages))
+    end
+
+    def matching_languages(message, languages) do
       Message.content(message)
       |> String.split
-      |> Enum.any?(fn(word) ->
-        # Enum.member?(languages[Message.language(message)], word)
-        languages |> Enum.any?(fn(language) ->
-          Enum.member?(language, word)
+      |> Enum.reduce([], fn(word, acc) ->
+        match = Map.keys(languages) |> Enum.find(fn(language) ->
+          Enum.member?(languages[language], word)
         end)
+        if match do
+          Enum.concat(acc, [match])
+        else
+          acc
+        end
       end)
     end
 

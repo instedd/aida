@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger}
   alias __MODULE__
   import Message
   @type message :: map
@@ -23,12 +23,13 @@ defmodule Aida.Bot do
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
     cond do
-      new_session?(message) && !language(message) && Enum.count(bot.languages) == 1 ->
+      !language(message) && Enum.count(bot.languages) == 1 ->
         message
         |> put_session("language", bot.languages |> List.first)
         |> greet(bot)
       language(message) ->
         handle(bot, message)
+      true -> language_detector(bot, message)
     end
   end
 
@@ -46,7 +47,7 @@ defmodule Aida.Bot do
 
     bot.skills
     |> Enum.reduce(message, fn(skill, message) ->
-      Skill.explain(skill, message)
+      !is_language_detector?(skill) && Skill.explain(skill, message) || message
     end)
   end
 
@@ -82,5 +83,31 @@ defmodule Aida.Bot do
         message
         |> clarification(bot, skills)
     end
+  end
+
+  defp language_detector(bot, message) do
+    skills = bot.skills
+    |> Enum.filter(fn(skill) ->
+      is_language_detector?(skill)
+    end)
+
+    case skills do
+      [skill] ->
+        if Skill.can_handle?(skill, message) do
+          Skill.respond(skill, message)
+          |> greet(bot)
+        else
+          Skill.explain(skill, message)
+        end
+      _ -> Logger.info "Error: None or more than one language_detector skills were found"
+    end
+  end
+
+  defp is_language_detector?(%Skill.LanguageDetector{})do
+    true
+  end
+
+  defp is_language_detector?(_)do
+    false
   end
 end
