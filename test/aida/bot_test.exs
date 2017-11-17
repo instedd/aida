@@ -86,12 +86,32 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("I want to speak in english please")
+      input2 = Message.new("english")
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @english_restaurant_greet
     end
 
     test "selects language when the user sends 'español'", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("español")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @spanish_restaurant_greet
+    end
+
+    test "selects language when the user sends 'english' in a long sentence", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("I want to speak in english please")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+    end
+
+    test "selects language when the user sends 'español' in a long sentence", %{bot: bot} do
       input = Message.new("Hi!")
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
@@ -106,9 +126,19 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("I want to speak in english or spanish inglés")
+      input2 = Message.new("I want to speak in english or spanish o inglés")
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @english_restaurant_greet
+    end
+
+    test "replies language selection when the user selects a not available language ", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("eu quero falar português")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @language_selection_speech
     end
 
   end
