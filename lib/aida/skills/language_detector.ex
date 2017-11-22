@@ -42,6 +42,10 @@ defmodule Aida.Skill.LanguageDetector do
       end)
     end
 
+    def confidence(%{keywords: keywords}, message) do
+      0
+    end
+
     def id(_) do
       "language_detector"
     end

@@ -38,6 +38,22 @@ defmodule Aida.Skill.KeywordResponder do
       end)
     end
 
+    def confidence(%{keywords: keywords}, message) do
+      words_in_message = String.replace(Message.content(message), ~r/\p{P}/, "")
+      |> String.split
+
+      matches = words_in_message
+      |> Enum.filter(fn(word) ->
+        Enum.member?(keywords[Message.language(message)], word)
+      end)
+
+      word_count = Enum.count(words_in_message)
+      case word_count do
+        0 -> 0
+        _ ->Enum.count(matches)/word_count
+      end
+    end
+
     def id(%{id: id}) do
       id
     end

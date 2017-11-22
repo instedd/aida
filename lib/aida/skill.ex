@@ -10,6 +10,9 @@ defprotocol Aida.Skill do
   @spec can_handle?(skill :: t, msg :: Message.t) :: boolean
   def can_handle?(skill, msg)
 
+  @spec confidence(skill :: t, msg :: Message.t) :: non_neg_integer
+  def confidence(skill, msg)
+
   @spec respond(skill :: t, msg :: Message.t) :: Message.t
   def respond(skill, message)
 
