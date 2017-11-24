@@ -23,12 +23,8 @@ defmodule Aida.Skill.LanguageDetector do
       |> Message.put_session("language", matching_languages(message, skill.languages) |> List.first)
     end
 
-    def can_handle?(%{languages: languages}, message) do
-      !Enum.empty?(matching_languages(message, languages))
-    end
-
     def matching_languages(message, languages) do
-      Message.content(message)
+      Message.curated_message(message)
       |> String.split
       |> Enum.reduce([], fn(word, acc) ->
         match = Map.keys(languages) |> Enum.find(fn(language) ->
@@ -42,8 +38,17 @@ defmodule Aida.Skill.LanguageDetector do
       end)
     end
 
-    def confidence(%{keywords: keywords}, message) do
-      0
+    def confidence(%{languages: languages}, message) do
+      words_in_message = Message.content(message)
+      |> String.split
+
+      matches = matching_languages(message, languages)
+
+      word_count = Enum.count(words_in_message)
+      case word_count do
+        0 -> 0
+        _ ->Enum.count(matches)/word_count
+      end
     end
 
     def id(_) do

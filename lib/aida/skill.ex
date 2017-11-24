@@ -7,9 +7,6 @@ defprotocol Aida.Skill do
   @spec clarify(skill :: t, msg :: Message.t) :: Message.t
   def clarify(skill, msg)
 
-  @spec can_handle?(skill :: t, msg :: Message.t) :: boolean
-  def can_handle?(skill, msg)
-
   @spec confidence(skill :: t, msg :: Message.t) :: non_neg_integer
   def confidence(skill, msg)
 
@@ -18,4 +15,5 @@ defprotocol Aida.Skill do
 
   @spec id(skill :: t) :: String.t
   def id(skill)
+
 end

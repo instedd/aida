@@ -49,4 +49,8 @@ defmodule Aida.Message do
   def language(message) do
     get_session(message, "language")
   end
+
+  def curated_message(message) do
+    String.replace(Message.content(message), ~r/\p{P}/, "")
+  end
 end

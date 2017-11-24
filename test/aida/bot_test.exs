@@ -47,12 +47,29 @@ defmodule Aida.BotTest do
       ]
     end
 
-    test "replies with clarification when message matches more than one skill", %{bot: bot} do
+    test "replies with clarification when message matches more than one skill and similar confidence", %{bot: bot} do
       response = bot |> Bot.chat(Message.new("Hi!"))
       output = bot |> Bot.chat(Message.new("food hours", response.session))
       assert output.reply == [
         "I'm not sure exactly what you need.",
         "For menu options, write 'menu'",
+        "For opening hours say 'hours'"
+      ]
+    end
+
+    test "replies with the skill with more confidence when message matches more than one skill", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!"))
+      output = bot |> Bot.chat(Message.new("Want time food hours", response.session))
+      assert output.reply == [
+        "We are open every day from 7pm to 11pm"
+      ]
+    end
+
+    test "replies with clarification when message matches only one skill but with low confidence", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!"))
+      output = bot |> Bot.chat(Message.new("I want to know the opening hours for this restaurant", response.session))
+      assert output.reply == [
+        "I'm not sure exactly what you need.",
         "For opening hours say 'hours'"
       ]
     end
@@ -117,6 +134,16 @@ defmodule Aida.BotTest do
       assert output.reply == @language_selection_speech
 
       input2 = Message.new("Quiero hablar en español por favor")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @spanish_restaurant_greet
+    end
+
+    test "selects language when the user sends 'español' followed by a question mark", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("Puedo hablar en español?")
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
     end

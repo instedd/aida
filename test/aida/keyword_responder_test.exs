@@ -59,6 +59,15 @@ defmodule Aida.KeywordResponderTest do
       assert confidence == 0
     end
 
+    test "returns 0 when there is no match", %{bot: bot} do
+      message = Message.new("message that says a lot of different words")
+      |> Message.put_session("language", "en")
+
+      confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
+
+      assert confidence == 0
+    end
+
     test "replies with the proper confidence when there is more than 1 match", %{bot: bot} do
       message = Message.new("message that says hours and also says time")
       |> Message.put_session("language", "en")

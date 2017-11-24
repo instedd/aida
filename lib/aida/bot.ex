@@ -68,20 +68,36 @@ defmodule Aida.Bot do
   end
 
   defp handle(bot, message) do
-    skills = bot.skills
-    |> Enum.filter(fn(skill) ->
-      Skill.can_handle?(skill, message)
+    skills_by_confidence = bot.skills
+    |> Enum.map(fn(skill) ->
+      confidence = Skill.confidence(skill, message)
+      if confidence > 0 do
+        %{"confidence" => confidence, "skill" => skill}
+      else
+        nil
+      end
     end)
 
-    case skills do
-      [skill] ->
-        Skill.respond(skill, message)
+    skills_sorted = Enum.reject(Enum.sort_by(skills_by_confidence, fn (skill) -> skill["confidence"] end, &>=/2), &is_nil/1)
+
+    case skills_sorted do
       [] ->
         message
         |> not_understood(bot)
       skills ->
-        message
-        |> clarification(bot, skills)
+        higher_confidence_skill = Enum.at(skills, 0)
+
+        difference = case Enum.count(skills) do
+          1 -> higher_confidence_skill["confidence"]
+          _ -> higher_confidence_skill["confidence"] - Enum.at(skills, 1)["confidence"]
+        end
+
+        if bot.front_desk.threshold <= difference do
+          Skill.respond(higher_confidence_skill["skill"], message)
+        else
+          message
+          |> clarification(bot, Enum.map(skills, fn(skill) -> skill["skill"] end))
+        end
     end
   end
 
@@ -93,7 +109,7 @@ defmodule Aida.Bot do
 
     case skills do
       [skill] ->
-        if Skill.can_handle?(skill, message) do
+        if Skill.confidence(skill, message) > 0 do
           Skill.respond(skill, message)
           |> greet(bot)
         else

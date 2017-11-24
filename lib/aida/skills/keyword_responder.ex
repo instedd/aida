@@ -30,16 +30,8 @@ defmodule Aida.Skill.KeywordResponder do
       message |> Message.respond(response)
     end
 
-    def can_handle?(%{keywords: keywords}, message) do
-      Message.content(message)
-      |> String.split
-      |> Enum.any?(fn(word) ->
-        Enum.member?(keywords[Message.language(message)], word)
-      end)
-    end
-
     def confidence(%{keywords: keywords}, message) do
-      words_in_message = String.replace(Message.content(message), ~r/\p{P}/, "")
+      words_in_message = Message.curated_message(message)
       |> String.split
 
       matches = words_in_message
