@@ -45,9 +45,11 @@ defmodule Aida.Skill.LanguageDetector do
       matches = matching_languages(message, languages)
 
       word_count = Enum.count(words_in_message)
-      case word_count do
-        0 -> 0
-        _ ->Enum.count(matches)/word_count
+
+      cond do
+        Message.language(message) && word_count != 1 -> 0
+        word_count == 0 -> 0
+        true -> Enum.count(matches)/word_count
       end
     end
 

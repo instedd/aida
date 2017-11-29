@@ -10,11 +10,26 @@ defmodule Aida.BotTest do
     "I can give you information about our opening hours"
   ]
 
+  @english_not_understood [
+    "Sorry, I didn't understand that",
+    "I can do a number of things",
+    "I can give you information about our menu",
+    "I can give you information about our opening hours"
+  ]
+
+  @spanish_not_understood [
+    "Perdón, no entendí lo que dijiste",
+    "Puedo ayudarte con varias cosas",
+    "Te puedo dar información sobre nuestro menu",
+    "Te puedo dar información sobre nuestro horario"
+  ]
+
   @spanish_restaurant_greet [
     "Hola, soy un bot de Restaurant",
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
-    "Te puedo dar información sobre nuestro horario"]
+    "Te puedo dar información sobre nuestro horario"
+  ]
 
   @language_selection_speech [
     "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
@@ -39,12 +54,7 @@ defmodule Aida.BotTest do
     test "replies with explanation when message not understood and is not the first message", %{bot: bot} do
       response = bot |> Bot.chat(Message.new("Hi!"))
       output = bot |> Bot.chat(Message.new("foobar", response.session))
-      assert output.reply == [
-        "Sorry, I didn't understand that",
-        "I can do a number of things",
-        "I can give you information about our menu",
-        "I can give you information about our opening hours"
-      ]
+      assert output.reply == @english_not_understood
     end
 
     test "replies with clarification when message matches more than one skill and similar confidence", %{bot: bot} do
@@ -103,7 +113,7 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("english")
+      input2 = chain_message(input, "english")
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @english_restaurant_greet
     end
@@ -113,9 +123,43 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("español")
+      input2 = chain_message(input, "español")
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
+    end
+
+    test "after selecting language it doesn't switch when a phrase includes a different one", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = chain_message(output, "español")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @spanish_restaurant_greet
+
+      input3 = chain_message(output2, "no se hablar english")
+      output3 = bot |> Bot.chat(input3)
+      assert output3.reply == @spanish_not_understood
+
+    end
+
+    test "after selecting language only switches when just the new language is received", %{bot: bot} do
+      input = Message.new("Hi!")
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = chain_message(output, "español")
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @spanish_restaurant_greet
+
+      input3 = chain_message(output2, "english")
+      output3 = bot |> Bot.chat(input3)
+      assert output3.reply == []
+
+      input4 = chain_message(output3, "hello")
+      output4 = bot |> Bot.chat(input4)
+      assert output4.reply == @english_not_understood
+
     end
 
     test "selects language when the user sends 'english' in a long sentence", %{bot: bot} do
@@ -168,5 +212,10 @@ defmodule Aida.BotTest do
       assert output2.reply == @language_selection_speech
     end
 
+  end
+
+  def chain_message(previous_message, new_content) do
+    Message.new(new_content)
+     |> Message.put_session("language", Message.language(previous_message))
   end
 end
