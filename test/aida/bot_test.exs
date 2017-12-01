@@ -113,7 +113,7 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = chain_message(input, "english")
+      input2 = Message.new("english", output.session)
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @english_restaurant_greet
     end
@@ -123,7 +123,7 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = chain_message(input, "español")
+      input2 = Message.new("español", output.session)
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
     end
@@ -133,11 +133,11 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = chain_message(output, "español")
+      input2 = Message.new("español", output.session)
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
 
-      input3 = chain_message(output2, "no se hablar english")
+      input3 = Message.new( "no se hablar english", output2.session)
       output3 = bot |> Bot.chat(input3)
       assert output3.reply == @spanish_not_understood
 
@@ -148,15 +148,15 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = chain_message(output, "español")
+      input2 = Message.new("español", output.session)
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
 
-      input3 = chain_message(output2, "english")
+      input3 = Message.new( "english", output2.session)
       output3 = bot |> Bot.chat(input3)
       assert output3.reply == []
 
-      input4 = chain_message(output3, "hello")
+      input4 = Message.new( "hello", output3.session)
       output4 = bot |> Bot.chat(input4)
       assert output4.reply == @english_not_understood
 
@@ -207,15 +207,10 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("eu quero falar português")
+      input2 = Message.new("eu quero falar português", output.session)
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @language_selection_speech
     end
 
-  end
-
-  def chain_message(previous_message, new_content) do
-    Message.new(new_content)
-     |> Message.put_session("language", Message.language(previous_message))
   end
 end
