@@ -25,7 +25,7 @@ defmodule AidaWeb.BotControllerTest do
     "response" => @valid_localized_string
   }
   @valid_manifest %{
-    "version" => 1,
+    "version" => "1",
     "languages" => ["en"],
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
@@ -34,7 +34,7 @@ defmodule AidaWeb.BotControllerTest do
   }
 
   @updated_manifest %{
-    "version" => 1,
+    "version" => "1",
     "languages" => ["es"],
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],

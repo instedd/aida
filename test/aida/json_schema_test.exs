@@ -45,7 +45,7 @@ defmodule Aida.JsonSchemaTest do
     "access_token": "qwertyuiopasdfghjklzxcvbnm"
   })
   @valid_manifest ~s({
-    "version" : 1,
+    "version" : "1",
     "languages" : ["en"],
     "front_desk" : #{@valid_front_desk},
     "skills" : [
@@ -113,6 +113,12 @@ defmodule Aida.JsonSchemaTest do
     end)
   end
 
+  defp assert_valid_enum(thing, valid_value, type) do
+    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+      !Enum.member?(validation_result, {"Value #{inspect valid_value} is not allowed in enum.", [thing]})
+    end)
+  end
+
   defp assert_max(json_thing, thing, max_value, type) do
     validate(json_thing, type, fn(validation_result) ->
       validation_result
@@ -129,7 +135,8 @@ defmodule Aida.JsonSchemaTest do
 
   test "manifest_v1" do
     assert_required("version", :manifest_v1)
-    assert_enum("version", 2, :manifest_v1)
+    assert_enum("version", "2", :manifest_v1)
+    assert_valid_enum("type", "1", :manifest_v1)
     assert_required("languages", :manifest_v1)
     assert_required("skills", :manifest_v1)
     assert_required("variables", :manifest_v1)
@@ -154,6 +161,7 @@ defmodule Aida.JsonSchemaTest do
 
   test "keyword_responder" do
     assert_enum("type", "foo", :keyword_responder)
+    assert_valid_enum("type", "keyword_responder", :keyword_responder)
     assert_required("type", :keyword_responder)
     assert_required("explanation", :keyword_responder)
     assert_required("clarification", :keyword_responder)
@@ -168,6 +176,7 @@ defmodule Aida.JsonSchemaTest do
 
   test "language_detector" do
     assert_enum("type", "foo", :language_detector)
+    assert_valid_enum("type", "language_detector", :language_detector)
     assert_required("type", :language_detector)
     assert_required("explanation", :language_detector)
     assert_required("languages", :language_detector)
@@ -237,6 +246,7 @@ defmodule Aida.JsonSchemaTest do
 
   test "facebook_channel" do
     assert_enum("type", "foo", :facebook_channel)
+    assert_valid_enum("type", "facebook", :facebook_channel)
     assert_required("type", :facebook_channel)
     assert_required("page_id", :facebook_channel)
     assert_required("verify_token", :facebook_channel)
