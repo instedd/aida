@@ -27,6 +27,11 @@ defmodule Aida.JsonSchemaTest do
     "keywords": #{@valid_localized_keywords},
     "response": #{@valid_localized_string}
   })
+  @valid_language_detector ~s({
+    "type": "language_detector",
+    "explanation": "",
+    "languages": #{@valid_localized_keywords}
+  })
   @valid_variable ~s({
     "name": "",
     "values": {
@@ -43,7 +48,10 @@ defmodule Aida.JsonSchemaTest do
     "version" : 1,
     "languages" : ["en"],
     "front_desk" : #{@valid_front_desk},
-    "skills" : [#{@valid_keyword_responder}],
+    "skills" : [
+      #{@valid_keyword_responder},
+      #{@valid_language_detector}
+    ],
     "variables" : [],
     "channels" : [#{@valid_facebook_channel}]
   })
@@ -158,8 +166,21 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:keyword_responder)
   end
 
+  test "language_detector" do
+    assert_enum("type", "foo", :language_detector)
+    assert_required("type", :language_detector)
+    assert_required("explanation", :language_detector)
+    assert_required("languages", :language_detector)
+
+    @valid_language_detector
+    |> assert_valid(:language_detector)
+  end
+
   test "skill" do
     @valid_keyword_responder
+    |> assert_valid(:skill)
+
+    @valid_language_detector
     |> assert_valid(:skill)
 
     ~s({})
