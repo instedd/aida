@@ -1,5 +1,15 @@
 defmodule Aida.BotParser do
-  alias Aida.{Bot, FrontDesk, Skill, Skill.KeywordResponder, Skill.LanguageDetector, Variable, Channel.Facebook}
+  alias Aida.{
+    Bot,
+    FrontDesk,
+    Skill,
+    Skill.KeywordResponder,
+    Skill.LanguageDetector,
+    Skill.ScheduledMessages,
+    DelayedMessage,
+    Variable,
+    Channel.Facebook
+  }
 
   @spec parse(id :: String.t, manifest :: map) :: {atom, Bot.t}
   def parse(id, manifest) do
@@ -48,6 +58,22 @@ defmodule Aida.BotParser do
       name: skill["name"],
       keywords: skill["keywords"],
       response: skill["response"]
+    }
+  end
+
+  defp parse_skill(%{"type" => "scheduled_messages"} = skill) do
+    %ScheduledMessages{
+      id: skill["id"],
+      name: skill["name"],
+      schedule_type: skill["schedule_type"],
+      messages: skill["messages"] |> Enum.map(&parse_delayed_message/1)
+    }
+  end
+
+  defp parse_delayed_message(message) do
+    %DelayedMessage{
+      delay: message["delay"],
+      message: message["message"]
     }
   end
 

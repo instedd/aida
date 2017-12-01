@@ -1,12 +1,12 @@
 defmodule Aida.Skill.LanguageDetector do
-  alias Aida.{Bot, Message}
+  alias Aida.Message
 
   @type t :: %__MODULE__{
-    explanation: Bot.message,
+    explanation: String.t(),
     languages: %{}
   }
 
-  defstruct explanation: %{},
+  defstruct explanation: "",
             languages: %{}
 
   defimpl Aida.Skill, for: __MODULE__ do

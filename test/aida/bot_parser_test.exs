@@ -1,6 +1,15 @@
 defmodule Aida.BotParserTest do
   use ExUnit.Case
-  alias Aida.{Bot, BotParser, FrontDesk, Skill.KeywordResponder, Variable}
+  alias Aida.{
+    Bot,
+    BotParser,
+    FrontDesk,
+    Skill.KeywordResponder,
+    Skill.LanguageDetector,
+    Skill.ScheduledMessages,
+    DelayedMessage,
+    Variable
+  }
   alias Aida.Channel.Facebook
 
   @uuid "f905a698-310f-473f-b2d0-00d30ad58b0c"
@@ -32,7 +41,7 @@ defmodule Aida.BotParserTest do
         }
       },
       skills: [
-        %Aida.Skill.LanguageDetector{
+        %LanguageDetector{
           explanation: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
           languages: %{
             "en" => ["english", "inglés"],
@@ -78,6 +87,20 @@ defmodule Aida.BotParserTest do
             "en" => "We are open every day from 7pm to 11pm",
             "es" => "Abrimos todas las noches de 19 a 23"
           }
+        },
+        %ScheduledMessages{
+          id: "inactivity_check",
+          name: "Inactivity Check",
+          schedule_type: "since_last_incoming_message",
+          messages: [
+            %DelayedMessage{
+              delay: "2880",
+              message: %{
+                "en" => "Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?",
+                "es" => "Hola! Hace 2 días que no sé nada de vos, ¿puedo ayudarte en algo?"
+              }
+            }
+          ]
         }
       ],
       variables: [
