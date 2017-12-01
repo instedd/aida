@@ -27,6 +27,17 @@ defmodule Aida.JsonSchemaTest do
     "keywords": #{@valid_localized_keywords},
     "response": #{@valid_localized_string}
   })
+  @valid_delayed_message ~s({
+    "delay": "1",
+    "message": #{@valid_localized_string}
+  })
+  @valid_scheduled_messages ~s({
+    "type": "scheduled_messages",
+    "id": "2",
+    "name": "",
+    "schedule_type": "since_last_incoming_message",
+    "messages": [#{@valid_delayed_message}]
+  })
   @valid_language_detector ~s({
     "type": "language_detector",
     "explanation": "",
@@ -50,6 +61,7 @@ defmodule Aida.JsonSchemaTest do
     "front_desk" : #{@valid_front_desk},
     "skills" : [
       #{@valid_keyword_responder},
+      #{@valid_scheduled_messages},
       #{@valid_language_detector}
     ],
     "variables" : [],
@@ -174,6 +186,29 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:keyword_responder)
   end
 
+  test "scheduled_messages" do
+    assert_enum("type", "foo", :scheduled_messages)
+    assert_valid_enum("type", "scheduled_messages", :scheduled_messages)
+    assert_required("type", :scheduled_messages)
+    assert_required("schedule_type", :scheduled_messages)
+    assert_valid_enum("schedule_type", "since_last_incoming_message", :since_last_incoming_message)
+    assert_enum("schedule_type", "foo", :scheduled_messages)
+    assert_required("messages", :scheduled_messages)
+    assert_required("name", :scheduled_messages)
+    assert_required("id", :scheduled_messages)
+
+    @valid_scheduled_messages
+    |> assert_valid(:scheduled_messages)
+  end
+
+  test "delayed_message" do
+    assert_required("delay", :delayed_message)
+    assert_required("message", :delayed_message)
+
+    @valid_delayed_message
+    |> assert_valid(:delayed_message)
+  end
+
   test "language_detector" do
     assert_enum("type", "foo", :language_detector)
     assert_valid_enum("type", "language_detector", :language_detector)
@@ -190,6 +225,9 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:skill)
 
     @valid_language_detector
+    |> assert_valid(:skill)
+
+    @valid_scheduled_messages
     |> assert_valid(:skill)
 
     ~s({})
