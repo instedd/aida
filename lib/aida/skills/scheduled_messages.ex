@@ -1,11 +1,10 @@
 defmodule Aida.Skill.ScheduledMessages do
-  alias __MODULE__
 
   @type t :: %__MODULE__{
     id: String.t(),
     name: String.t(),
     schedule_type: String.t(),
-    messages: [DelayedMessage.t()]
+    messages: [Aida.DelayedMessage.t()]
   }
 
   defstruct id: "",
