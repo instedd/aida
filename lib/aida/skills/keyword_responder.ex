@@ -26,7 +26,7 @@ defmodule Aida.Skill.KeywordResponder do
       message |> Message.respond(clarification)
     end
 
-    def respond(%{response: response}, message) do
+    def put_response(%{response: response}, message) do
       message |> Message.respond(response)
     end
 

@@ -1,4 +1,5 @@
 defmodule Aida.BotTest do
+  use Aida.DataCase
   alias Aida.{BotParser, Bot, Message}
   use ExUnit.Case
 
