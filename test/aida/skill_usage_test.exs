@@ -21,11 +21,11 @@ defmodule Aida.SkillUsageTest do
     test "stores an interaction per message", %{bot: bot} do
       input = Message.new("english")
       output = bot |> Bot.chat(input)
-      assert Enum.count(DB.list_skill_usage()) == 1
+      assert Enum.count(DB.list_skill_usages()) == 1
 
       input2 = Message.new("español", output.session)
       bot |> Bot.chat(input2)
-      assert Enum.count(DB.list_skill_usage()) == 2
+      assert Enum.count(DB.list_skill_usages()) == 2
     end
   end
 end

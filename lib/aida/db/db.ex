@@ -158,7 +158,7 @@ defmodule Aida.DB do
     :ok
   end
 
-  def list_skill_usage do
+  def list_skill_usages do
     Repo.all(SkillUsage)
   end
 
