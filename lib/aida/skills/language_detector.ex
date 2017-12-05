@@ -18,7 +18,7 @@ defmodule Aida.Skill.LanguageDetector do
       message
     end
 
-    def respond(skill, message) do
+    def put_response(skill, message) do
       message
       |> Message.put_session("language", matching_languages(message, skill.languages) |> List.first)
     end

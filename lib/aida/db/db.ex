@@ -7,7 +7,7 @@ defmodule Aida.DB do
   alias Aida.Repo
   alias Aida.PubSub
 
-  alias Aida.DB.{Bot, Session}
+  alias Aida.DB.{Bot, SkillUsage, Session}
 
   @doc """
   Returns the list of bots.
@@ -156,5 +156,49 @@ defmodule Aida.DB do
       |> Repo.delete_all
 
     :ok
+  end
+
+  def list_skill_usage do
+    Repo.all(SkillUsage)
+  end
+
+  @doc """
+  Creates a skill_usage.
+
+  ## Examples
+
+      iex> create_skill_usage(%{field: value})
+      {:ok, %SkillUsage{}}
+
+      iex> create_skill_usage(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_skill_usage(attrs \\ %{}) do
+    result = %SkillUsage{}
+    |> SkillUsage.changeset(attrs)
+    |> Repo.insert()
+
+    result
+  end
+
+  @doc """
+  Updates a skill_usage.
+
+  ## Examples
+
+      iex> update_skill_usage(skill_usage, %{field: new_value})
+      {:ok, %SkillUsage{}}
+
+      iex> update_skill_usage(skill_usage, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_skill_usage(%SkillUsage{} = skill_usage, attrs) do
+    result = skill_usage
+    |> SkillUsage.changeset(attrs)
+    |> Repo.update()
+
+    result
   end
 end
