@@ -1,9 +1,8 @@
 defmodule Aida.BotTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message}
+  alias Aida.{BotParser, Bot, Message, DB, Skill, TestChannel, Session, SessionStore}
   use ExUnit.Case
 
-  @bot_id "486d6622-225a-42c6-864b-5457687adc30"
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
     "I can do a number of things",
@@ -41,7 +40,8 @@ defmodule Aida.BotTest do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
         |> Poison.decode!
         |> Map.put("languages", ["en"])
-      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(bot.id, manifest)
 
       %{bot: bot}
     end
@@ -98,7 +98,8 @@ defmodule Aida.BotTest do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest.json")
         |> Poison.decode!
-      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(bot.id, manifest)
 
       %{bot: bot}
     end
@@ -153,14 +154,13 @@ defmodule Aida.BotTest do
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
 
-      input3 = Message.new( "english", output2.session)
+      input3 = Message.new("english", output2.session)
       output3 = bot |> Bot.chat(input3)
       assert output3.reply == []
 
-      input4 = Message.new( "hello", output3.session)
+      input4 = Message.new("hello", output3.session)
       output4 = bot |> Bot.chat(input4)
       assert output4.reply == @english_not_understood
-
     end
 
     test "selects language when the user sends 'english' in a long sentence", %{bot: bot} do
@@ -212,6 +212,148 @@ defmodule Aida.BotTest do
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @language_selection_speech
     end
+  end
 
+  describe "scheduled bot" do
+    setup do
+      SessionStore.start_link
+
+      manifest = File.read!("test/fixtures/valid_manifest.json")
+        |> Poison.decode!
+
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(bot.id, manifest)
+      {:ok, bot} = Bot.init(bot)
+
+      %{bot: bot}
+    end
+
+    test "sends a message after 3 days", %{bot: bot} do
+      channel = TestChannel.new(fn(messages, recipient) ->
+        assert messages == ["Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?"]
+        assert recipient == "1234"
+      end)
+      bot = %{bot | channels: [channel]}
+
+      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("english", output.session)
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+
+      Session.save(output2.session)
+
+      # set the last message time to 3 days back so it falls into the schedule
+      DB.create_skill_usage(%{
+        bot_id: bot.id,
+        user_id: "1234",
+        last_usage: Timex.shift(DateTime.utc_now(), days: -3),
+        skill_id: (hd(bot.skills) |> Skill.id()),
+        user_generated: true
+      })
+
+      # force the recurrent function timer so it sends the scheduled message now and we don't have to wait
+      Bot.wake_up(bot, "inactivity_check")
+    end
+
+    test "sends a message after a month", %{bot: bot} do
+      channel = TestChannel.new(fn(messages, recipient) ->
+        assert messages == ["Hey, I didn’t hear from you for the last month, is there anything I can help you with?"]
+        assert recipient == "1234"
+      end)
+      bot = %{bot | channels: [channel]}
+
+      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("english", output.session)
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+
+      Session.save(output2.session)
+
+      # set the last message time to 3 days back so it falls into the schedule
+      DB.create_skill_usage(%{
+        bot_id: bot.id,
+        user_id: "1234",
+        last_usage: Timex.shift(DateTime.utc_now(), month: -2),
+        skill_id: (hd(bot.skills) |> Skill.id()),
+        user_generated: true
+      })
+
+      # force the recurrent function timer so it sends the scheduled message now and we don't have to wait
+      Bot.wake_up(bot, "inactivity_check")
+    end
+
+    test "doesn't send a message if the timer is not yet overdue", %{bot: bot} do
+      channel = TestChannel.new(fn(_messages, _recipient) ->
+        # if the message is sent we did something wrong
+        assert false
+      end)
+      bot = %{bot | channels: [channel]}
+
+      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("english", output.session)
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+
+      Session.save(output2.session)
+
+      # set the last message time to now so it doesn't fall into the schedule
+      DB.create_skill_usage(%{
+        bot_id: bot.id,
+        user_id: "1234",
+        last_usage: DateTime.utc_now(),
+        skill_id: (hd(bot.skills) |> Skill.id()),
+        user_generated: true
+      })
+
+      # force the recurrent function timer so it sends the scheduled message now and we don't have to wait
+      Bot.wake_up(bot, "inactivity_check")
+    end
+
+    test "doesn't send a message if the reminder has already been sent", %{bot: bot} do
+      channel = TestChannel.new(fn(_messages, _recipient) ->
+        # if the message is sent we did something wrong
+        assert false
+      end)
+      bot = %{bot | channels: [channel]}
+
+      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      input2 = Message.new("english", output.session)
+      output2 = bot |> Bot.chat(input2)
+      assert output2.reply == @english_restaurant_greet
+
+      Session.save(output2.session)
+
+      DB.create_skill_usage(%{
+        bot_id: bot.id,
+        user_id: "1234",
+        last_usage: Timex.shift(DateTime.utc_now(), days: -3),
+        skill_id: (hd(bot.skills) |> Skill.id()),
+        user_generated: true
+      })
+
+      # set the reminder as sent
+      DB.create_skill_usage(%{
+        bot_id: bot.id,
+        user_id: "1234",
+        last_usage: Timex.shift(DateTime.utc_now(), days: -1),
+        skill_id: "inactivity_check",
+        user_generated: false
+      })
+
+      # force the recurrent function timer so it sends the scheduled message now and we don't have to wait
+      Bot.wake_up(bot, "inactivity_check")
+    end
   end
 end

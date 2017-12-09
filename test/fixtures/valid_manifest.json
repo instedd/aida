@@ -86,10 +86,24 @@
       "schedule_type": "since_last_incoming_message",
       "messages": [
         {
+          "delay": "1440",
+          "message": {
+            "en": "Hey, I didn’t hear from you for the last day, is there anything I can help you with?",
+            "es": "Hola! Desde ayer que no sé nada de vos, ¿puedo ayudarte en algo?"
+          }
+        },
+        {
           "delay": "2880",
           "message": {
             "en": "Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?",
             "es": "Hola! Hace 2 días que no sé nada de vos, ¿puedo ayudarte en algo?"
+          }
+        },
+        {
+          "delay": "43200",
+          "message": {
+            "en": "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
+            "es": "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"
           }
         }
       ]

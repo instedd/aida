@@ -19,6 +19,11 @@ defprotocol Aida.Skill do
   @spec respond(skill :: t, msg :: Message.t) :: Message.t
   defdelegate respond(skill, message), to: Aida.Utils
 
+  @spec init(skill :: t, bot :: Aida.Bot.t) :: t
+  def init(skill, bot)
+
+  @spec wake_up(skill :: t, bot :: Aida.Bot.t) :: :ok
+  def wake_up(skill, bot)
 end
 
 defmodule Aida.Utils do

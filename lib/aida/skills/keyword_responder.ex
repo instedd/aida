@@ -18,6 +18,14 @@ defmodule Aida.Skill.KeywordResponder do
             response: %{}
 
   defimpl Aida.Skill, for: __MODULE__ do
+    def init(skill, _bot) do
+      skill
+    end
+
+    def wake_up(_skill, _bot) do
+      :ok
+    end
+
     def explain(%{explanation: explanation}, message) do
       message |> Message.respond(explanation)
     end

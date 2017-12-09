@@ -99,11 +99,15 @@ defmodule Aida.Channel.Facebook do
       |> Plug.Conn.send_resp(200, "ok")
     end
 
+    def type(_) do
+      "facebook"
+    end
+
     def handle_message(channel, message) do
       text = message["message"]["text"]
       recipient_id = message["recipient"]["id"]
       sender_id = message["sender"]["id"]
-      session_id = "facebook/#{recipient_id}/#{sender_id}"
+      session_id = "#{type(channel)}/#{recipient_id}/#{sender_id}"
 
       case text do
         "##RESET" ->

@@ -20,6 +20,22 @@ defmodule Aida.Bot do
             variables: [],
             channels: []
 
+  @spec init(bot :: t) :: {:ok, t}
+  def init(bot) do
+    skills = bot.skills
+    |> Enum.map(fn(skill) ->
+      Skill.init(skill, bot)
+    end)
+
+    {:ok, %{bot | skills: skills}}
+  end
+
+  @spec wake_up(bot :: t, skill_id :: String.t) :: :ok
+  def wake_up(%Bot{} = bot, skill_id) do
+    find_skill(bot, skill_id)
+    |> Skill.wake_up(bot)
+  end
+
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
     cond do
@@ -125,5 +141,18 @@ defmodule Aida.Bot do
 
   defp is_language_detector?(_)do
     false
+  end
+
+  def find_skill(bot, skill_id) do
+    skills = bot.skills
+    |> Enum.filter(fn(skill) ->
+      Skill.id(skill) == skill_id
+    end)
+
+    case skills do
+      [skill] -> skill
+      [] -> Logger.info "Skill not found #{skill_id}"
+      _ -> Logger.info "Duplicated skill id #{skill_id}"
+    end
   end
 end
