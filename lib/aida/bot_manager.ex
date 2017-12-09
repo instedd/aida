@@ -71,6 +71,15 @@ defmodule Aida.BotManager do
     {:noreply, state}
   end
 
+  def handle_info({:bot_wake_up, bot_id, skill_id}, state) do
+    case @table |> :ets.lookup(bot_id) do
+      [{_id, bot}] ->
+        Bot.wake_up(bot, skill_id)
+      _ -> :not_found
+    end
+    {:noreply, state}
+  end
+
   defp parse_bot(db_bot) do
     BotParser.parse(db_bot.id, db_bot.manifest)
   end
@@ -83,6 +92,7 @@ defmodule Aida.BotManager do
   end
   defp start_bot(bot) do
     stop_bot(bot.id)
+    {:ok, bot} = Bot.init(bot)
     @table |> :ets.insert({bot.id, bot})
     bot.channels |> Enum.each(&Channel.start/1)
   end

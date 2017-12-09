@@ -58,5 +58,4 @@ defmodule Aida.SessionStore do
 
     {:reply, result, state}
   end
-
 end

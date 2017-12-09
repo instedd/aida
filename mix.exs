@@ -49,6 +49,7 @@ defmodule Aida.Mixfile do
       {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
       {:ex_json_schema, "~> 0.5.5"},
       {:cors_plug, "~> 1.4"},
+      {:timex, "~> 3.0", override: true},
     ]
   end
 

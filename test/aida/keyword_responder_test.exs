@@ -76,9 +76,7 @@ defmodule Aida.KeywordResponderTest do
 
       assert confidence == 2/8
     end
-
   end
-
 
   def get_confidence_from_skill_id(skills, message, id) do
     skills = skills
@@ -93,5 +91,4 @@ defmodule Aida.KeywordResponderTest do
         assert false
     end
   end
-
 end
