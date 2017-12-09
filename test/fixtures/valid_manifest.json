@@ -109,101 +109,101 @@
       ]
     },
     {
-    "type": "survey",
-    "id": "food_preferences",
-    "name": "Food Preferences",
-    "schedule": "2017-12-15 14:30:00",
-    "questions": [
-      {
-        "type": "select_one",
-        "choices": "yes_no",
-        "name": "opt_in",
-        "message": {
-          "en": "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
-          "es": "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+      "type": "survey",
+      "id": "food_preferences",
+      "name": "Food Preferences",
+      "schedule": "2017-12-15 14:30:00",
+      "questions": [
+        {
+          "type": "select_one",
+          "choices": "yes_no",
+          "name": "opt_in",
+          "message": {
+            "en": "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
+            "es": "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+          }
+        },
+        {
+          "type": "integer",
+          "name": "age",
+          "message": {
+            "en": "How old are you?",
+            "es": "Que edad tenés?"
+          }
+        },
+        {
+          "type": "decimal",
+          "name": "wine_temp",
+          "message": {
+            "en": "At what temperature do your like red wine the best?",
+            "es": "A qué temperatura preferís tomar el vino tinto?"
+          }
+        },
+        {
+          "type": "select_many",
+          "name": "wine_grapes",
+          "choices": "grapes",
+          "message": {
+            "en": "What are your favorite wine grapes?",
+            "es": "Que variedades de vino preferís?"
+          }
+        },
+        {
+          "type": "text",
+          "name": "request",
+          "message": {
+            "en": "Any particular requests for your dinner?",
+            "es": "Algún pedido especial para tu cena?"
+          }
         }
-      },
-      {
-        "type": "integer",
-        "name": "age",
-        "message": {
-          "en": "How old are you?",
-          "es": "Que edad tenés?"
+      ],
+      "choice_lists": [
+        {
+          "name": "yes_no",
+          "choices": [
+            {
+              "name":"yes",
+              "keywords": {
+                "en": ["Yes","Sure","Ok"],
+                "es": ["Si","OK","Dale"]
+              }
+            },
+            {
+              "name":"no",
+              "keywords": {
+                "en": ["No","Nope","Later"],
+                "es": ["No","Luego","Nop"]
+              }
+            }
+          ]
+        },
+        {
+          "name": "grapes",
+          "choices": [
+            {
+              "name":"merlot",
+              "keywords": {
+                "en": ["merlot"],
+                "es": ["merlot"]
+              }
+            },
+            {
+              "name":"syrah",
+              "keywords": {
+                "en": ["syrah"],
+                "es": ["syrah"]
+              }
+            },
+            {
+              "name":"malbec",
+              "keywords": {
+                "en": ["malbec"],
+                "es": ["malbec"]
+              }
+            }
+          ]
         }
-      },
-      {
-        "type": "decimal",
-        "name": "wine_temp",
-        "message": {
-          "en": "At what temperature do your like red wine the best?",
-          "es": "A qué temperatura preferís tomar el vino tinto?"
-        }
-      },
-      {
-        "type": "select_many",
-        "name": "wine_grapes",
-        "message": {
-          "en": "What are your favorite wine grapes?",
-          "es": "Que variedades de vino preferís?"
-        }
-      },
-      {
-        "type": "text",
-        "name": "request",
-        "message": {
-          "en": "Any particular requests for your dinner?",
-          "es": "Algún pedido especial para tu cena?"
-        }
-      }
-
-    ],
-    "choice_lists": [
-      {
-        "name": "yes_no",
-        "choices": [
-          {
-            "name":"yes",
-            "labels": {
-              "en": ["Yes","Sure","Ok"],
-              "es": ["Si","OK","Dale"]
-            }
-          },
-          {
-            "name":"no",
-            "labels": {
-              "en": ["No","Nope","Later"],
-              "es": ["No","Luego","Nop"]
-            }
-          }  
-        ]
-      },
-      {
-        "name": "grapes",
-        "choices": [
-          {
-            "name":"merlot",
-            "labels": {
-              "en": ["merlot"],
-              "es": ["merlot"]
-            }
-          },
-          {
-            "name":"syrah",
-            "labels": {
-              "en": ["syrah"],
-              "es": ["syrah"]
-            }
-          },
-          {
-            "name":"malbec",
-            "labels": {
-              "en": ["malbec"],
-              "es": ["malbec"]
-            }
-          }  
-        ]
-      }
-    ]
+      ]
     }
   ],
   "variables": [

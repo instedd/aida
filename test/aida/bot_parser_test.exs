@@ -7,6 +7,11 @@ defmodule Aida.BotParserTest do
     Skill.KeywordResponder,
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
+    Skill.Survey,
+    SelectQuestion,
+    InputQuestion,
+    ChoiceList,
+    Choice,
     DelayedMessage,
     Variable
   }
@@ -113,6 +118,102 @@ defmodule Aida.BotParserTest do
                 "en" => "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
                 "es" => "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"
               }
+            }
+          ]
+        },
+        %Survey{
+          id: "food_preferences",
+          name: "Food Preferences",
+          schedule: "2017-12-15 14:30:00",
+          questions: [
+            %SelectQuestion{
+              name: "opt_in",
+              type: "select_one",
+              choices: "yes_no",
+              message: %{
+                "en" => "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
+                "es" => "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+              }
+            },
+            %InputQuestion{
+              name: "age",
+              type: "integer",
+              message: %{
+                "en" => "How old are you?",
+                "es" => "Que edad tenés?"
+              }
+            },
+            %InputQuestion{
+              name: "wine_temp",
+              type: "decimal",
+              message: %{
+                "en" => "At what temperature do your like red wine the best?",
+                "es" => "A qué temperatura preferís tomar el vino tinto?"
+                }
+              },
+            %SelectQuestion{
+              name: "wine_grapes",
+              type: "select_many",
+              choices: "grapes",
+              message: %{
+                "en" => "What are your favorite wine grapes?",
+                "es" => "Que variedades de vino preferís?"
+              }
+            },
+            %InputQuestion{
+              name: "request",
+              type: "text",
+              message: %{
+                "en" => "Any particular requests for your dinner?",
+                "es" => "Algún pedido especial para tu cena?"
+              }
+            }
+          ],
+          choice_lists: [
+            %ChoiceList{
+              name: "yes_no",
+              choices: [
+                %Choice{
+                  name: "yes",
+                  keywords: %{
+                    "en" => ["Yes", "Sure", "Ok"],
+                    "es" => ["Si", "OK", "Dale"]
+                  }
+                },
+                %Choice{
+                  name: "no",
+                  keywords: %{
+                    "en" => ["No", "Nope", "Later"],
+                    "es" => ["No", "Luego", "Nop"]
+                  }
+                }
+              ]
+            },
+            %ChoiceList{
+              name: "grapes",
+              choices: [
+                %Choice{
+                  name: "merlot",
+                  keywords: %{
+                    "en" => ["merlot"],
+                    "es" => ["merlot"]
+                  }
+                },
+                %Choice{
+                  name: "syrah",
+                  keywords: %{
+                    "en" => ["syrah"],
+                    "es" => ["syrah"]
+                  }
+                },
+                %Choice{
+                  name: "malbec",
+                  keywords: %{
+                    "en" => ["malbec"],
+                    "es" => ["malbec"]
+                  }
+                }
+              ]
             }
           ]
         }

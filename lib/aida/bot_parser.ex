@@ -6,7 +6,12 @@ defmodule Aida.BotParser do
     Skill.KeywordResponder,
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
+    Skill.Survey,
     DelayedMessage,
+    SelectQuestion,
+    InputQuestion,
+    ChoiceList,
+    Choice,
     Variable,
     Channel.Facebook
   }
@@ -70,10 +75,57 @@ defmodule Aida.BotParser do
     }
   end
 
+  defp parse_skill(%{"type" => "survey"} = skill) do
+    %Survey{
+      id: skill["id"],
+      name: skill["name"],
+      schedule: skill["schedule"],
+      questions: skill["questions"] |> Enum.map(&parse_survey_question/1),
+      choice_lists: skill["choice_lists"] |> Enum.map(&parse_survey_choice_list/1)
+    }
+  end
+
   defp parse_delayed_message(message) do
     %DelayedMessage{
       delay: message["delay"],
       message: message["message"]
+    }
+  end
+
+  defp parse_survey_question(%{"type" => "select_one"} = question) do
+    parse_select_survey_question(question)
+  end
+  defp parse_survey_question(%{"type" => "select_many"} = question) do
+    parse_select_survey_question(question)
+  end
+  defp parse_survey_question(question) do
+    %InputQuestion{
+      type: question["type"],
+      name: question["name"],
+      message: question["message"]
+    }
+  end
+
+  defp parse_select_survey_question(question) do
+    %SelectQuestion{
+      type: question["type"],
+      choices: question["choices"],
+      name: question["name"],
+      message: question["message"]
+    }
+  end
+
+  defp parse_survey_choice_list(choice_list) do
+    %ChoiceList{
+      name: choice_list["name"],
+      choices: choice_list["choices"] |> Enum.map(&parse_survey_choice/1)
+    }
+  end
+
+  defp parse_survey_choice(choice) do
+    %Choice{
+      name: choice["name"],
+      keywords: choice["keywords"]
     }
   end
 
