@@ -59,7 +59,8 @@
       "oneOf": [
         {"$ref": "#/definitions/keyword_responder"},
         {"$ref": "#/definitions/language_detector"},
-        {"$ref": "#/definitions/scheduled_messages"}
+        {"$ref": "#/definitions/scheduled_messages"},
+        {"$ref": "#/definitions/survey"}
       ]
     },
 
@@ -114,6 +115,81 @@
       },
       "additionalProperties": false,
       "required": ["delay", "message"]
+    },
+
+    "survey": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["survey"]},
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "schedule": {"type": "string"},
+        "questions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/definitions/question"}
+        },
+        "choice_lists": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/choice_list"}
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "id", "name", "schedule", "questions", "choice_lists"]
+    },
+
+    "question": {
+      "oneOf": [
+        {"$ref": "#/definitions/select_question"},
+        {"$ref": "#/definitions/input_question"}
+      ]
+    },
+
+    "select_question": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["select_one", "select_many"]},
+        "name": {"type": "string"},
+        "choices": {"type": "string"},
+        "message": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["type", "name", "choices", "message"]
+    },
+
+    "input_question": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["integer", "decimal", "text"]},
+        "name": {"type": "string"},
+        "message": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["type", "name", "message"]
+    },
+
+    "choice_list": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "choices": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/definitions/choice"}
+        }
+      },
+      "additionalProperties": false,
+      "required": ["name", "choices"]
+    },
+
+    "choice": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "keywords": {"$ref": "#/definitions/localized_keywords"}
+      },
+      "additionalProperties": false,
+      "required": ["name", "keywords"]
     },
 
     "channel": {
