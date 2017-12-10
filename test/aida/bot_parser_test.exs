@@ -124,7 +124,7 @@ defmodule Aida.BotParserTest do
         %Survey{
           id: "food_preferences",
           name: "Food Preferences",
-          schedule: "2017-12-15 14:30:00",
+          schedule: ~N[2017-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
           questions: [
             %SelectQuestion{
               name: "opt_in",
