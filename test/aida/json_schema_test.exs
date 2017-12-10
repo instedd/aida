@@ -43,6 +43,33 @@ defmodule Aida.JsonSchemaTest do
     "explanation": "",
     "languages": #{@valid_localized_keywords}
   })
+  @valid_choice ~s({
+    "name": "",
+    "labels": #{@valid_localized_keywords}
+  })
+  @valid_choice_list ~s({
+    "name": "",
+    "choices": [#{@valid_choice}]
+  })
+  @valid_select_question ~s({
+    "type": "select_one",
+    "choices": "",
+    "name": "",
+    "message": #{@valid_localized_string}
+  })
+  @valid_input_question ~s({
+    "type": "integer",
+    "name": "",
+    "message": #{@valid_localized_string}
+  })
+  @valid_survey ~s({
+    "type": "survey",
+    "id": "2",
+    "name": "",
+    "schedule": "",
+    "questions": [#{@valid_input_question}],
+    "choice_lists": []
+  })
   @valid_variable ~s({
     "name": "",
     "values": {
@@ -62,7 +89,8 @@ defmodule Aida.JsonSchemaTest do
     "skills" : [
       #{@valid_keyword_responder},
       #{@valid_scheduled_messages},
-      #{@valid_language_detector}
+      #{@valid_language_detector},
+      #{@valid_survey}
     ],
     "variables" : [],
     "channels" : [#{@valid_facebook_channel}]
@@ -94,6 +122,12 @@ defmodule Aida.JsonSchemaTest do
     validate(~s({}), type, fn(validation_result) ->
       validation_result
       |> Enum.member?({"Expected a minimum of 1 properties but got 0", []})
+    end)
+  end
+
+  defp assert_empty_array(thing, type) do
+    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
+      !Enum.member?(validation_result, {"Expected a minimum of 1 items but got 0.", [thing]})
     end)
   end
 
@@ -194,6 +228,8 @@ defmodule Aida.JsonSchemaTest do
     assert_enum("schedule_type", "foo", :scheduled_messages)
     assert_valid_enum("schedule_type", "since_last_incoming_message", :since_last_incoming_message)
     assert_required("messages", :scheduled_messages)
+    assert_array("messages", :scheduled_messages)
+    reject_empty_array("messages", :scheduled_messages)
     assert_required("name", :scheduled_messages)
     assert_required("id", :scheduled_messages)
 
@@ -220,6 +256,79 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:language_detector)
   end
 
+  test "survey" do
+    assert_enum("type", "foo", :survey)
+    assert_valid_enum("type", "survey", :survey)
+    assert_required("type", :survey)
+    assert_required("schedule", :survey)
+    assert_required("name", :survey)
+    assert_required("id", :survey)
+    assert_required("questions", :survey)
+    reject_empty_array("questions", :survey)
+    assert_array("questions", :survey)
+    assert_required("choice_lists", :survey)
+    assert_array("choice_lists", :survey)
+    assert_empty_array("choice_lists", :survey)
+
+    @valid_survey
+    |> assert_valid(:survey)
+  end
+
+  test "input_question" do
+    assert_required("type", :input_question)
+    assert_enum("type", "foo", :input_question)
+    assert_valid_enum("type", "integer", :input_question)
+    assert_valid_enum("type", "decimal", :input_question)
+    assert_valid_enum("type", "text", :input_question)
+    assert_required("name", :input_question)
+    assert_required("message", :input_question)
+
+    @valid_input_question
+    |> assert_valid(:input_question)
+  end
+
+  test "select_question" do
+    assert_required("type", :select_question)
+    assert_enum("type", "foo", :select_question)
+    assert_valid_enum("type", "select_one", :select_question)
+    assert_valid_enum("type", "select_many", :select_question)
+    assert_required("choices", :select_question)
+    assert_required("name", :select_question)
+    assert_required("message", :select_question)
+
+    @valid_select_question
+    |> assert_valid(:select_question)
+  end
+
+  test "choice" do
+    assert_required("name", :choice)
+    assert_required("labels", :choice)
+
+    @valid_choice
+    |> assert_valid(:choice)
+  end
+
+  test "choice_list" do
+    assert_required("name", :choice_list)
+    assert_required("choices", :choice_list)
+    reject_empty_array("choices", :choice_list)
+    assert_array("choices", :choice_list)
+
+    @valid_choice_list
+    |> assert_valid(:choice_list)
+  end
+
+  test "question" do
+    @valid_input_question
+    |> assert_valid(:question)
+
+    @valid_select_question
+    |> assert_valid(:question)
+
+    ~s({})
+    |> reject_sub_type(:question)
+  end
+
   test "skill" do
     @valid_keyword_responder
     |> assert_valid(:skill)
@@ -228,6 +337,9 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:skill)
 
     @valid_scheduled_messages
+    |> assert_valid(:skill)
+
+    @valid_survey
     |> assert_valid(:skill)
 
     ~s({})

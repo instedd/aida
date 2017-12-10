@@ -125,7 +125,7 @@ defmodule Aida.BotParser do
   defp parse_survey_choice(choice) do
     %Choice{
       name: choice["name"],
-      keywords: choice["keywords"]
+      labels: choice["labels"]
     }
   end
 
