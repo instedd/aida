@@ -112,7 +112,7 @@
       "type": "survey",
       "id": "food_preferences",
       "name": "Food Preferences",
-      "schedule": "2017-12-15 14:30:00",
+      "schedule": "2017-12-10T01:40:13Z",
       "questions": [
         {
           "type": "select_one",

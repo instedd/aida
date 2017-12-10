@@ -76,10 +76,11 @@ defmodule Aida.BotParser do
   end
 
   defp parse_skill(%{"type" => "survey"} = skill) do
+    {:ok, schedule, _} = skill["schedule"] |> DateTime.from_iso8601()
     %Survey{
       id: skill["id"],
       name: skill["name"],
-      schedule: skill["schedule"],
+      schedule: schedule,
       questions: skill["questions"] |> Enum.map(&parse_survey_question/1),
       choice_lists: skill["choice_lists"] |> Enum.map(&parse_survey_choice_list/1)
     }
