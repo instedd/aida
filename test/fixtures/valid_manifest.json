@@ -163,14 +163,14 @@
           "choices": [
             {
               "name":"yes",
-              "keywords": {
+              "labels": {
                 "en": ["Yes","Sure","Ok"],
                 "es": ["Si","OK","Dale"]
               }
             },
             {
               "name":"no",
-              "keywords": {
+              "labels": {
                 "en": ["No","Nope","Later"],
                 "es": ["No","Luego","Nop"]
               }
@@ -182,21 +182,21 @@
           "choices": [
             {
               "name":"merlot",
-              "keywords": {
+              "labels": {
                 "en": ["merlot"],
                 "es": ["merlot"]
               }
             },
             {
               "name":"syrah",
-              "keywords": {
+              "labels": {
                 "en": ["syrah"],
                 "es": ["syrah"]
               }
             },
             {
               "name":"malbec",
-              "keywords": {
+              "labels": {
                 "en": ["malbec"],
                 "es": ["malbec"]
               }

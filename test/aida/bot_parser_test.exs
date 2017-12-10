@@ -175,14 +175,14 @@ defmodule Aida.BotParserTest do
               choices: [
                 %Choice{
                   name: "yes",
-                  keywords: %{
+                  labels: %{
                     "en" => ["Yes", "Sure", "Ok"],
                     "es" => ["Si", "OK", "Dale"]
                   }
                 },
                 %Choice{
                   name: "no",
-                  keywords: %{
+                  labels: %{
                     "en" => ["No", "Nope", "Later"],
                     "es" => ["No", "Luego", "Nop"]
                   }
@@ -194,21 +194,21 @@ defmodule Aida.BotParserTest do
               choices: [
                 %Choice{
                   name: "merlot",
-                  keywords: %{
+                  labels: %{
                     "en" => ["merlot"],
                     "es" => ["merlot"]
                   }
                 },
                 %Choice{
                   name: "syrah",
-                  keywords: %{
+                  labels: %{
                     "en" => ["syrah"],
                     "es" => ["syrah"]
                   }
                 },
                 %Choice{
                   name: "malbec",
-                  keywords: %{
+                  labels: %{
                     "en" => ["malbec"],
                     "es" => ["malbec"]
                   }

@@ -1,10 +1,10 @@
 defmodule Aida.Choice do
   @type t :: %__MODULE__{
     name: String.t(),
-    keywords: %{}
+    labels: %{}
   }
 
   defstruct name: "",
-            keywords: %{}
+            labels: %{}
 
 end

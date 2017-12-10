@@ -186,10 +186,10 @@
       "type": "object",
       "properties": {
         "name": {"type": "string"},
-        "keywords": {"$ref": "#/definitions/localized_keywords"}
+        "labels": {"$ref": "#/definitions/localized_keywords"}
       },
       "additionalProperties": false,
-      "required": ["name", "keywords"]
+      "required": ["name", "labels"]
     },
 
     "channel": {
