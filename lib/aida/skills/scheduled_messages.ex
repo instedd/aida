@@ -22,8 +22,8 @@ defmodule Aida.Skill.ScheduledMessages do
     message = skill.messages
     |> Enum.min_by(fn(message) -> message.delay end)
 
-    delay = (String.to_integer(message.delay) / 2)
     delay = [delay, 6*60] |> Enum.min()
+    delay = (div(String.to_integer(message.delay), 2))
     delay = [delay, 20] |> Enum.max()
 
     :timer.minutes(delay)
