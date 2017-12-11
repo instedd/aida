@@ -10,7 +10,6 @@ defmodule Aida.BotParserTest do
     Skill.Survey,
     SelectQuestion,
     InputQuestion,
-    ChoiceList,
     Choice,
     DelayedMessage,
     Variable
@@ -134,7 +133,22 @@ defmodule Aida.BotParserTest do
             %SelectQuestion{
               name: "opt_in",
               type: "select_one",
-              choices: "yes_no",
+              choices: [
+                %Choice{
+                  name: "yes",
+                  labels: %{
+                    "en" => ["Yes", "Sure", "Ok"],
+                    "es" => ["Si", "OK", "Dale"]
+                  }
+                },
+                %Choice{
+                  name: "no",
+                  labels: %{
+                    "en" => ["No", "Nope", "Later"],
+                    "es" => ["No", "Luego", "Nop"]
+                  }
+                }
+              ],
               message: %{
                 "en" => "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
                 "es" => "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
@@ -159,43 +173,6 @@ defmodule Aida.BotParserTest do
             %SelectQuestion{
               name: "wine_grapes",
               type: "select_many",
-              choices: "grapes",
-              message: %{
-                "en" => "What are your favorite wine grapes?",
-                "es" => "Que variedades de vino preferís?"
-              }
-            },
-            %InputQuestion{
-              name: "request",
-              type: "text",
-              message: %{
-                "en" => "Any particular requests for your dinner?",
-                "es" => "Algún pedido especial para tu cena?"
-              }
-            }
-          ],
-          choice_lists: [
-            %ChoiceList{
-              name: "yes_no",
-              choices: [
-                %Choice{
-                  name: "yes",
-                  labels: %{
-                    "en" => ["Yes", "Sure", "Ok"],
-                    "es" => ["Si", "OK", "Dale"]
-                  }
-                },
-                %Choice{
-                  name: "no",
-                  labels: %{
-                    "en" => ["No", "Nope", "Later"],
-                    "es" => ["No", "Luego", "Nop"]
-                  }
-                }
-              ]
-            },
-            %ChoiceList{
-              name: "grapes",
               choices: [
                 %Choice{
                   name: "merlot",
@@ -218,7 +195,19 @@ defmodule Aida.BotParserTest do
                     "es" => ["malbec"]
                   }
                 }
-              ]
+              ],
+              message: %{
+                "en" => "What are your favorite wine grapes?",
+                "es" => "Que variedades de vino preferís?"
+              }
+            },
+            %InputQuestion{
+              name: "request",
+              type: "text",
+              message: %{
+                "en" => "Any particular requests for your dinner?",
+                "es" => "Algún pedido especial para tu cena?"
+              }
             }
           ]
         }

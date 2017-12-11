@@ -10,7 +10,6 @@ defmodule Aida.BotParser do
     DelayedMessage,
     SelectQuestion,
     InputQuestion,
-    ChoiceList,
     Choice,
     Variable,
     Channel.Facebook
@@ -80,13 +79,14 @@ defmodule Aida.BotParser do
 
   defp parse_skill(%{"type" => "survey"} = skill, bot_id) do
     {:ok, schedule, _} = skill["schedule"] |> DateTime.from_iso8601()
+    choice_lists = skill["choice_lists"] |> Enum.map(&parse_survey_choice_list/1) |> Enum.into(%{})
+
     %Survey{
       id: skill["id"],
       bot_id: bot_id,
       name: skill["name"],
       schedule: schedule,
-      questions: skill["questions"] |> Enum.map(&parse_survey_question/1),
-      choice_lists: skill["choice_lists"] |> Enum.map(&parse_survey_choice_list/1)
+      questions: skill["questions"] |> Enum.map(&(parse_survey_question(&1, choice_lists)))
     }
   end
 
@@ -97,13 +97,15 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_survey_question(%{"type" => "select_one"} = question) do
-    parse_select_survey_question(question)
+  defp parse_survey_question(%{"type" => "select_one"} = question, choice_lists) do
+    parse_select_survey_question(question, choice_lists)
   end
-  defp parse_survey_question(%{"type" => "select_many"} = question) do
-    parse_select_survey_question(question)
+
+  defp parse_survey_question(%{"type" => "select_many"} = question, choice_lists) do
+    parse_select_survey_question(question, choice_lists)
   end
-  defp parse_survey_question(question) do
+
+  defp parse_survey_question(question, _) do
     %InputQuestion{
       type: question["type"],
       name: question["name"],
@@ -111,19 +113,19 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_select_survey_question(question) do
+  defp parse_select_survey_question(question, choice_lists) do
     %SelectQuestion{
       type: question["type"],
-      choices: question["choices"],
+      choices: choice_lists[question["choices"]],
       name: question["name"],
       message: question["message"]
     }
   end
 
   defp parse_survey_choice_list(choice_list) do
-    %ChoiceList{
-      name: choice_list["name"],
-      choices: choice_list["choices"] |> Enum.map(&parse_survey_choice/1)
+    {
+      choice_list["name"],
+      choice_list["choices"] |> Enum.map(&parse_survey_choice/1)
     }
   end
 

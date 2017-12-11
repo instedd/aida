@@ -5,16 +5,14 @@ defmodule Aida.Skill.Survey do
     bot_id: String.t(),
     name: String.t(),
     schedule: String.t(),
-    questions: [Aida.SelectQuestion.t() | Aida.InputQuestion.t()],
-    choice_lists: [Aida.ChoiceList.t()]
+    questions: [Aida.SelectQuestion.t() | Aida.InputQuestion.t()]
   }
 
   defstruct id: "",
             bot_id: "",
             name: "",
             schedule: "",
-            questions: [],
-            choice_lists: []
+            questions: []
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, _bot) do
