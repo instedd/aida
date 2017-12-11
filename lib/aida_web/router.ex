@@ -9,7 +9,7 @@ defmodule AidaWeb.Router do
     pipe_through :api
     resources "/bots", BotController, except: [:new, :edit]
     get "/version", VersionController, :version
-    get "/stats/users_per_period", SkillUsageController, :users_per_period
+    get "/stats/usage_summary", SkillUsageController, :usage_summary
     get "/stats/users_per_skill", SkillUsageController, :users_per_skill
   end
 

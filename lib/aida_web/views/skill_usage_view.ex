@@ -2,8 +2,8 @@ defmodule AidaWeb.SkillUsageView do
   use AidaWeb, :view
   alias AidaWeb.SkillUsageView
 
-  def render("users_per_period.json", %{users_count: users_count}) do
-    %{active_users: users_count}
+  def render("usage_summary.json", %{users_count: users_count, messages_sent: messages_sent, messages_received: messages_received}) do
+    %{active_users: users_count, messages_sent: messages_sent, messages_received: messages_received}
   end
 
   def render("users_per_skill.json", %{skills: skills}) do

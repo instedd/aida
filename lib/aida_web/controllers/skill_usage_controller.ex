@@ -5,9 +5,9 @@ defmodule AidaWeb.SkillUsageController do
   # alias Aida.DB.Bot
   # alias Aida.JsonSchema
 
-  def users_per_period(conn, %{"bot_id" => bot_id, "period" => period}) do
+  def usage_summary(conn, %{"bot_id" => bot_id, "period" => period}) do
     skill_usages = DB.list_skill_usages()
-    render(conn, "users_per_period.json", users_count: Enum.count(skill_usages))
+    render(conn, "usage_summary.json", users_count: Enum.count(skill_usages), messages_sent: 22, messages_received: 55)
   end
 
   def users_per_skill(conn, %{"bot_id" => bot_id, "period" => period}) do
