@@ -7,6 +7,7 @@ defmodule Aida.Skill.LanguageDetector do
   }
 
   defstruct explanation: "",
+            bot_id: "",
             languages: %{}
 
   defimpl Aida.Skill, for: __MODULE__ do

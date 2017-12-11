@@ -13,6 +13,7 @@ defmodule Aida.Skill.KeywordResponder do
   defstruct explanation: %{},
             clarification: %{},
             id: "",
+            bot_id: "",
             name: "",
             keywords: %{},
             response: %{}

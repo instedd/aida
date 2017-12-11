@@ -22,7 +22,7 @@ defmodule Aida.BotParser do
       id: id,
       languages: manifest["languages"],
       front_desk: parse_front_desk(manifest["front_desk"]),
-      skills: manifest["skills"] |> Enum.map(&parse_skill/1),
+      skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
       variables: manifest["variables"] |> Enum.map(&parse_variable/1),
       channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
     }
@@ -48,16 +48,18 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_skill(%{"type" => "language_detector"} = skill) do
+  defp parse_skill(%{"type" => "language_detector"} = skill, bot_id) do
     %LanguageDetector{
       explanation: skill["explanation"],
+      bot_id: bot_id,
       languages: skill["languages"]
     }
   end
 
-  defp parse_skill(%{"type" => "keyword_responder"} = skill) do
+  defp parse_skill(%{"type" => "keyword_responder"} = skill, bot_id) do
     %KeywordResponder{
       explanation: skill["explanation"],
+      bot_id: bot_id,
       clarification: skill["clarification"],
       id: skill["id"],
       name: skill["name"],
@@ -66,9 +68,10 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_skill(%{"type" => "scheduled_messages"} = skill) do
+  defp parse_skill(%{"type" => "scheduled_messages"} = skill, bot_id) do
     %ScheduledMessages{
       id: skill["id"],
+      bot_id: bot_id,
       name: skill["name"],
       schedule_type: skill["schedule_type"],
       messages: skill["messages"] |> Enum.map(&parse_delayed_message/1)

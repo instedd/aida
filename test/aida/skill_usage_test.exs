@@ -1,13 +1,11 @@
 defmodule Aida.SkillUsageTest do
   use Aida.DataCase
   alias Aida.{BotParser, Bot, Message}
-  # alias Aida.DB.SkillUsage
   alias Aida.DB
 
   use ExUnit.Case
 
   @bot_id "486d6622-225a-42c6-864b-5457687adc30"
-
 
   describe "multiple languages bot" do
     setup do
@@ -18,7 +16,7 @@ defmodule Aida.SkillUsageTest do
       %{bot: bot}
     end
 
-    test "stores an interaction per message", %{bot: bot} do
+    test "stores an interaction per sent message", %{bot: bot} do
       input = Message.new("english")
       output = bot |> Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 1
@@ -27,5 +25,18 @@ defmodule Aida.SkillUsageTest do
       bot |> Bot.chat(input2)
       assert Enum.count(DB.list_skill_usages()) == 2
     end
+
+    test "stores an interaction per sent message with the proper data", %{bot: bot} do
+      input = Message.new("english")
+      bot |> Bot.chat(input)
+      skill_usage = Enum.at(DB.list_skill_usages(),0)
+
+      assert skill_usage.user_id == input.session.id
+      assert skill_usage.bot_id == bot.id
+      assert Ecto.Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
+      assert skill_usage.skill_id == "language_detector"
+      assert skill_usage.user_generated == true
+    end
+
   end
 end

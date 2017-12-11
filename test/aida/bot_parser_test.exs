@@ -48,6 +48,7 @@ defmodule Aida.BotParserTest do
       skills: [
         %LanguageDetector{
           explanation: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+          bot_id: @uuid,
           languages: %{
             "en" => ["english", "inglés"],
             "es" => ["español", "spanish"]
@@ -63,6 +64,7 @@ defmodule Aida.BotParserTest do
             "es" => "Para información sobre nuestro menu, escribe 'menu'"
           },
           id: "this is a string id",
+          bot_id: @uuid,
           name: "Food menu",
           keywords: %{
             "en" => ["menu", "food"],
@@ -83,6 +85,7 @@ defmodule Aida.BotParserTest do
             "es" => "Para información sobre nuestro horario escribe 'horario'"
           },
           id: "this is a different id",
+          bot_id: @uuid,
           name: "Opening hours",
           keywords: %{
             "en" => ["hours","time"],
@@ -95,6 +98,7 @@ defmodule Aida.BotParserTest do
         },
         %ScheduledMessages{
           id: "inactivity_check",
+          bot_id: @uuid,
           name: "Inactivity Check",
           schedule_type: "since_last_incoming_message",
           messages: [

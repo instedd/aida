@@ -12,6 +12,7 @@ defmodule Aida.Skill.ScheduledMessages do
   }
 
   defstruct id: "",
+            bot_id: "",
             name: "",
             schedule_type: "",
             messages: []
