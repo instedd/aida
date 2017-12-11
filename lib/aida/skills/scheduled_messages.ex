@@ -29,6 +29,31 @@ defmodule Aida.Skill.ScheduledMessages do
     :timer.minutes(delay)
   end
 
+  def send_message(bot, skill, session_id, last_usage) do
+    {_, skill_message} = skill.messages
+    |> Enum.map(fn(message) ->
+      {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
+    end)
+    |> Enum.filter(fn({deadline, _message}) ->
+      DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
+    end)
+    |> Enum.min_by(fn({deadline, _message}) -> deadline end)
+
+    # TODO: we need to find the correct channel and sent the message through there
+    # Maybe storing the latest skill usage with the channel id or type?
+    # Use the first one for now
+    channel = bot.channels |> hd()
+
+    SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
+
+    session = Session.load(session_id)
+    message = Message.new("", session)
+    message = Skill.put_response(skill_message, message)
+
+    user_id = session_id |> String.split("/") |> List.last
+    channel |> Channel.send_message(message.reply, user_id)
+  end
+
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, bot) do
       Process.send_after(self(), {:bot_wake_up, bot.id, skill.id}, ScheduledMessages.delay(skill))
@@ -74,42 +99,15 @@ defmodule Aida.Skill.ScheduledMessages do
 
       never_reminded
       |> Enum.each(fn({user, last_usage}) ->
-        send_message(bot, skill, user, last_usage)
+        ScheduledMessages.send_message(bot, skill, user, last_usage)
       end)
 
       due_reminder
       |> Enum.each(fn({user, last_usage, _last_reminder}) ->
-        send_message(bot, skill, user, last_usage)
+        ScheduledMessages.send_message(bot, skill, user, last_usage)
       end)
 
       :ok
-    end
-
-    def send_message(bot, skill, user_id, last_usage) do
-      {_, skill_message} = skill.messages
-      |> Enum.map(fn(message) ->
-        {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
-      end)
-      |> Enum.filter(fn({deadline, _message}) ->
-        DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
-      end)
-      |> Enum.min_by(fn({deadline, _message}) -> deadline end)
-
-      # TODO: we need to find the correct channel and sent the message through there
-      # Maybe storing the latest skill usage with the channel id or type?
-      # Use the first one for now
-      channel = bot.channels |> hd()
-
-      session = Session.load("#{Channel.type(channel)}/#{bot.id}/#{user_id}")
-
-      message = Message.new("", session)
-
-      SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), message.session.id, false)
-
-      message = put_response(skill_message, message)
-
-      channel
-      |> Channel.send_message(message.reply, user_id)
     end
 
     def explain(%{}, message) do

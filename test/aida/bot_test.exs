@@ -235,7 +235,7 @@ defmodule Aida.BotTest do
       end)
       bot = %{bot | channels: [channel]}
 
-      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      input = Message.new("Hi!", Session.new("test/foo/1234"))
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -246,9 +246,9 @@ defmodule Aida.BotTest do
       Session.save(output2.session)
 
       # set the last message time to 3 days back so it falls into the schedule
-      DB.create_skill_usage(%{
+      DB.create_or_update_skill_usage(%{
         bot_id: bot.id,
-        user_id: "1234",
+        user_id: "test/foo/1234",
         last_usage: Timex.shift(DateTime.utc_now(), days: -3),
         skill_id: (hd(bot.skills) |> Skill.id()),
         user_generated: true
@@ -265,7 +265,7 @@ defmodule Aida.BotTest do
       end)
       bot = %{bot | channels: [channel]}
 
-      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      input = Message.new("Hi!", Session.new("test/foo/1234"))
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -276,9 +276,9 @@ defmodule Aida.BotTest do
       Session.save(output2.session)
 
       # set the last message time to 3 days back so it falls into the schedule
-      DB.create_skill_usage(%{
+      DB.create_or_update_skill_usage(%{
         bot_id: bot.id,
-        user_id: "1234",
+        user_id: "test/foo/1234",
         last_usage: Timex.shift(DateTime.utc_now(), month: -2),
         skill_id: (hd(bot.skills) |> Skill.id()),
         user_generated: true
@@ -295,7 +295,7 @@ defmodule Aida.BotTest do
       end)
       bot = %{bot | channels: [channel]}
 
-      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      input = Message.new("Hi!", Session.new("test/foo/1234"))
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -306,9 +306,9 @@ defmodule Aida.BotTest do
       Session.save(output2.session)
 
       # set the last message time to now so it doesn't fall into the schedule
-      DB.create_skill_usage(%{
+      DB.create_or_update_skill_usage(%{
         bot_id: bot.id,
-        user_id: "1234",
+        user_id: "test/foo/1234",
         last_usage: DateTime.utc_now(),
         skill_id: (hd(bot.skills) |> Skill.id()),
         user_generated: true
@@ -325,7 +325,7 @@ defmodule Aida.BotTest do
       end)
       bot = %{bot | channels: [channel]}
 
-      input = Message.new("Hi!", Session.new("test/#{bot.id}/1234"))
+      input = Message.new("Hi!", Session.new("test/foo/1234"))
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -335,18 +335,18 @@ defmodule Aida.BotTest do
 
       Session.save(output2.session)
 
-      DB.create_skill_usage(%{
+      DB.create_or_update_skill_usage(%{
         bot_id: bot.id,
-        user_id: "1234",
+        user_id: "test/foo/1234",
         last_usage: Timex.shift(DateTime.utc_now(), days: -3),
         skill_id: (hd(bot.skills) |> Skill.id()),
         user_generated: true
       })
 
       # set the reminder as sent
-      DB.create_skill_usage(%{
+      DB.create_or_update_skill_usage(%{
         bot_id: bot.id,
-        user_id: "1234",
+        user_id: "test/foo/1234",
         last_usage: Timex.shift(DateTime.utc_now(), days: -1),
         skill_id: "inactivity_check",
         user_generated: false
