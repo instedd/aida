@@ -25,10 +25,8 @@ defmodule Aida.DB.SkillUsage do
     |> validate_required([:bot_id, :user_id, :last_usage, :skill_id, :user_generated])
   end
 
-  def log_skill_usage(skill, message, user_generated \\ true) do
-    changeset = %{bot_id: skill.bot_id, user_id: message.session.id, last_usage: Date.utc_today(), skill_id: Skill.id(skill), user_generated: true}
-    DB.create_skill_usage(changeset)
+  def log_skill_usage(bot_id, skill_id, session_id, user_generated \\ true) do
+    changeset = %{bot_id: bot_id, user_id: session_id, last_usage: Date.utc_today(), skill_id: skill_id, user_generated: user_generated}
+    DB.create_or_update_skill_usage(changeset)
   end
 end
-
-

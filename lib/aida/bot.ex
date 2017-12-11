@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage}
   alias __MODULE__
   import Message
   @type message :: map
@@ -51,6 +51,7 @@ defmodule Aida.Bot do
 
   @spec greet(message :: Message.t, bot :: t) :: Message.t
   defp greet(%Message{} = message, bot) do
+    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
     message
     |> respond(bot.front_desk.greeting)
     |> introduction(bot)
@@ -60,6 +61,8 @@ defmodule Aida.Bot do
   defp introduction(message, bot) do
     message = message
     |> respond(bot.front_desk.introduction)
+
+    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
 
     bot.skills
     |> Enum.reduce(message, fn(skill, message) ->
@@ -71,6 +74,8 @@ defmodule Aida.Bot do
     message = message
     |> respond(bot.front_desk.clarification)
 
+    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
+
     skills
     |> Enum.reduce(message, fn(skill, message) ->
       Skill.clarify(skill, message)
@@ -78,6 +83,8 @@ defmodule Aida.Bot do
   end
 
   defp not_understood(message, bot) do
+    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
+
     message
     |> respond(bot.front_desk.not_understood)
     |> introduction(bot)
@@ -129,6 +136,7 @@ defmodule Aida.Bot do
           Skill.respond(skill, message)
           |> greet(bot)
         else
+          SkillUsage.log_skill_usage(bot.id, Aida.Skill.id(skill), message.session.id)
           Skill.explain(skill, message)
         end
       _ -> Logger.info "Error: None or more than one language_detector skills were found"

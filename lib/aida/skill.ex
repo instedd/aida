@@ -29,7 +29,7 @@ end
 defmodule Aida.Utils do
   alias Aida.DB.SkillUsage
   def respond(skill, message) do
-    SkillUsage.log_skill_usage(skill, message)
+    SkillUsage.log_skill_usage(skill.bot_id, Aida.Skill.id(skill), message.session.id)
     Aida.Skill.put_response(skill, message)
   end
 end

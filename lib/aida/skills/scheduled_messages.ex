@@ -1,6 +1,6 @@
 defmodule Aida.Skill.ScheduledMessages do
   import Ecto.Query
-  alias Aida.{Message, Repo, Channel, Session}
+  alias Aida.{Message, Repo, Channel, Session, Skill}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
@@ -104,7 +104,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
       message = Message.new("", session)
 
-      SkillUsage.log_skill_usage(skill, message, false)
+      SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), message.session.id, false)
 
       message = put_response(skill_message, message)
 

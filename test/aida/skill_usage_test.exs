@@ -16,17 +16,39 @@ defmodule Aida.SkillUsageTest do
       %{bot: bot}
     end
 
-    test "stores an interaction per sent message", %{bot: bot} do
-      input = Message.new("english")
+    test "stores an interaction per sent message when the front_desk answers", %{bot: bot} do
+      input = Message.new("Hi!")
+        |> Message.put_session("language", "en")
       output = bot |> Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 1
+    end
+
+    test "stores only one interaction per sent message for each skill", %{bot: bot} do
+      input = Message.new("english")
+      output = bot |> Bot.chat(input)
+      assert Enum.count(DB.list_skill_usages()) == 2
 
       input2 = Message.new("español", output.session)
       bot |> Bot.chat(input2)
       assert Enum.count(DB.list_skill_usages()) == 2
     end
 
-    test "stores an interaction per sent message with the proper data", %{bot: bot} do
+    test "stores one interaction per sent message for each skill", %{bot: bot} do
+      input = Message.new("english")
+      output = bot |> Bot.chat(input)
+      assert Enum.count(DB.list_skill_usages()) == 2
+
+      input2 = Message.new("español", output.session)
+      output2 = bot |> Bot.chat(input2)
+      assert Enum.count(DB.list_skill_usages()) == 2
+
+      input3 = Message.new("menu", output2.session)
+      bot |> Bot.chat(input3)
+      assert Enum.count(DB.list_skill_usages()) == 3
+
+    end
+
+    test "stores an interaction per sent message with the proper data for language_detector", %{bot: bot} do
       input = Message.new("english")
       bot |> Bot.chat(input)
       skill_usage = Enum.at(DB.list_skill_usages(),0)
@@ -35,6 +57,22 @@ defmodule Aida.SkillUsageTest do
       assert skill_usage.bot_id == bot.id
       assert Ecto.Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
       assert skill_usage.skill_id == "language_detector"
+      assert skill_usage.user_generated == true
+    end
+
+    test "stores an interaction per sent message with the proper data when the front desk answers", %{bot: bot} do
+      input = Message.new("Hi!")
+        |> Message.put_session("language", "en")
+      bot |> Bot.chat(input)
+
+      assert Enum.count(DB.list_skill_usages()) == 1
+
+      skill_usage = Enum.at(DB.list_skill_usages(),0)
+
+      assert skill_usage.user_id == input.session.id
+      assert skill_usage.bot_id == bot.id
+      assert Ecto.Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
+      assert skill_usage.skill_id == "front_desk"
       assert skill_usage.user_generated == true
     end
 

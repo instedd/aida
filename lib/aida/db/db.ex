@@ -183,6 +183,26 @@ defmodule Aida.DB do
   end
 
   @doc """
+  Creates or updates a skill_usage.
+
+  ## Examples
+
+      iex> create_or_update_skill_usage(%{field: value})
+      {:ok, %SkillUsage{}}
+
+      iex> create_or_update_skill_usage(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_or_update_skill_usage(attrs) do
+    result = %SkillUsage{}
+    |> SkillUsage.changeset(attrs)
+    |> Repo.insert(on_conflict: [set: [last_usage: attrs.last_usage]], conflict_target: [:bot_id, :user_id, :skill_id, :user_generated])
+
+    result
+  end
+
+  @doc """
   Updates a skill_usage.
 
   ## Examples
