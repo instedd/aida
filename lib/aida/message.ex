@@ -30,12 +30,12 @@ defmodule Aida.Message do
     %{message | reply: message.reply ++ [response]}
   end
 
-  @spec get_session(message :: t, key :: String.t) :: String.t | nil
+  @spec get_session(message :: t, key :: String.t) :: Session.value
   def get_session(%{session: session}, key) do
     Session.get(session, key)
   end
 
-  @spec put_session(message :: t, key :: String.t, value :: String.t) :: t
+  @spec put_session(message :: t, key :: String.t, value :: Session.value) :: t
   def put_session(%{session: session} = message, key, value) do
     %{message | session: Session.put(session, key, value)}
   end
@@ -45,7 +45,7 @@ defmodule Aida.Message do
     Session.is_new?(session)
   end
 
-  @spec language(message :: t) :: String.t | nil
+  @spec language(message :: t) :: Session.value
   def language(message) do
     get_session(message, "language")
   end

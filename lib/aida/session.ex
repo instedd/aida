@@ -2,11 +2,14 @@ defmodule Aida.Session do
   alias __MODULE__
   alias Aida.SessionStore
 
+  @type value :: Poison.Parser.t
+  @typep values :: %{required(String.t) => value}
   @type t :: %__MODULE__{
     id: String.t,
     is_new?: boolean,
-    values: %{required(String.t) => String.t}
+    values: values
   }
+
 
   defstruct id: nil,
             is_new?: false,
@@ -20,7 +23,7 @@ defmodule Aida.Session do
     }
   end
 
-  @spec new(id :: String.t, values :: map) :: t
+  @spec new(id :: String.t, values :: values) :: t
   def new(id, values) do
     %Session{
       id: id,
@@ -46,12 +49,12 @@ defmodule Aida.Session do
     SessionStore.delete(id)
   end
 
-  @spec get(session :: Session.t, key :: String.t) :: String.t | nil
+  @spec get(session :: Session.t, key :: String.t) :: value
   def get(%Session{values: values}, key) do
     Map.get(values, key)
   end
 
-  @spec put(session :: Session.t, key :: String.t, value :: String.t) :: t
+  @spec put(session :: Session.t, key :: String.t, value :: value) :: t
   def put(%Session{values: values} = session, key, value) do
     %{session | values: Map.put(values, key, value)}
   end
