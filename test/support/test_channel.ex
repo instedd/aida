@@ -24,7 +24,8 @@ defmodule Aida.TestChannel do
       "test"
     end
 
-    def send_message(%{send_message_assertion: send_message_assertion}, messages, recipient) do
+    def send_message(%{send_message_assertion: send_message_assertion} = channel, messages, recipient) do
+      send channel.pid, {:send_message, messages, recipient}
       send_message_assertion.(messages, recipient)
     end
   end

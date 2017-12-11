@@ -112,7 +112,7 @@
       "type": "survey",
       "id": "food_preferences",
       "name": "Food Preferences",
-      "schedule": "2017-12-10T01:40:13Z",
+      "schedule": "2117-12-10T01:40:13Z",
       "questions": [
         {
           "type": "select_one",
@@ -128,7 +128,7 @@
           "name": "age",
           "message": {
             "en": "How old are you?",
-            "es": "Que edad tenés?"
+            "es": "Qué edad tenés?"
           }
         },
         {

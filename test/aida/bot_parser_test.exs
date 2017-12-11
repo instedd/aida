@@ -128,7 +128,7 @@ defmodule Aida.BotParserTest do
           id: "food_preferences",
           bot_id: @uuid,
           name: "Food Preferences",
-          schedule: ~N[2017-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
+          schedule: ~N[2117-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
           questions: [
             %SelectQuestion{
               name: "opt_in",
@@ -159,7 +159,7 @@ defmodule Aida.BotParserTest do
               type: "integer",
               message: %{
                 "en" => "How old are you?",
-                "es" => "Que edad tenés?"
+                "es" => "Qué edad tenés?"
               }
             },
             %InputQuestion{

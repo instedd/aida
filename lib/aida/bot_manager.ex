@@ -32,6 +32,11 @@ defmodule Aida.BotManager do
     end
   end
 
+  @spec wake_up_message(bot :: Bot.t, skill :: Aida.Skill.t) :: term
+  def wake_up_message(bot, skill) do
+    {:bot_wake_up, bot.id, skill.id}
+  end
+
   def init([]) do
     @table |> :ets.new([:named_table])
     DB.list_bots
