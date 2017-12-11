@@ -1,8 +1,7 @@
 defmodule Aida.DB.SkillUsage do
   use Ecto.Schema
-  alias Aida.{DB, Skill, Message}
+  alias Aida.DB
   import Ecto.Changeset
-  alias Aida.Ecto.Type.JSON
   alias __MODULE__
   require Logger
 
@@ -11,7 +10,7 @@ defmodule Aida.DB.SkillUsage do
   schema "skill_usage" do
     field :bot_id, :binary_id
     field :user_id, :string
-    field :last_usage, Ecto.Date
+    field :last_usage, :date
     field :skill_id, :string
     field :user_generated, :boolean, default: false
 

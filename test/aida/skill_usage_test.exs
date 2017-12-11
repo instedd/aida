@@ -19,7 +19,7 @@ defmodule Aida.SkillUsageTest do
     test "stores an interaction per sent message when the front_desk answers", %{bot: bot} do
       input = Message.new("Hi!")
         |> Message.put_session("language", "en")
-      output = bot |> Bot.chat(input)
+      bot |> Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 1
     end
 
@@ -55,7 +55,7 @@ defmodule Aida.SkillUsageTest do
 
       assert skill_usage.user_id == input.session.id
       assert skill_usage.bot_id == bot.id
-      assert Ecto.Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
+      assert Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
       assert skill_usage.skill_id == "language_detector"
       assert skill_usage.user_generated == true
     end
@@ -71,7 +71,7 @@ defmodule Aida.SkillUsageTest do
 
       assert skill_usage.user_id == input.session.id
       assert skill_usage.bot_id == bot.id
-      assert Ecto.Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
+      assert Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
       assert skill_usage.skill_id == "front_desk"
       assert skill_usage.user_generated == true
     end
