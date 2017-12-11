@@ -16,9 +16,9 @@ defmodule Aida.ScheduledMessagesTest do
       assert ScheduledMessages.delay(skill) == :timer.minutes(90)
     end
 
-    test "schedules for 6hs as max value", %{skill: skill} do
-      skill = %{skill | messages: [%DelayedMessage{delay: "2880"}]}
-      assert ScheduledMessages.delay(skill) == :timer.hours(6)
+    test "schedules for 24hs as max value", %{skill: skill} do
+      skill = %{skill | messages: [%DelayedMessage{delay: "#{24*60*3}"}]}
+      assert ScheduledMessages.delay(skill) == :timer.hours(24)
     end
 
     test "schedules for 20 minutes as min value", %{skill: skill} do
