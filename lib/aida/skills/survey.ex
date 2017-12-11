@@ -2,6 +2,7 @@ defmodule Aida.Skill.Survey do
 
   @type t :: %__MODULE__{
     id: String.t(),
+    bot_id: String.t(),
     name: String.t(),
     schedule: String.t(),
     questions: [Aida.SelectQuestion.t() | Aida.InputQuestion.t()],
@@ -9,6 +10,7 @@ defmodule Aida.Skill.Survey do
   }
 
   defstruct id: "",
+            bot_id: "",
             name: "",
             schedule: "",
             questions: [],

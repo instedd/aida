@@ -5,6 +5,7 @@ defmodule Aida.Skill.KeywordResponder do
     explanation: Bot.message,
     clarification: Bot.message,
     id: String.t(),
+    bot_id: String.t(),
     name: String.t(),
     keywords: %{},
     response: %{}

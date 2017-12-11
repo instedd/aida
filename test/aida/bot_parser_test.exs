@@ -127,6 +127,7 @@ defmodule Aida.BotParserTest do
         },
         %Survey{
           id: "food_preferences",
+          bot_id: @uuid,
           name: "Food Preferences",
           schedule: ~N[2017-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
           questions: [

@@ -6,6 +6,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
   @type t :: %__MODULE__{
     id: String.t(),
+    bot_id: String.t(),
     name: String.t(),
     schedule_type: String.t(),
     messages: [Aida.DelayedMessage.t()]

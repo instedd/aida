@@ -3,6 +3,7 @@ defmodule Aida.Skill.LanguageDetector do
 
   @type t :: %__MODULE__{
     explanation: String.t(),
+    bot_id: String.t(),
     languages: %{}
   }
 
