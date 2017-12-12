@@ -30,21 +30,15 @@ defmodule Aida.Skill.ScheduledMessages do
   end
 
   def send_message(bot, skill, session_id, last_usage) do
-    messages = skill.messages
+    {_, skill_message} = skill.messages
     |> Enum.map(fn(message) ->
       {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
     end)
     |> Enum.filter(fn({deadline, _message}) ->
       DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
     end)
-
-    {_, skill_message} =
-    messages
-    |> Enum.reduce(hd(messages), fn({deadline, _message} = message, {date, _} = min) ->
-      case DateTime.compare(deadline, date) do
-        :gt -> min
-        _ -> message
-      end
+    |> Enum.min_by(fn({deadline, _message}) ->
+      DateTime.to_unix(deadline, :millisecond)
     end)
 
     # TODO: we need to find the correct channel and sent the message through there
