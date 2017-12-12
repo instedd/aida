@@ -138,5 +138,94 @@ defmodule Aida.DBTest do
       assert DB.get_session("session_1") == nil
       assert DB.get_session("session_2")
     end
+
+    test "create_or_update_skill_usage/1 updates existing skill usage with the proper last_usage" do
+      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
+      session_id = "facebook/123456789/987654321"
+      session_id_2 = "facebook/0123456789/0987654321"
+      skill_id = "language_detector"
+
+      {:ok, skill_usage} = DB.create_or_update_skill_usage(%{bot_id: bot_id, user_id: session_id, last_usage: Date.add(Date.utc_today(), -2), skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(%{bot_id: bot_id, user_id: session_id_2, last_usage: Date.add(Date.utc_today(), -2), skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(%{bot_id: bot_id, user_id: session_id, last_usage: Date.utc_today(), skill_id: skill_id, user_generated: true})
+
+      db_skill_usage = DB.get_skill_usage(skill_usage.id)
+      assert db_skill_usage.bot_id == bot_id
+      assert db_skill_usage.last_usage == Date.utc_today()
+
+      assert Enum.count(DB.list_skill_usages()) == 2
+    end
+
+    test "skill_usages_per_user_bot_and_period/2 returns the count for each skill" do
+      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
+      bot_id_2 = "13aaf183-9c29-42ee-946c-138701dbdee8"
+      session_id = "facebook/123456789/987654321"
+      session_id_2 = "facebook/123456789/0987654321"
+      session_id_3 = "facebook/123456789/1111111111"
+      skill_id = "language_detector"
+      skill_id_2 = "keyword_1"
+      skill_id_3 = "keyword_2"
+
+      {:ok, _ignored_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id,
+        last_usage: Date.add(Date.utc_today(), -9),
+        skill_id: skill_id_3, user_generated: true})
+
+      {:ok, _ignored_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id_2, user_id: session_id,
+        last_usage: Date.add(Date.utc_today(), -2),
+        skill_id: skill_id, user_generated: true})
+
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id_2,
+        last_usage: Date.add(Date.utc_today(), -7),
+        skill_id: skill_id, user_generated: true})
+
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id_2,
+        last_usage: Date.add(Date.utc_today(), -7),
+        skill_id: skill_id_3, user_generated: true})
+
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id_2,
+        last_usage: Date.add(Date.utc_today(), -2),
+        skill_id: skill_id_2, user_generated: true})
+
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id,
+        last_usage: Date.add(Date.utc_today(), -2),
+        skill_id: skill_id_2, user_generated: true})
+
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id,
+        last_usage: Date.utc_today(),
+        skill_id: skill_id, user_generated: true})
+
+      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
+        %{bot_id: bot_id, user_id: session_id_3,
+        last_usage: Date.utc_today(),
+        skill_id: skill_id, user_generated: true})
+
+
+      assert Enum.count(DB.list_skill_usages()) == 8
+
+      skill_usages_today = DB.skill_usages_per_user_bot_and_period(bot_id, "today")
+      assert Enum.count(skill_usages_today) == 1
+
+      assert skill_usages_today == [%{count: 2, skill_id: "language_detector"}]
+
+
+      skill_usages_this_week = DB.skill_usages_per_user_bot_and_period(bot_id, "this_week")
+      assert Enum.count(skill_usages_this_week) == 3
+
+      assert skill_usages_this_week == [%{count: 2, skill_id: "keyword_1"}, %{count: 1, skill_id: "keyword_2"}, %{count: 3, skill_id: "language_detector"}]
+
+
+      skill_usages_this_month = DB.skill_usages_per_user_bot_and_period(bot_id, "this_month")
+      assert Enum.count(skill_usages_this_month) == 3
+
+      assert skill_usages_this_month == [%{count: 2, skill_id: "keyword_1"}, %{count: 2, skill_id: "keyword_2"}, %{count: 3, skill_id: "language_detector"}]
+
+    end
   end
 end

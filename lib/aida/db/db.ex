@@ -163,6 +163,32 @@ defmodule Aida.DB do
   end
 
   @doc """
+  Returns the number of usages for each skill in the given period. If there is none, it returns an empty array.
+  """
+  def skill_usages_per_user_bot_and_period(bot_id, period) do
+    date = case period do
+      "today" -> Date.utc_today()
+      "this_week" -> Date.add(Date.utc_today(), -7)
+      "this_month" -> Date.add(Date.utc_today(), -28)
+      _ -> Date.add(Date.utc_today(), -28)
+    end
+
+    SkillUsage
+      |> group_by([s], [s.skill_id])
+      |> select([s], %{skill_id: s.skill_id, count: count(s.user_id)})
+      |> where([s], s.last_usage >= ^date)
+      |> where([s], s.bot_id == ^bot_id)
+      |> Repo.all()
+  end
+
+  @doc """
+  Returns the skill usage for the given id. If the skill usage does not exist, it returns `nil`.
+  """
+  def get_skill_usage(id) do
+    SkillUsage |> Repo.get(id)
+  end
+
+  @doc """
   Creates a skill_usage.
 
   ## Examples
