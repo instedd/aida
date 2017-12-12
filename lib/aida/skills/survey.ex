@@ -36,14 +36,11 @@ defmodule Aida.Skill.Survey do
   end
 
   def answer(survey, message) do
-    survey_state = message
-      |> Message.get_session(state_key(survey))
-
-    question = survey.questions
-      |> Enum.at(survey_state["step"])
-
-    message
-      |> Message.respond(question.message)
+    case current_question(survey, message) do
+      nil -> message
+      question ->
+        message |> Message.respond(question.message)
+    end
   end
 
   def state_key(survey), do: "survey/#{survey.id}"
@@ -60,7 +57,11 @@ defmodule Aida.Skill.Survey do
   def move_to_next_question(survey, message) do
     survey_state = case message |> Message.get_session(state_key(survey)) do
       %{"step" => step} = state ->
-        %{state | "step" => step + 1}
+        if step + 1 >= Enum.count(survey.questions) do
+          nil
+        else
+          %{state | "step" => step + 1}
+        end
       _ -> %{"step" => 0}
     end
 

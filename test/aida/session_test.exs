@@ -51,4 +51,34 @@ defmodule Aida.SessionTest do
       assert SessionStore.find("session_id") == %{"foo" => "bar"}
     end
   end
+
+  describe "value store" do
+    test "get" do
+      session = Session.new("session_id", %{"foo" => "bar"})
+
+      assert session |> Session.get("foo") == "bar"
+    end
+
+    test "put" do
+      session = Session.new("session_id", %{})
+      session = session |> Session.put("foo", "bar")
+
+      assert session == %Session{
+        id: "session_id",
+        is_new?: false,
+        values: %{"foo" => "bar"}
+      }
+    end
+
+    test "put nil deletes key" do
+      session = Session.new("session_id", %{"foo" => "bar"})
+      session = session |> Session.put("foo", nil)
+
+      assert session == %Session{
+        id: "session_id",
+        is_new?: false,
+        values: %{}
+      }
+    end
+  end
 end

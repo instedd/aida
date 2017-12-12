@@ -94,5 +94,14 @@ defmodule Aida.SurveyTest do
       assert message.reply == ["Any particular requests for your dinner?"]
       assert message |> Message.get_session("survey/food_preferences/wine_grapes") == ["merlot", "syrah"]
     end
+
+    test "clears the store to end the survey", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 4}})
+
+      message = Message.new("No, thanks!", session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session("survey/food_preferences") == nil
+    end
   end
 end

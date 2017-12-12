@@ -55,6 +55,10 @@ defmodule Aida.Session do
   end
 
   @spec put(session :: Session.t, key :: String.t, value :: value) :: t
+  def put(%Session{values: values} = session, key, nil) do
+    %{session | values: Map.delete(values, key)}
+  end
+
   def put(%Session{values: values} = session, key, value) do
     %{session | values: Map.put(values, key, value)}
   end
