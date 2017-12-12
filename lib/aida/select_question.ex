@@ -44,21 +44,32 @@ defmodule Aida.SelectQuestion do
     end
 
     def accept_answer(%{type: :select_one} = question, message) do
-      language = message |> Message.language()
-      response = message.content |> String.downcase
+      if question |> valid_answer?(message) do
+        language = message |> Message.language()
+        response = message.content |> String.downcase
 
-      find_choice(question.choices, response, language)
-      |> Choice.name
+        choice = find_choice(question.choices, response, language)
+        |> Choice.name
+
+        {:ok, choice}
+      else
+        :error
+      end
     end
 
     def accept_answer(%{type: :select_many} = question, message) do
-      language = message |> Message.language()
-      responses = message.content |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+      if question |> valid_answer?(message) do
+        language = message |> Message.language()
+        responses = message.content |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
 
-      responses |> Enum.map(fn(response) ->
-        find_choice(question.choices, response, language)
-        |> Choice.name
-      end)
+        choices = responses |> Enum.map(fn(response) ->
+          find_choice(question.choices, response, language)
+          |> Choice.name
+        end)
+        {:ok, choices}
+      else
+        :error
+      end
     end
   end
 end

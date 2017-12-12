@@ -73,6 +73,33 @@ defmodule Aida.SurveyQuestionTest do
       message = Message.new("foo", @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
+
+    test "accept_answer" do
+      question = %SelectQuestion{
+        type: :select_one,
+        choices: @yes_no,
+        name: "smoker",
+        message: %{
+          "en" => "do you smoke?",
+          "es" => "fumás?"
+        }
+      }
+
+      message = Message.new("Yes", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, "yes"}
+
+      message = Message.new("Sure", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, "yes"}
+
+      message = Message.new("Ok", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, "yes"}
+
+      message = Message.new("Nope", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, "no"}
+
+      message = Message.new("foo", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+    end
   end
 
   describe "select_many" do
@@ -101,6 +128,33 @@ defmodule Aida.SurveyQuestionTest do
 
       message = Message.new("merlot, foo", @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
+    end
+
+    test "accept_answer" do
+      question = %SelectQuestion{
+        type: :select_many,
+        choices: @grapes,
+        name: "grape",
+        message: %{
+          "en" => "which wine do you prefer?",
+          "es" => "qué vino te gusta?"
+        }
+      }
+
+      message = Message.new("syrah, merlot", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["syrah", "merlot"]}
+
+      message = Message.new("Cabernet suavignon, Merlot", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["cabernet suavignon", "merlot"]}
+
+      message = Message.new("foo", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+
+      message = Message.new("foo, merlot", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+
+      message = Message.new("merlot, foo", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
 
@@ -132,6 +186,26 @@ defmodule Aida.SurveyQuestionTest do
 
       message = Message.new("merlot, foo", @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
+    end
+
+    test "accept_answer" do
+      question = %InputQuestion{
+        type: :integer,
+        name: "age",
+        message: %{
+          "en" => "How old are you?",
+          "es" => "Cuántos años tenés?"
+        }
+      }
+
+      message = Message.new("123456", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, 123456}
+
+      message = Message.new("1", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, 1}
+
+      message = Message.new("-3", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
 
@@ -176,6 +250,47 @@ defmodule Aida.SurveyQuestionTest do
       message = Message.new("merlot.foo", @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
+
+    test "accept_answer" do
+      question = %InputQuestion{
+        type: :decimal,
+        name: "age",
+        message: %{
+          "en" => "How old are you?",
+          "es" => "Cuántos años tenés?"
+        }
+      }
+
+      message = Message.new("123.456", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, 123.456}
+
+      message = Message.new("1.2", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, 1.2}
+
+      message = Message.new("-3.2", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, -3.2}
+
+      message = Message.new("3", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, 3}
+
+      message = Message.new("-3", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, -3}
+
+      message = Message.new("0.1", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, 0.1}
+
+      message = Message.new(".1", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+
+      message = Message.new("-3a", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+
+      message = Message.new("foo", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+
+      message = Message.new("merlot.foo", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+    end
   end
 
   describe "text" do
@@ -194,6 +309,23 @@ defmodule Aida.SurveyQuestionTest do
 
       message = Message.new(" ", @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
+    end
+
+    test "accept_answer" do
+      question = %InputQuestion{
+        type: :text,
+        name: "age",
+        message: %{
+          "en" => "What's your name?",
+          "es" => "Cómo te llamás?"
+        }
+      }
+
+      message = Message.new("lalala llala", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, "lalala llala"}
+
+      message = Message.new(" ", @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
 end
