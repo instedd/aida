@@ -86,29 +86,27 @@ defmodule Aida.Bot do
     SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
 
     message
-    |> respond(bot.front_desk.not_understood)
-    |> introduction(bot)
+      |> respond(bot.front_desk.not_understood)
+      |> introduction(bot)
   end
 
   defp handle(bot, message) do
     skills_by_confidence = bot.skills
-    |> Enum.map(fn(skill) ->
-      confidence = Skill.confidence(skill, message)
-      case confidence do
-        :threshold ->
-          %{"confidence" => threshold(bot), "skill" => skill}
-        confidence when confidence > 0 ->
-          %{"confidence" => confidence, "skill" => skill}
-        _ -> nil
-      end
-    end)
+      |> Enum.map(fn(skill) ->
+        confidence = Skill.confidence(skill, message)
+        case confidence do
+          :threshold ->
+            %{"confidence" => threshold(bot), "skill" => skill}
+          confidence when confidence > 0 ->
+            %{"confidence" => confidence, "skill" => skill}
+          _ -> nil
+        end
+      end)
 
     skills_sorted = Enum.reject(Enum.sort_by(skills_by_confidence, fn (skill) -> skill["confidence"] end, &>=/2), &is_nil/1)
 
     case skills_sorted do
-      [] ->
-        message
-        |> not_understood(bot)
+      [] -> message |> not_understood(bot)
       skills ->
         higher_confidence_skill = Enum.at(skills, 0)
 
@@ -120,23 +118,22 @@ defmodule Aida.Bot do
         if threshold(bot) <= difference do
           Skill.respond(higher_confidence_skill["skill"], message)
         else
-          message
-          |> clarification(bot, Enum.map(skills, fn(skill) -> skill["skill"] end))
+          message |> clarification(bot, Enum.map(skills, fn(skill) -> skill["skill"] end))
         end
     end
   end
 
   defp language_detector(bot, message) do
     skills = bot.skills
-    |> Enum.filter(fn(skill) ->
-      is_language_detector?(skill)
-    end)
+      |> Enum.filter(fn(skill) ->
+        is_language_detector?(skill)
+      end)
 
     case skills do
       [skill] ->
         if Skill.confidence(skill, message) > 0 do
           Skill.respond(skill, message)
-          |> greet(bot)
+            |> greet(bot)
         else
           SkillUsage.log_skill_usage(bot.id, Aida.Skill.id(skill), message.session.id)
           Skill.explain(skill, message)
@@ -155,9 +152,9 @@ defmodule Aida.Bot do
 
   def find_skill(bot, skill_id) do
     skills = bot.skills
-    |> Enum.filter(fn(skill) ->
-      Skill.id(skill) == skill_id
-    end)
+      |> Enum.filter(fn(skill) ->
+        Skill.id(skill) == skill_id
+      end)
 
     case skills do
       [skill] -> skill

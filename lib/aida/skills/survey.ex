@@ -102,7 +102,7 @@ defmodule Aida.Skill.Survey do
         :error -> message
         {:ok, answer} ->
           Survey.move_to_next_question(survey, message)
-          |> Message.put_session(Survey.answer_key(survey, question), answer)
+            |> Message.put_session(Survey.answer_key(survey, question), answer)
       end
 
       Survey.answer(survey, message)

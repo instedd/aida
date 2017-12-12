@@ -147,6 +147,12 @@ defmodule Aida.DB do
     Session |> Repo.get(id)
   end
 
+  def sessions_by_bot(bot_id) do
+    Session
+      |> where([s], s.bot_id == ^bot_id)
+      |> Repo.all()
+  end
+
   @doc """
   Deletes the session with the given id
   """
