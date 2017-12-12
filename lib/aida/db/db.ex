@@ -147,6 +147,9 @@ defmodule Aida.DB do
     Session |> Repo.get(id)
   end
 
+  @doc """
+  Returns all the sessions for the given bot id. If there is none, it returns an empty array.
+  """
   def sessions_by_bot(_bot_id) do
     Session
       # TODO filter by bot_id
@@ -155,7 +158,7 @@ defmodule Aida.DB do
   end
 
   @doc """
-  Deletes the session with the given id
+  Deletes the session with the given id.
   """
   def delete_session(id) do
     Session
