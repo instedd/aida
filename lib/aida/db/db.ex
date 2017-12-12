@@ -165,8 +165,8 @@ defmodule Aida.DB do
   @doc """
   Returns the number of usages for each skill in the given period. If there is none, it returns an empty array.
   """
-  def skill_usages_per_user_bot_and_period(bot_id, period) do
-    date = convert_period(period)
+  def skill_usages_per_user_bot_and_period(bot_id, period, today \\ Date.utc_today()) do
+    date = convert_period(period, today)
 
     SkillUsage
       |> group_by([s], [s.skill_id])
@@ -179,8 +179,8 @@ defmodule Aida.DB do
   @doc """
   Returns the user_ids that used a specific bot in the given period. If there is none, it returns an empty array.
   """
-  def active_users_per_bot_and_period(bot_id, period) do
-    date = convert_period(period)
+  def active_users_per_bot_and_period(bot_id, period, today \\ Date.utc_today()) do
+    date = convert_period(period, today)
 
     SkillUsage
       |> distinct(true)
@@ -191,12 +191,13 @@ defmodule Aida.DB do
       |> Repo.all()
   end
 
-  defp convert_period(period) do
+  defp convert_period(period, today) do
+
     case period do
-      "today" -> Date.utc_today()
-      "this_week" -> Date.add(Date.utc_today(), -7)
-      "this_month" -> Date.add(Date.utc_today(), -28)
-      _ -> Date.add(Date.utc_today(), -28)
+      "today" -> today
+      "this_week" -> Date.add(today, -Date.day_of_week(today))
+      "this_month" -> Date.add(today, -(today.day - 1))
+      _ -> today
     end
   end
 

@@ -165,63 +165,64 @@ defmodule Aida.DBTest do
       skill_id = "language_detector"
       skill_id_2 = "keyword_1"
       skill_id_3 = "keyword_2"
+      {:ok, today} = Date.from_iso8601("2017-12-12")
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(Date.utc_today(), -9),
+        last_usage: Date.add(today, -(today.day-1)),
         skill_id: skill_id_3, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id_2, user_id: session_id,
-        last_usage: Date.add(Date.utc_today(), -2),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(Date.utc_today(), -7),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(Date.utc_today(), -7),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id_3, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(Date.utc_today(), -2),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id_2, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(Date.utc_today(), -2),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id_2, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.utc_today(),
+        last_usage: today,
         skill_id: skill_id, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_3,
-        last_usage: Date.utc_today(),
+        last_usage: today,
         skill_id: skill_id, user_generated: true})
 
 
       assert Enum.count(DB.list_skill_usages()) == 8
 
-      skill_usages_today = DB.skill_usages_per_user_bot_and_period(bot_id, "today")
+      skill_usages_today = DB.skill_usages_per_user_bot_and_period(bot_id, "today", today)
       assert Enum.count(skill_usages_today) == 1
 
       assert skill_usages_today == [%{count: 2, skill_id: "language_detector"}]
 
 
-      skill_usages_this_week = DB.skill_usages_per_user_bot_and_period(bot_id, "this_week")
+      skill_usages_this_week = DB.skill_usages_per_user_bot_and_period(bot_id, "this_week", today)
       assert Enum.count(skill_usages_this_week) == 3
 
       assert skill_usages_this_week == [%{count: 2, skill_id: "keyword_1"}, %{count: 1, skill_id: "keyword_2"}, %{count: 3, skill_id: "language_detector"}]
 
 
-      skill_usages_this_month = DB.skill_usages_per_user_bot_and_period(bot_id, "this_month")
+      skill_usages_this_month = DB.skill_usages_per_user_bot_and_period(bot_id, "this_month", today)
       assert Enum.count(skill_usages_this_month) == 3
 
       assert skill_usages_this_month == [%{count: 2, skill_id: "keyword_1"}, %{count: 2, skill_id: "keyword_2"}, %{count: 3, skill_id: "language_detector"}]
@@ -239,74 +240,75 @@ defmodule Aida.DBTest do
       skill_id = "language_detector"
       skill_id_2 = "keyword_1"
       skill_id_3 = "keyword_2"
+      {:ok, today} = Date.from_iso8601("2017-12-12")
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_4,
-        last_usage: Date.add(Date.utc_today(), -9),
+        last_usage: Date.add(today, -(today.day-1)),
         skill_id: skill_id_3, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(Date.utc_today(), -9),
+        last_usage: Date.add(today, -(today.day-1)),
         skill_id: skill_id_3, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id_2, user_id: session_id,
-        last_usage: Date.add(Date.utc_today(), -2),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(Date.utc_today(), -7),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(Date.utc_today(), -7),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id_3, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(Date.utc_today(), -2),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id_2, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(Date.utc_today(), -2),
+        last_usage: Date.add(today, -Date.day_of_week(today)),
         skill_id: skill_id_2, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.utc_today(),
+        last_usage: today,
         skill_id: skill_id, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_3,
-        last_usage: Date.utc_today(),
+        last_usage: today,
         skill_id: skill_id_2, user_generated: true})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_5,
-        last_usage: Date.utc_today(),
+        last_usage: today,
         skill_id: skill_id_2, user_generated: false})
 
       {:ok, _skill_usage} = DB.create_or_update_skill_usage(
         %{bot_id: bot_id, user_id: session_id_3,
-        last_usage: Date.utc_today(),
+        last_usage: today,
         skill_id: skill_id, user_generated: true})
 
 
       assert Enum.count(DB.list_skill_usages()) == 11
 
-      active_users_today = DB.active_users_per_bot_and_period(bot_id, "today")
+      active_users_today = DB.active_users_per_bot_and_period(bot_id, "today", today)
       assert Enum.count(active_users_today) == 2
 
 
-      active_users_this_week = DB.active_users_per_bot_and_period(bot_id, "this_week")
+      active_users_this_week = DB.active_users_per_bot_and_period(bot_id, "this_week", today)
       assert Enum.count(active_users_this_week) == 3
 
 
-      active_users_this_month = DB.active_users_per_bot_and_period(bot_id, "this_month")
+      active_users_this_month = DB.active_users_per_bot_and_period(bot_id, "this_month", today)
       assert Enum.count(active_users_this_month) == 4
     end
 
