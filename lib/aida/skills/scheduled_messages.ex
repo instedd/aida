@@ -30,14 +30,22 @@ defmodule Aida.Skill.ScheduledMessages do
   end
 
   def send_message(bot, skill, session_id, last_usage) do
-    {_, skill_message} = skill.messages
+    messages = skill.messages
     |> Enum.map(fn(message) ->
       {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
     end)
     |> Enum.filter(fn({deadline, _message}) ->
       DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
     end)
-    |> Enum.min_by(fn({deadline, _message}) -> deadline end)
+
+    {_, skill_message} =
+    messages
+    |> Enum.reduce(hd(messages), fn({deadline, _message} = message, {date, _} = min) ->
+      case DateTime.compare(deadline, date) do
+        :gt -> min
+        _ -> message
+      end
+    end)
 
     # TODO: we need to find the correct channel and sent the message through there
     # Maybe storing the latest skill usage with the channel id or type?
@@ -48,7 +56,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
     session = Session.load(session_id)
     message = Message.new("", session)
-    message = Skill.put_response(skill_message, message)
+    message = message |> Message.respond(skill_message)
 
     user_id = session_id |> String.split("/") |> List.last
     channel |> Channel.send_message(message.reply, user_id)
@@ -119,8 +127,8 @@ defmodule Aida.Skill.ScheduledMessages do
       message
     end
 
-    def put_response(skill_message, message) do
-      message |> Message.respond(skill_message)
+    def put_response(%{}, message) do
+      message
     end
 
     def confidence(%{}, _message) do
