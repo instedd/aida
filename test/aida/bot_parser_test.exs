@@ -26,7 +26,7 @@ defmodule Aida.BotParserTest do
       id: @uuid,
       languages: ["en", "es"],
       front_desk: %FrontDesk{
-        threshold: 0.7,
+        threshold: 0.3,
         greeting: %{
           "en" => "Hello, I'm a Restaurant bot",
           "es" => "Hola, soy un bot de Restaurant"
