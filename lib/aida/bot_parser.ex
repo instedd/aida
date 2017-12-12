@@ -97,26 +97,29 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_survey_question(%{"type" => "select_one"} = question, choice_lists) do
-    parse_select_survey_question(question, choice_lists)
+  defp parse_survey_question(question, choice_lists) do
+    question_type = case question["type"] do
+      "integer" -> :integer
+      "decimal" -> :decimal
+      "text" -> :text
+      "select_one" -> :select_one
+      "select_many" -> :select_many
+    end
+    parse_survey_question(question_type, question, choice_lists)
   end
 
-  defp parse_survey_question(%{"type" => "select_many"} = question, choice_lists) do
-    parse_select_survey_question(question, choice_lists)
-  end
-
-  defp parse_survey_question(question, _) do
-    %InputQuestion{
-      type: question["type"],
+  defp parse_survey_question(question_type, question, choice_lists) when question_type == :select_one or question_type == :select_many do
+    %SelectQuestion{
+      type: question_type,
+      choices: choice_lists[question["choices"]],
       name: question["name"],
       message: question["message"]
     }
   end
 
-  defp parse_select_survey_question(question, choice_lists) do
-    %SelectQuestion{
-      type: question["type"],
-      choices: choice_lists[question["choices"]],
+  defp parse_survey_question(question_type, question, _) do
+    %InputQuestion{
+      type: question_type,
       name: question["name"],
       message: question["message"]
     }

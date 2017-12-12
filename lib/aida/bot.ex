@@ -94,10 +94,12 @@ defmodule Aida.Bot do
     skills_by_confidence = bot.skills
     |> Enum.map(fn(skill) ->
       confidence = Skill.confidence(skill, message)
-      if confidence > 0 do
-        %{"confidence" => confidence, "skill" => skill}
-      else
-        nil
+      case confidence do
+        :threshold ->
+          %{"confidence" => threshold(bot), "skill" => skill}
+        confidence when confidence > 0 ->
+          %{"confidence" => confidence, "skill" => skill}
+        _ -> nil
       end
     end)
 
@@ -115,7 +117,7 @@ defmodule Aida.Bot do
           _ -> higher_confidence_skill["confidence"] - Enum.at(skills, 1)["confidence"]
         end
 
-        if bot.front_desk.threshold <= difference do
+        if threshold(bot) <= difference do
           Skill.respond(higher_confidence_skill["skill"], message)
         else
           message
@@ -162,5 +164,9 @@ defmodule Aida.Bot do
       [] -> Logger.info "Skill not found #{skill_id}"
       _ -> Logger.info "Duplicated skill id #{skill_id}"
     end
+  end
+
+  def threshold(%Bot{front_desk: front_desk}) do
+    front_desk |> FrontDesk.threshold
   end
 end

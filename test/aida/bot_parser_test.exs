@@ -132,7 +132,7 @@ defmodule Aida.BotParserTest do
           questions: [
             %SelectQuestion{
               name: "opt_in",
-              type: "select_one",
+              type: :select_one,
               choices: [
                 %Choice{
                   name: "yes",
@@ -156,7 +156,7 @@ defmodule Aida.BotParserTest do
             },
             %InputQuestion{
               name: "age",
-              type: "integer",
+              type: :integer,
               message: %{
                 "en" => "How old are you?",
                 "es" => "Qué edad tenés?"
@@ -164,7 +164,7 @@ defmodule Aida.BotParserTest do
             },
             %InputQuestion{
               name: "wine_temp",
-              type: "decimal",
+              type: :decimal,
               message: %{
                 "en" => "At what temperature do your like red wine the best?",
                 "es" => "A qué temperatura preferís tomar el vino tinto?"
@@ -172,7 +172,7 @@ defmodule Aida.BotParserTest do
               },
             %SelectQuestion{
               name: "wine_grapes",
-              type: "select_many",
+              type: :select_many,
               choices: [
                 %Choice{
                   name: "merlot",
@@ -203,7 +203,7 @@ defmodule Aida.BotParserTest do
             },
             %InputQuestion{
               name: "request",
-              type: "text",
+              type: :text,
               message: %{
                 "en" => "Any particular requests for your dinner?",
                 "es" => "Algún pedido especial para tu cena?"

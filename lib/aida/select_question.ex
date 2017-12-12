@@ -1,5 +1,5 @@
 defmodule Aida.SelectQuestion do
-  alias Aida.Message
+  alias Aida.{Message, Choice}
 
   @type t :: %__MODULE__{
     type: :select_one | :select_many,
@@ -32,15 +32,33 @@ defmodule Aida.SelectQuestion do
     end
 
     def choice_exists?(choices, response, language) do
-      choices |> Enum.any?(fn(choice) ->
+      find_choice(choices, response, language) != nil
+    end
+
+    def find_choice(choices, response, language) do
+      choices |> Enum.find(fn(choice) ->
         choice.labels[language]
           |> Enum.map(&String.downcase/1)
           |> Enum.member?(response)
       end)
     end
 
-    def accept_answer(_question, message) do
-      message
+    def accept_answer(%{type: :select_one} = question, message) do
+      language = message |> Message.language()
+      response = message.content |> String.downcase
+
+      find_choice(question.choices, response, language)
+      |> Choice.name
+    end
+
+    def accept_answer(%{type: :select_many} = question, message) do
+      language = message |> Message.language()
+      responses = message.content |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+
+      responses |> Enum.map(fn(response) ->
+        find_choice(question.choices, response, language)
+        |> Choice.name
+      end)
     end
   end
 end

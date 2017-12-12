@@ -7,7 +7,7 @@ defprotocol Aida.Skill do
   @spec clarify(skill :: t, msg :: Message.t) :: Message.t
   def clarify(skill, msg)
 
-  @spec confidence(skill :: t, msg :: Message.t) :: non_neg_integer
+  @spec confidence(skill :: t, msg :: Message.t) :: non_neg_integer | :threshold
   def confidence(skill, msg)
 
   @spec put_response(skill :: t, msg :: Message.t) :: Message.t

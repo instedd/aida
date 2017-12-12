@@ -1,6 +1,6 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
-  alias Aida.{BotManager, Repo, Session, Message, Channel}
+  alias Aida.{BotManager, Repo, Session, Message, Channel, SurveyQuestion}
   alias Aida.DB.SkillUsage
   import Ecto.Query
 
@@ -25,16 +25,47 @@ defmodule Aida.Skill.Survey do
   def start_survey(survey, bot, session_id) do
     channel = bot.channels |> hd()
     session = Session.load(session_id)
-      |> Session.put("survey/#{survey.id}", %{"step" => 0})
+      |> Session.put(state_key(survey), %{"step" => 0})
 
-    question = survey.questions |> hd()
-    message = Message.new("", session)
-      |> Message.respond(question.message)
+    message = answer(survey, Message.new("", session))
 
     user_id = session_id |> String.split("/") |> List.last
     channel |> Channel.send_message(message.reply, user_id)
 
-    Session.save(session)
+    Session.save(message.session)
+  end
+
+  def answer(survey, message) do
+    survey_state = message
+      |> Message.get_session(state_key(survey))
+
+    question = survey.questions
+      |> Enum.at(survey_state["step"])
+
+    message
+      |> Message.respond(question.message)
+  end
+
+  def state_key(survey), do: "survey/#{survey.id}"
+  def answer_key(survey, question), do: "#{state_key(survey)}/#{question.name}"
+
+  def current_question(survey, message) do
+    case message |> Message.get_session(state_key(survey)) do
+      %{"step" => step} ->
+        survey.questions |> Enum.at(step)
+      _ -> nil
+    end
+  end
+
+  def move_to_next_question(survey, message) do
+    survey_state = case message |> Message.get_session(state_key(survey)) do
+      %{"step" => step} = state ->
+        %{state | "step" => step + 1}
+      _ -> %{"step" => 0}
+    end
+
+    message
+    |> Message.put_session(state_key(survey), survey_state)
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
@@ -65,28 +96,35 @@ defmodule Aida.Skill.Survey do
     end
 
     def put_response(survey, message) do
-      state_key = "survey/#{survey.id}"
-      survey_state = message |> Message.get_session(state_key)
-      survey_state = %{survey_state | "step" => survey_state["step"] + 1}
+      question = Survey.current_question(survey, message)
+      message = if question |> SurveyQuestion.valid_answer?(message) do
+        answer = SurveyQuestion.accept_answer(question, message)
 
-      question = survey.questions |> Enum.at(survey_state["step"])
+        message = Survey.move_to_next_question(survey, message)
 
-      message
-        |> Message.put_session(state_key, survey_state)
-        |> Message.respond(question.message)
+        message
+        |> Message.put_session(Survey.answer_key(survey, question), answer)
+      else
+        message
+      end
+
+      Survey.answer(survey, message)
     end
 
     def confidence(survey, message) do
-      case message |> Message.get_session(state_key(survey)) do
+      case Survey.current_question(survey, message) do
         nil -> 0
-        _ -> 1
+        question ->
+          if question |> SurveyQuestion.valid_answer?(message) do
+            1
+          else
+            :threshold
+          end
       end
     end
 
     def id(%{id: id}) do
       id
     end
-
-    defp state_key(survey), do: "survey/#{survey.id}"
   end
 end

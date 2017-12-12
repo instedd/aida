@@ -1,4 +1,5 @@
 defmodule Aida.FrontDesk do
+  alias __MODULE__
   alias Aida.Bot
 
   @type t :: %__MODULE__{
@@ -14,4 +15,8 @@ defmodule Aida.FrontDesk do
             introduction: %{},
             not_understood: %{},
             clarification: %{}
+
+  def threshold(%FrontDesk{threshold: threshold}) do
+    threshold
+  end
 end

@@ -66,11 +66,33 @@ defmodule Aida.SurveyTest do
     test "accept user reply", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 0}})
 
-      message = Message.new("yes", session)
+      message = Message.new("Yes", session)
       message = Bot.chat(bot, message)
 
-      assert message.reply == ["How old are you?"]
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 1}
+      assert message.reply == ["How old are you?"]
+      assert message |> Message.get_session("survey/food_preferences/opt_in") == "yes"
+    end
+
+    test "invalid reply should retry the question", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
+
+      message = Message.new("bananas", session)
+      message = Bot.chat(bot, message)
+
+      assert message.reply == ["At what temperature do your like red wine the best?"]
+      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+    end
+
+    test "accept user reply on select_many", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 3}})
+
+      message = Message.new("merlot, syrah", session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
+      assert message.reply == ["Any particular requests for your dinner?"]
+      assert message |> Message.get_session("survey/food_preferences/wine_grapes") == ["merlot", "syrah"]
     end
   end
 end
