@@ -23,9 +23,9 @@ defmodule Aida.Bot do
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do
     skills = bot.skills
-    |> Enum.map(fn(skill) ->
-      Skill.init(skill, bot)
-    end)
+      |> Enum.map(fn(skill) ->
+        Skill.init(skill, bot)
+      end)
 
     {:ok, %{bot | skills: skills}}
   end
@@ -33,7 +33,7 @@ defmodule Aida.Bot do
   @spec wake_up(bot :: t, skill_id :: String.t) :: :ok
   def wake_up(%Bot{} = bot, skill_id) do
     find_skill(bot, skill_id)
-    |> Skill.wake_up(bot)
+      |> Skill.wake_up(bot)
   end
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
@@ -41,8 +41,8 @@ defmodule Aida.Bot do
     cond do
       !language(message) && Enum.count(bot.languages) == 1 ->
         message
-        |> put_session("language", bot.languages |> List.first)
-        |> greet(bot)
+          |> put_session("language", bot.languages |> List.first)
+          |> greet(bot)
       language(message) ->
         handle(bot, message)
       true -> language_detector(bot, message)
@@ -53,33 +53,33 @@ defmodule Aida.Bot do
   defp greet(%Message{} = message, bot) do
     SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
     message
-    |> respond(bot.front_desk.greeting)
-    |> introduction(bot)
+      |> respond(bot.front_desk.greeting)
+      |> introduction(bot)
   end
 
   @spec introduction(message :: Message.t, bot :: t) :: Message.t
   defp introduction(message, bot) do
     message = message
-    |> respond(bot.front_desk.introduction)
+      |> respond(bot.front_desk.introduction)
 
     SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
 
     bot.skills
-    |> Enum.reduce(message, fn(skill, message) ->
-      !is_language_detector?(skill) && Skill.explain(skill, message) || message
-    end)
+      |> Enum.reduce(message, fn(skill, message) ->
+        !is_language_detector?(skill) && Skill.explain(skill, message) || message
+      end)
   end
 
   defp clarification(message, bot, skills) do
     message = message
-    |> respond(bot.front_desk.clarification)
+      |> respond(bot.front_desk.clarification)
 
     SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
 
     skills
-    |> Enum.reduce(message, fn(skill, message) ->
-      Skill.clarify(skill, message)
-    end)
+      |> Enum.reduce(message, fn(skill, message) ->
+        Skill.clarify(skill, message)
+      end)
   end
 
   defp not_understood(message, bot) do
