@@ -1,6 +1,6 @@
 defmodule Aida.Skill.ScheduledMessages do
   import Ecto.Query
-  alias Aida.{Message, Repo, Channel, Session, Skill}
+  alias Aida.{Message, Repo, Channel, Session, Skill, BotManager}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
@@ -56,7 +56,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, bot) do
-      Process.send_after(self(), {:bot_wake_up, bot.id, skill.id}, ScheduledMessages.delay(skill))
+      BotManager.schedule_wake_up(bot, skill, ScheduledMessages.delay(skill))
       skill
     end
 

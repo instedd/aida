@@ -1,6 +1,7 @@
 defmodule Aida.BotManagerTest do
   use Aida.DataCase
   alias Aida.{DB, Bot, BotManager, BotParser, TestChannel, ChannelRegistry}
+  import Mock
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
 
@@ -53,6 +54,48 @@ defmodule Aida.BotManagerTest do
       BotManager.start(bot)
       assert_received {:stop, ^channel}
       assert_received {:start, ^channel}
+    end
+
+    test "schedule wake up" do
+      bot = %Bot{id: @uuid}
+      skill = %{id: "skill_id"}
+      BotManager.start(bot)
+
+      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, 50)
+        refute called Bot.wake_up(bot, "skill_id")
+        :timer.sleep(100)
+        assert called Bot.wake_up(bot, "skill_id")
+      end
+    end
+
+    test "scheduling a second wake up for the same skill unschedule the first one" do
+      bot = %Bot{id: @uuid}
+      skill = %{id: "skill_id"}
+      BotManager.start(bot)
+
+      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, 50)
+        BotManager.schedule_wake_up(bot, skill, 100)
+        refute called Bot.wake_up(bot, "skill_id")
+        :timer.sleep(50)
+        refute called Bot.wake_up(bot, "skill_id")
+        :timer.sleep(100)
+        assert called Bot.wake_up(bot, "skill_id")
+      end
+    end
+
+    test "stopping the bot unschedule all the wake ups" do
+      bot = %Bot{id: @uuid}
+      skill = %{id: "skill_id"}
+      BotManager.start(bot)
+
+      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, 50)
+        BotManager.stop(bot.id)
+        :timer.sleep(100)
+        refute called Bot.wake_up(bot, "skill_id")
+      end
     end
   end
 

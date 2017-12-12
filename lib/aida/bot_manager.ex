@@ -1,8 +1,12 @@
 defmodule Aida.BotManager do
   use GenServer
-  alias Aida.{DB, Channel, Bot, BotParser, Logger}
+  alias Aida.{DB, Channel, Bot, Skill, BotParser, Logger}
   @server_ref {:global, __MODULE__}
   @table :bots
+
+  defmodule State do
+    defstruct [:timers]
+  end
 
   @spec start_link() :: GenServer.on_start
   def start_link() do
@@ -32,9 +36,9 @@ defmodule Aida.BotManager do
     end
   end
 
-  @spec wake_up_message(bot :: Bot.t, skill :: Aida.Skill.t) :: term
-  def wake_up_message(bot, skill) do
-    {:bot_wake_up, bot.id, skill.id}
+  @spec schedule_wake_up(bot :: Bot.t, skill :: Skill.t, delay :: integer) :: :ok
+  def schedule_wake_up(bot, skill, delay) do
+    GenServer.cast(@server_ref, {:schedule_wake_up, bot, skill, delay})
   end
 
   def init([]) do
@@ -44,15 +48,18 @@ defmodule Aida.BotManager do
     |> Enum.each(&start_bot/1)
 
     Aida.PubSub.subscribe_bot_changes
-    {:ok, nil}
+    state = %State{timers: %{}}
+    {:ok, state}
   end
 
   def handle_call({:start, bot}, _from, state) do
+    state = stop_bot_timers(bot.id, state)
     start_bot(bot)
     {:reply, :ok, state}
   end
 
   def handle_call({:stop, bot_id}, _from, state) do
+    state = stop_bot_timers(bot_id, state)
     result = stop_bot(bot_id)
     {:reply, result, state}
   end
@@ -61,17 +68,33 @@ defmodule Aida.BotManager do
     {:reply, :ok, state}
   end
 
+  def handle_cast({:schedule_wake_up, bot, skill, delay}, %State{timers: timers} = state) do
+    # Cancel any existing scheduled wake up for the same bot/skill
+    timer = timers[{bot.id, skill.id}]
+    if timer do
+      Process.cancel_timer(timer)
+    end
+
+    message = {:bot_wake_up, bot.id, skill.id}
+    timer = Process.send_after(self(), message, delay)
+    timers = timers |> Map.put({bot.id, skill.id}, timer)
+
+    {:noreply, %{state | timers: timers}}
+  end
+
   def handle_info({:bot_created, bot_id}, state) do
     reload_bot(bot_id)
     {:noreply, state}
   end
 
   def handle_info({:bot_updated, bot_id}, state) do
+    state = stop_bot_timers(bot_id, state)
     reload_bot(bot_id)
     {:noreply, state}
   end
 
   def handle_info({:bot_deleted, bot_id}, state) do
+    state = stop_bot_timers(bot_id, state)
     reload_bot(bot_id)
     {:noreply, state}
   end
@@ -79,6 +102,7 @@ defmodule Aida.BotManager do
   def handle_info({:bot_wake_up, bot_id, skill_id}, state) do
     case @table |> :ets.lookup(bot_id) do
       [{_id, bot}] ->
+        Logger.debug("Waking up bot: #{bot_id}, skill: #{skill_id}")
         Bot.wake_up(bot, skill_id)
       _ -> :not_found
     end
@@ -92,9 +116,11 @@ defmodule Aida.BotManager do
   defp start_bot({:ok, bot}) do
     start_bot(bot)
   end
+
   defp start_bot({:error, errors}) do
     Logger.error(errors)
   end
+
   defp start_bot(bot) do
     stop_bot(bot.id)
     {:ok, bot} = Bot.init(bot)
@@ -121,5 +147,20 @@ defmodule Aida.BotManager do
         |> parse_bot
         |> start_bot
     end
+  end
+
+  defp stop_bot_timers(bot_id, %State{timers: timers} = state) do
+    timers = timers
+    |> Enum.reduce(timers, fn(timers_entry, new_timers) ->
+      case timers_entry do
+        {{^bot_id, _} = key, timer} ->
+          Process.cancel_timer(timer)
+          new_timers |> Map.delete(key)
+
+        _ -> new_timers
+      end
+    end)
+
+    %State{state | timers: timers}
   end
 end

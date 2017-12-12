@@ -1,6 +1,7 @@
 defmodule Aida.SurveyTest do
   alias Aida.{Bot, BotManager, Skill, Skill.Survey, SessionStore, BotParser, TestChannel, Session, DB, Message}
   use Aida.DataCase
+  import Mock
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
   @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
@@ -14,14 +15,17 @@ defmodule Aida.SurveyTest do
 
   test "init schedules wake_up" do
     bot = %Bot{id: @bot_id}
-    skill = %Survey{id: @skill_id, schedule: DateTime.utc_now |> Timex.shift(milliseconds: 100)}
-      |> Skill.init(bot)
+    skill = %Survey{id: @skill_id, schedule: DateTime.utc_now |> Timex.shift(days: 1)}
 
-    refute_received _
-    :timer.sleep(100)
+    schedule_wake_up_fn = fn(_bot, _skill, delay) ->
+      assert_in_delta delay, :timer.hours(24), :timer.seconds(1)
+      :ok
+    end
 
-    message = BotManager.wake_up_message(bot, skill)
-    assert_received ^message
+    with_mock BotManager, [schedule_wake_up: schedule_wake_up_fn] do
+      skill |> Skill.init(bot)
+      assert called BotManager.schedule_wake_up(bot, skill, :_)
+    end
   end
 
   describe "wake_up" do
