@@ -147,9 +147,10 @@ defmodule Aida.DB do
     Session |> Repo.get(id)
   end
 
-  def sessions_by_bot(bot_id) do
+  def sessions_by_bot(_bot_id) do
     Session
-      |> where([s], s.bot_id == ^bot_id)
+      # TODO filter by bot_id
+      # |> where([s], s.bot_id == ^bot_id)
       |> Repo.all()
   end
 
