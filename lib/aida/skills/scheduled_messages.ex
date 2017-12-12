@@ -107,6 +107,7 @@ defmodule Aida.Skill.ScheduledMessages do
         ScheduledMessages.send_message(bot, skill, user, last_usage)
       end)
 
+      BotManager.schedule_wake_up(bot, skill, ScheduledMessages.delay(skill))
       :ok
     end
 
