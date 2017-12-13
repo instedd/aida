@@ -7,7 +7,7 @@ defmodule Aida.DB do
   alias Aida.Repo
   alias Aida.PubSub
 
-  alias Aida.DB.{Bot, SkillUsage, Session}
+  alias Aida.DB.{Bot, SkillUsage, Session, MessagesPerDay}
 
   @doc """
   Returns the list of bots.
@@ -276,5 +276,70 @@ defmodule Aida.DB do
     |> Repo.update()
 
     result
+  end
+
+  @doc """
+  Creates or updates a messages_per_day.
+
+  ## Examples
+
+      iex> create_or_update_messages_per_day_received(%{field: value})
+      {:ok, %MessagesPerDay{}}
+
+      iex> create_or_update_messages_per_day_received(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_or_update_messages_per_day_received(attrs) do
+    result = %MessagesPerDay{}
+    |> MessagesPerDay.changeset(attrs)
+    |> Repo.insert(on_conflict: [inc: [received_messages: 1]], conflict_target: [:bot_id, :day])
+
+    result
+  end
+
+  @doc """
+  Creates or updates a messages_per_day.
+
+  ## Examples
+
+      iex> create_or_update_messages_per_day_sent(%{field: value})
+      {:ok, %MessagesPerDay{}}
+
+      iex> create_or_update_messages_per_day_sent(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_or_update_messages_per_day_sent(attrs) do
+    result = %MessagesPerDay{}
+    |> MessagesPerDay.changeset(attrs)
+    |> Repo.insert(on_conflict: [inc: [sent_messages: 1]], conflict_target: [:bot_id, :day])
+
+    result
+  end
+
+
+  @doc """
+  Returns the messages per day for the given id. If the messages per day does not exist, it returns `nil`.
+  """
+  def get_messages_per_day(id) do
+    MessagesPerDay |> Repo.get(id)
+  end
+
+  def list_messages_per_day do
+    Repo.all(MessagesPerDay)
+  end
+
+  @doc """
+  Returns the messages per day for the given bot_id. If the messages per day does not exist, it returns `nil`.
+  """
+  def get_bot_messages_per_day_for_period(bot_id, period, today \\ Date.utc_today()) do
+    date = convert_period(period, today)
+
+    MessagesPerDay
+      |> select([s], %{received_messages: sum(s.received_messages), sent_messages: sum(s.sent_messages)})
+      |> where([s], s.day >= ^date)
+      |> where([s], s.bot_id == ^bot_id)
+      |> Repo.all()
   end
 end

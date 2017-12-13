@@ -312,5 +312,88 @@ defmodule Aida.DBTest do
       assert Enum.count(active_users_this_month) == 4
     end
 
+
+    test "create_or_update_messages_per_day_received/1 increments existing messages_per_day with the proper count" do
+      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      today = Date.utc_today()
+
+      changeset_1 = %{bot_id: bot_id, day: today, received_messages: 1}
+      {:ok, messages_per_day} = DB.create_or_update_messages_per_day_received(changeset_1)
+      DB.create_or_update_messages_per_day_received(changeset_1)
+      DB.create_or_update_messages_per_day_received(changeset_1)
+      DB.create_or_update_messages_per_day_received(changeset_1)
+
+      changeset_2 = %{bot_id: bot_id, day: Date.add(today, -1), received_messages: 1}
+      {:ok, messages_per_day_2} = DB.create_or_update_messages_per_day_received(changeset_2)
+      DB.create_or_update_messages_per_day_received(changeset_2)
+      DB.create_or_update_messages_per_day_received(changeset_2)
+
+
+      db_messages_per_day = DB.get_messages_per_day(messages_per_day.id)
+      assert db_messages_per_day.received_messages == 4
+
+      db_messages_per_day_2 = DB.get_messages_per_day(messages_per_day_2.id)
+      assert db_messages_per_day_2.received_messages == 3
+
+
+      assert Enum.count(DB.list_messages_per_day()) == 2
+    end
+
+
+    test "create_or_update_messages_per_day_sent/1 increments existing messages_per_day with the proper count" do
+      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      today = Date.utc_today()
+
+      changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
+      {:ok, messages_per_day} = DB.create_or_update_messages_per_day_sent(changeset_1)
+      DB.create_or_update_messages_per_day_sent(changeset_1)
+      DB.create_or_update_messages_per_day_sent(changeset_1)
+
+      changeset_2 = %{bot_id: bot_id, day: Date.add(today, -1), sent_messages: 1}
+      {:ok, messages_per_day_2} = DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+
+
+      db_messages_per_day = DB.get_messages_per_day(messages_per_day.id)
+      assert db_messages_per_day.sent_messages == 3
+
+      db_messages_per_day_2 = DB.get_messages_per_day(messages_per_day_2.id)
+      assert db_messages_per_day_2.sent_messages == 5
+
+
+      assert Enum.count(DB.list_messages_per_day()) == 2
+    end
+
+
+    test "get_bot_messages_per_day_for_period/3 returns the proper count for a bot in a certain period" do
+      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      today = Date.utc_today()
+
+      changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
+      {:ok, _messages_per_day} = DB.create_or_update_messages_per_day_sent(changeset_1)
+      DB.create_or_update_messages_per_day_sent(changeset_1)
+      DB.create_or_update_messages_per_day_sent(changeset_1)
+
+      changeset_2 = %{bot_id: bot_id, day: Date.add(today, -1), sent_messages: 1}
+      {:ok, _messages_per_day} = DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+      DB.create_or_update_messages_per_day_sent(changeset_2)
+
+      changeset_3 = %{bot_id: bot_id, day: Date.add(today, -1), received_messages: 1}
+      {:ok, _messages_per_day} = DB.create_or_update_messages_per_day_received(changeset_3)
+      DB.create_or_update_messages_per_day_received(changeset_3)
+      DB.create_or_update_messages_per_day_received(changeset_3)
+      DB.create_or_update_messages_per_day_received(changeset_3)
+      DB.create_or_update_messages_per_day_received(changeset_3)
+
+
+      bot_messages_per_day = DB.get_bot_messages_per_day_for_period(bot_id, "this_week")
+
+      assert bot_messages_per_day == [%{received_messages: 5, sent_messages: 7}]
+    end
   end
 end

@@ -18,8 +18,8 @@ defmodule Aida.DB.SkillUsage do
   end
 
   @doc false
-  def changeset(%SkillUsage{} = botStats, attrs) do
-    botStats
+  def changeset(%SkillUsage{} = skillUsage, attrs) do
+    skillUsage
     |> cast(attrs, [:bot_id, :user_id, :last_usage, :skill_id, :user_generated])
     |> validate_required([:bot_id, :user_id, :last_usage, :skill_id, :user_generated])
   end

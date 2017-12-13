@@ -5,6 +5,7 @@ defmodule Aida.Channel.Facebook do
   alias Aida.Bot
   alias Aida.Message
   alias Aida.Session
+  alias Aida.DB.MessagesPerDay
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
@@ -73,7 +74,6 @@ defmodule Aida.Channel.Facebook do
     def call(%{assigns: %{user: _}} = conn, _params), do: conn
 
     def callback(channel, %{method: "POST"} = conn) do
-
       params = conn.params
 
       if params["object"] == "page" && params["entry"] do
@@ -117,6 +117,8 @@ defmodule Aida.Channel.Facebook do
         nil -> :ok
 
         _ ->
+          MessagesPerDay.log_received_message(channel.bot_id)
+
           bot = BotManager.find(channel.bot_id)
           session = Session.load(session_id)
           reply = Bot.chat(bot, Message.new(text, session))
@@ -131,6 +133,7 @@ defmodule Aida.Channel.Facebook do
       headers = [{"Content-type", "application/json"}]
 
       Enum.each(messages, fn message ->
+        MessagesPerDay.log_sent_message(channel.bot_id)
         json = %{"recipient": %{"id": recipient}, "message": %{"text": message}, "messaging_type": "RESPONSE"}
         HTTPoison.post url, Poison.encode!(json), headers
       end)
