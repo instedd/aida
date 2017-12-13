@@ -2,8 +2,6 @@ defmodule AidaWeb.SkillUsageController do
   use AidaWeb, :controller
 
   alias Aida.DB
-  # alias Aida.DB.Bot
-  # alias Aida.JsonSchema
 
   def usage_summary(conn, %{"bot_id" => bot_id, "period" => period}) do
     skill_usages = DB.active_users_per_bot_and_period(bot_id, period)
