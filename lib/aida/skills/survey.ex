@@ -25,14 +25,18 @@ defmodule Aida.Skill.Survey do
   def start_survey(survey, bot, session_id) do
     channel = bot.channels |> hd()
     session = Session.load(session_id)
-      |> Session.put(state_key(survey), %{"step" => 0})
 
-    message = answer(survey, Message.new("", session))
+    if session |> Session.get("language") do
+      session = session
+        |> Session.put(state_key(survey), %{"step" => 0})
 
-    user_id = session_id |> String.split("/") |> List.last
-    channel |> Channel.send_message(message.reply, user_id)
+      message = answer(survey, Message.new("", session))
 
-    Session.save(message.session)
+      user_id = session_id |> String.split("/") |> List.last
+      channel |> Channel.send_message(message.reply, user_id)
+
+      Session.save(message.session)
+    end
   end
 
   def answer(survey, message) do

@@ -73,6 +73,26 @@ defmodule Aida.SurveyTest do
       assert session |> Session.get("survey/food_preferences") == %{"step" => 0}
     end
 
+    test "do not start the survey if the session doesn't have a language", %{bot: bot} do
+      channel = TestChannel.new()
+      bot = %{bot | channels: [channel]}
+
+      Session.new(@session_id, %{})
+      |> Session.save
+
+      DB.create_skill_usage(%{
+        bot_id: @bot_id,
+        user_id: @session_id,
+        last_usage: DateTime.utc_now,
+        skill_id: hd(bot.skills) |> Skill.id,
+        user_generated: true
+      })
+
+      Bot.wake_up(bot, "food_preferences")
+
+      refute_received {:send_message, _, _}
+    end
+
     test "accept user reply", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 0}})
 
