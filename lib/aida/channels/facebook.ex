@@ -107,7 +107,7 @@ defmodule Aida.Channel.Facebook do
       text = message["message"]["text"]
       recipient_id = message["recipient"]["id"]
       sender_id = message["sender"]["id"]
-      session_id = "#{type(channel)}/#{recipient_id}/#{sender_id}"
+      session_id = "#{channel.bot_id}/#{type(channel)}/#{recipient_id}/#{sender_id}"
 
       case text do
         "##RESET" ->

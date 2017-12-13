@@ -130,6 +130,14 @@ defmodule Aida.DBTest do
       assert session.data == %{"foo" => 3, "bar" => 4}
     end
 
+    test "get sessions by bot" do
+      {:ok, s1} = DB.save_session("bot1/x", %{})
+      {:ok, _s2} = DB.save_session("bot2/x", %{})
+
+      sessions = DB.sessions_by_bot("bot1")
+      assert sessions == [s1]
+    end
+
     test "delete_session/1 deletes a session" do
       {:ok, _session} = DB.save_session("session_1", %{"foo" => 1, "bar" => 2})
       {:ok, _session} = DB.save_session("session_2", %{"foo" => 1, "bar" => 2})

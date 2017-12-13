@@ -150,10 +150,10 @@ defmodule Aida.DB do
   @doc """
   Returns all the sessions for the given bot id. If there is none, it returns an empty array.
   """
-  def sessions_by_bot(_bot_id) do
+  def sessions_by_bot(bot_id) do
     Session
       # TODO filter by bot_id
-      # |> where([s], s.bot_id == ^bot_id)
+      |> where([s], like(s.id, ^"#{bot_id}/%"))
       |> Repo.all()
   end
 
