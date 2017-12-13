@@ -72,7 +72,9 @@ defmodule Aida.Skill.Survey do
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, bot) do
       delay = Survey.delay(skill)
-      BotManager.schedule_wake_up(bot, skill, delay)
+      if delay > 0 do
+        BotManager.schedule_wake_up(bot, skill, delay)
+      end
 
       skill
     end
