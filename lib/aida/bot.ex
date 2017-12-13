@@ -42,52 +42,11 @@ defmodule Aida.Bot do
       !language(message) && Enum.count(bot.languages) == 1 ->
         message
           |> put_session("language", bot.languages |> List.first)
-          |> greet(bot)
+          |> FrontDesk.greet(bot)
       language(message) ->
         handle(bot, message)
       true -> language_detector(bot, message)
     end
-  end
-
-  @spec greet(message :: Message.t, bot :: t) :: Message.t
-  defp greet(%Message{} = message, bot) do
-    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
-    message
-      |> respond(bot.front_desk.greeting)
-      |> introduction(bot)
-  end
-
-  @spec introduction(message :: Message.t, bot :: t) :: Message.t
-  defp introduction(message, bot) do
-    message = message
-      |> respond(bot.front_desk.introduction)
-
-    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
-
-    bot.skills
-      |> Enum.reduce(message, fn(skill, message) ->
-        !is_language_detector?(skill) && Skill.explain(skill, message) || message
-      end)
-  end
-
-  defp clarification(message, bot, skills) do
-    message = message
-      |> respond(bot.front_desk.clarification)
-
-    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
-
-    skills
-      |> Enum.reduce(message, fn(skill, message) ->
-        Skill.clarify(skill, message)
-      end)
-  end
-
-  defp not_understood(message, bot) do
-    SkillUsage.log_skill_usage(bot.id, "front_desk", message.session.id)
-
-    message
-      |> respond(bot.front_desk.not_understood)
-      |> introduction(bot)
   end
 
   defp handle(bot, message) do
@@ -106,7 +65,7 @@ defmodule Aida.Bot do
     skills_sorted = Enum.reject(Enum.sort_by(skills_by_confidence, fn (skill) -> skill["confidence"] end, &>=/2), &is_nil/1)
 
     case skills_sorted do
-      [] -> message |> not_understood(bot)
+      [] -> message |> FrontDesk.not_understood(bot)
       skills ->
         higher_confidence_skill = Enum.at(skills, 0)
 
@@ -118,7 +77,7 @@ defmodule Aida.Bot do
         if threshold(bot) <= difference do
           Skill.respond(higher_confidence_skill["skill"], message)
         else
-          message |> clarification(bot, Enum.map(skills, fn(skill) -> skill["skill"] end))
+          message |> FrontDesk.clarification(bot, Enum.map(skills, fn(skill) -> skill["skill"] end))
         end
     end
   end
@@ -133,7 +92,7 @@ defmodule Aida.Bot do
       [skill] ->
         if Skill.confidence(skill, message) > 0 do
           Skill.respond(skill, message)
-            |> greet(bot)
+            |> FrontDesk.greet(bot)
         else
           SkillUsage.log_skill_usage(bot.id, Aida.Skill.id(skill), message.session.id)
           Skill.explain(skill, message)
@@ -142,11 +101,11 @@ defmodule Aida.Bot do
     end
   end
 
-  defp is_language_detector?(%Skill.LanguageDetector{})do
+  def is_language_detector?(%Skill.LanguageDetector{})do
     true
   end
 
-  defp is_language_detector?(_)do
+  def is_language_detector?(_)do
     false
   end
 
