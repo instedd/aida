@@ -1,5 +1,5 @@
 defmodule Aida.TestChannel do
-  defstruct [:pid, :send_message_assertion]
+  defstruct [:pid]
 
   def new() do
     %Aida.TestChannel{pid: self()}
@@ -24,7 +24,7 @@ defmodule Aida.TestChannel do
       "test"
     end
 
-    def send_message(%{send_message_assertion: send_message_assertion} = channel, messages, recipient) do
+    def send_message(channel, messages, recipient) do
       send channel.pid, {:send_message, messages, recipient}
     end
   end
