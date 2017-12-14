@@ -68,8 +68,8 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["keyword_responder"]},
-        "id": {"type": "string"},
-        "name": {"type": "string"},
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
         "explanation": {"$ref": "#/definitions/localized_string"},
         "clarification": {"$ref": "#/definitions/localized_string"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
@@ -83,7 +83,7 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["language_detector"]},
-        "explanation": {"type": "string"},
+        "explanation": {"$ref": "#/definitions/non_empty_string"},
         "languages": {"$ref": "#/definitions/localized_keywords"}
       },
       "additionalProperties": false,
@@ -94,8 +94,8 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["scheduled_messages"]},
-        "id": {"type": "string"},
-        "name": {"type": "string"},
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
         "schedule_type": {"enum": ["since_last_incoming_message"]},
         "messages": {
           "type": "array",
@@ -110,7 +110,7 @@
     "delayed_message": {
       "type": "object",
       "properties": {
-        "delay": {"type": "string"},
+        "delay": {"$ref": "#/definitions/non_empty_string"},
         "message": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,
@@ -121,9 +121,9 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["survey"]},
-        "id": {"type": "string"},
-        "name": {"type": "string"},
-        "schedule": {"type": "string"},
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
+        "schedule": {"type": "string", "pattern": "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2})(\\.(\\d{3})){0,1}([+-](\\d{2}):(\\d{2})|Z)$"},
         "questions": {
           "type": "array",
           "minItems": 1,
@@ -149,8 +149,8 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["select_one", "select_many"]},
-        "name": {"type": "string"},
-        "choices": {"type": "string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
+        "choices": {"$ref": "#/definitions/non_empty_string"},
         "message": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,
@@ -161,7 +161,7 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["integer", "decimal", "text"]},
-        "name": {"type": "string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
         "message": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,
@@ -171,7 +171,7 @@
     "choice_list": {
       "type": "object",
       "properties": {
-        "name": {"type": "string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
         "choices": {
           "type": "array",
           "minItems": 1,
@@ -185,7 +185,7 @@
     "choice": {
       "type": "object",
       "properties": {
-        "name": {"type": "string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
         "labels": {"$ref": "#/definitions/localized_keywords"}
       },
       "additionalProperties": false,
@@ -202,9 +202,9 @@
       "type": "object",
       "properties": {
         "type": {"enum": ["facebook"]},
-        "page_id": {"type": "string"},
-        "verify_token": {"type": "string"},
-        "access_token": {"type": "string"}
+        "page_id": {"$ref": "#/definitions/non_empty_string"},
+        "verify_token": {"$ref": "#/definitions/non_empty_string"},
+        "access_token": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
       "required": ["type", "page_id", "verify_token", "access_token"]
@@ -213,7 +213,7 @@
     "variable": {
       "type": "object",
       "properties": {
-        "name": {"type": "string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
         "values": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,
@@ -222,7 +222,7 @@
 
     "localized_string": {
       "type": "object",
-      "patternProperties": {"^[a-z]{2,3}$": {"type": "string"}},
+      "patternProperties": {"^[a-z]{2,3}$": {"$ref": "#/definitions/non_empty_string"}},
       "minProperties": 1,
       "additionalProperties": false
     },
@@ -233,11 +233,16 @@
         "^[a-z]{2,3}$": {
           "type": "array",
           "minItems": 1,
-          "items": {"type": "string"}
+          "items": {"$ref": "#/definitions/non_empty_string"}
         }
       },
       "minProperties": 1,
       "additionalProperties": false
+    },
+
+    "non_empty_string": {
+      "type": "string",
+      "minLength": 1
     }
   }
 }

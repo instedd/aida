@@ -5,7 +5,7 @@ defmodule AidaWeb.BotControllerTest do
   alias Aida.DB.Bot
   alias Aida.JsonSchema
 
-  @valid_localized_string %{"en" => ""}
+  @valid_localized_string %{"en" => "a"}
   @valid_message %{"message" => @valid_localized_string}
   @valid_front_desk %{
     "greeting" => @valid_message,
@@ -14,11 +14,11 @@ defmodule AidaWeb.BotControllerTest do
     "clarification" => @valid_message,
     "threshold" => 0.1
   }
-  @valid_localized_keywords %{"en" => [""]}
+  @valid_localized_keywords %{"en" => ["a"]}
   @valid_keyword_responder %{
     "type" => "keyword_responder",
     "id" => "1",
-    "name" => "",
+    "name" => "a",
     "explanation" => @valid_localized_string,
     "clarification" => @valid_localized_string,
     "keywords" => @valid_localized_keywords,

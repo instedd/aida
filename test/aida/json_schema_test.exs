@@ -8,7 +8,7 @@ defmodule Aida.JsonSchemaTest do
     :ok
   end
 
-  @valid_localized_string ~s({"en": ""})
+  @valid_localized_string ~s({"en": "a"})
   @valid_message ~s({"message" : #{@valid_localized_string}})
   @valid_front_desk ~s({
     "greeting": #{@valid_message},
@@ -17,11 +17,11 @@ defmodule Aida.JsonSchemaTest do
     "clarification": #{@valid_message},
     "threshold": 0.1
   })
-  @valid_localized_keywords ~s({"en": [""]})
+  @valid_localized_keywords ~s({"en": ["a"]})
   @valid_keyword_responder ~s({
     "type": "keyword_responder",
     "id" : "1",
-    "name" : "",
+    "name" : "a",
     "explanation": #{@valid_localized_string},
     "clarification": #{@valid_localized_string},
     "keywords": #{@valid_localized_keywords},
@@ -34,46 +34,46 @@ defmodule Aida.JsonSchemaTest do
   @valid_scheduled_messages ~s({
     "type": "scheduled_messages",
     "id": "2",
-    "name": "",
+    "name": "a",
     "schedule_type": "since_last_incoming_message",
     "messages": [#{@valid_delayed_message}]
   })
   @valid_language_detector ~s({
     "type": "language_detector",
-    "explanation": "",
+    "explanation": "a",
     "languages": #{@valid_localized_keywords}
   })
   @valid_choice ~s({
-    "name": "",
+    "name": "a",
     "labels": #{@valid_localized_keywords}
   })
   @valid_choice_list ~s({
-    "name": "",
+    "name": "a",
     "choices": [#{@valid_choice}]
   })
   @valid_select_question ~s({
     "type": "select_one",
-    "choices": "",
-    "name": "",
+    "choices": "a",
+    "name": "a",
     "message": #{@valid_localized_string}
   })
   @valid_input_question ~s({
     "type": "integer",
-    "name": "",
+    "name": "a",
     "message": #{@valid_localized_string}
   })
   @valid_survey ~s({
     "type": "survey",
     "id": "2",
-    "name": "",
-    "schedule": "",
+    "name": "a",
+    "schedule": "2017-12-10T01:40:13.000-03:00",
     "questions": [#{@valid_input_question}],
     "choice_lists": []
   })
   @valid_variable ~s({
-    "name": "",
+    "name": "a",
     "values": {
-      "en": ""
+      "en": "a"
     }
   })
   @valid_facebook_channel ~s({
