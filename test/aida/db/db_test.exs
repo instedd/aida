@@ -403,5 +403,13 @@ defmodule Aida.DBTest do
 
       assert bot_messages_per_day == [%{received_messages: 5, sent_messages: 7}]
     end
+
+    test "get_bot_messages_per_day_for_period/3 returns 0 when there is no record" do
+      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+
+      bot_messages_per_day = DB.get_bot_messages_per_day_for_period(bot_id, "this_week")
+
+      assert bot_messages_per_day == [%{received_messages: 0, sent_messages: 0}]
+    end
   end
 end

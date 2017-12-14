@@ -337,7 +337,7 @@ defmodule Aida.DB do
     date = convert_period(period, today)
 
     MessagesPerDay
-      |> select([s], %{received_messages: sum(s.received_messages), sent_messages: sum(s.sent_messages)})
+      |> select([s], %{received_messages: fragment("coalesce(?, 0)", sum(s.received_messages)), sent_messages: fragment("coalesce(?, 0)", sum(s.sent_messages))})
       |> where([s], s.day >= ^date)
       |> where([s], s.bot_id == ^bot_id)
       |> Repo.all()
