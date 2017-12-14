@@ -110,7 +110,7 @@
     "delayed_message": {
       "type": "object",
       "properties": {
-        "delay": {"$ref": "#/definitions/non_empty_string"},
+        "delay": {"type": "string", "pattern": "^\\d+$", "minLength": 1},
         "message": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,

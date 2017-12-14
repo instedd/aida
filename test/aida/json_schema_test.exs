@@ -165,17 +165,31 @@ defmodule Aida.JsonSchemaTest do
     end)
   end
 
-  defp assert_max(json_thing, thing, max_value, type) do
-    validate(json_thing, type, fn(validation_result) ->
+  defp assert_max(thing, max_value, type) do
+    validate(~s({"#{thing}": #{max_value + 1}}), type, fn(validation_result) ->
       validation_result
       |> Enum.member?({"Expected the value to be <= #{max_value}", [thing]})
     end)
   end
 
-  defp assert_min(json_thing, thing, min_value, type) do
-    validate(json_thing, type, fn(validation_result) ->
+  defp assert_min(thing, min_value, type) do
+    validate(~s({"#{thing}": #{min_value - 1}}), type, fn(validation_result) ->
       validation_result
       |> Enum.member?({"Expected the value to be >= #{min_value}", [thing]})
+    end)
+  end
+
+  defp assert_non_empty_string(thing, type) do
+    validate(~s({"#{thing}": ""}), type, fn(validation_result) ->
+      validation_result
+      |> Enum.member?({"Expected value to have a minimum length of 1 but was 0.", [thing]})
+    end)
+  end
+
+  defp assert_digit(thing, type) do
+    validate(~s({"#{thing}": "a"}), type, fn(validation_result) ->
+      validation_result
+      |> Enum.member?({"String \"a\" does not match pattern \"^\\\\d+$\".", [thing]})
     end)
   end
 
@@ -214,7 +228,9 @@ defmodule Aida.JsonSchemaTest do
     assert_required("response", :keyword_responder)
     assert_required("keywords", :keyword_responder)
     assert_required("name", :keyword_responder)
+    assert_non_empty_string("name", :keyword_responder)
     assert_required("id", :keyword_responder)
+    assert_non_empty_string("id", :keyword_responder)
 
     @valid_keyword_responder
     |> assert_valid(:keyword_responder)
@@ -230,7 +246,9 @@ defmodule Aida.JsonSchemaTest do
     assert_required("messages", :scheduled_messages)
     assert_array("messages", :scheduled_messages)
     reject_empty_array("messages", :scheduled_messages)
+    assert_non_empty_string("name", :scheduled_messages)
     assert_required("name", :scheduled_messages)
+    assert_non_empty_string("id", :scheduled_messages)
     assert_required("id", :scheduled_messages)
 
     @valid_scheduled_messages
@@ -239,6 +257,8 @@ defmodule Aida.JsonSchemaTest do
 
   test "delayed_message" do
     assert_required("delay", :delayed_message)
+    assert_non_empty_string("delay", :delayed_message)
+    assert_digit("delay", :delayed_message)
     assert_required("message", :delayed_message)
 
     @valid_delayed_message
@@ -262,7 +282,9 @@ defmodule Aida.JsonSchemaTest do
     assert_required("type", :survey)
     assert_required("schedule", :survey)
     assert_required("name", :survey)
+    assert_non_empty_string("name", :survey)
     assert_required("id", :survey)
+    assert_non_empty_string("id", :survey)
     assert_required("questions", :survey)
     reject_empty_array("questions", :survey)
     assert_array("questions", :survey)
@@ -281,6 +303,7 @@ defmodule Aida.JsonSchemaTest do
     assert_valid_enum("type", "decimal", :input_question)
     assert_valid_enum("type", "text", :input_question)
     assert_required("name", :input_question)
+    assert_non_empty_string("name", :input_question)
     assert_required("message", :input_question)
 
     @valid_input_question
@@ -293,7 +316,9 @@ defmodule Aida.JsonSchemaTest do
     assert_valid_enum("type", "select_one", :select_question)
     assert_valid_enum("type", "select_many", :select_question)
     assert_required("choices", :select_question)
+    assert_non_empty_string("choices", :select_question)
     assert_required("name", :select_question)
+    assert_non_empty_string("name", :select_question)
     assert_required("message", :select_question)
 
     @valid_select_question
@@ -302,6 +327,7 @@ defmodule Aida.JsonSchemaTest do
 
   test "choice" do
     assert_required("name", :choice)
+    assert_non_empty_string("name", :choice)
     assert_required("labels", :choice)
 
     @valid_choice
@@ -310,6 +336,7 @@ defmodule Aida.JsonSchemaTest do
 
   test "choice_list" do
     assert_required("name", :choice_list)
+    assert_non_empty_string("name", :choice_list)
     assert_required("choices", :choice_list)
     reject_empty_array("choices", :choice_list)
     assert_array("choices", :choice_list)
@@ -352,12 +379,8 @@ defmodule Aida.JsonSchemaTest do
     assert_required("not_understood", :front_desk)
     assert_required("clarification", :front_desk)
     assert_required("threshold", :front_desk)
-
-    ~s({"threshold": 2})
-    |> assert_max("threshold", 1, :front_desk)
-
-    ~s({"threshold": -1})
-    |> assert_min("threshold", 0, :front_desk)
+    assert_max("threshold", 1, :front_desk)
+    assert_min("threshold", 0, :front_desk)
 
     @valid_front_desk
     |> assert_valid(:front_desk)
@@ -372,6 +395,7 @@ defmodule Aida.JsonSchemaTest do
 
   test "variable" do
     assert_required("name", :variable)
+    assert_non_empty_string("name", :variable)
     assert_required("values", :variable)
 
     @valid_variable
@@ -399,8 +423,11 @@ defmodule Aida.JsonSchemaTest do
     assert_valid_enum("type", "facebook", :facebook_channel)
     assert_required("type", :facebook_channel)
     assert_required("page_id", :facebook_channel)
+    assert_non_empty_string("page_id", :facebook_channel)
     assert_required("verify_token", :facebook_channel)
+    assert_non_empty_string("verify_token", :facebook_channel)
     assert_required("access_token", :facebook_channel)
+    assert_non_empty_string("access_token", :facebook_channel)
 
     @valid_facebook_channel
     |> assert_valid(:facebook_channel)
