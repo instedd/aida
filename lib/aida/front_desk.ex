@@ -65,5 +65,4 @@ defmodule Aida.FrontDesk do
   defp log_usage(bot_id, session_id) do
     SkillUsage.log_skill_usage(bot_id, "front_desk", session_id)
   end
-
 end

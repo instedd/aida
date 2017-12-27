@@ -379,7 +379,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("not_understood", :front_desk)
     assert_required("clarification", :front_desk)
     assert_required("threshold", :front_desk)
-    assert_max("threshold", 1, :front_desk)
+    assert_max("threshold", 0.5, :front_desk)
     assert_min("threshold", 0, :front_desk)
 
     @valid_front_desk
