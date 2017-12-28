@@ -15,3 +15,6 @@ erl_crash.dump
 # secrets files as long as you replace their contents by environment
 # variables.
 /config/*.secret.exs
+
+/lib/expr_parser.erl
+/lib/expr_lexer.erl
