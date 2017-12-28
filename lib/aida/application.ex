@@ -27,6 +27,10 @@ defmodule Aida.Application do
       children
     end
 
+    # Capture all errors and report to Sentry
+    # https://github.com/getsentry/sentry-elixir#capture-all-exceptions
+    :ok = :error_logger.add_report_handler(Sentry.Logger)
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Aida.Supervisor]

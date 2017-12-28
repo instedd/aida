@@ -1,6 +1,11 @@
 defmodule AidaWeb.Router do
   use AidaWeb, :router
 
+  # Capture errors and report to Sentry
+  # https://github.com/getsentry/sentry-elixir#setup-with-plug-or-phoenix
+  use Plug.ErrorHandler
+  use Sentry.Plug
+
   pipeline :api do
     plug :accepts, ["json"]
   end

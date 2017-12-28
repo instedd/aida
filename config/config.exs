@@ -29,6 +29,14 @@ end
 
 config :aida, version: version
 
+sentry_enabled = String.length(System.get_env("SENTRY_DSN") || "") > 0
+config :sentry,
+  dsn: System.get_env("SENTRY_DSN"),
+  public_dsn: System.get_env("SENTRY_PUBLIC_DSN"),
+  environment_name: Mix.env || :dev,
+  included_environments: (if sentry_enabled, do: [:prod], else: []),
+  release: version
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env}.exs"
