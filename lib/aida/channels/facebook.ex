@@ -44,13 +44,16 @@ defmodule Aida.Channel.Facebook do
   end
 
   def callback(conn) do
-    page_id = get_page_id_from_params(conn.params)
-
-    channel = find_channel_for_page_id(page_id)
-
-    cond do
-      channel == :not_found -> conn |> Plug.Conn.send_resp(200, "ok")
-      true -> channel |> Aida.Channel.callback(conn)
+    try do
+      page_id = get_page_id_from_params(conn.params)
+      case find_channel_for_page_id(page_id) do
+        :not_found -> conn |> Plug.Conn.send_resp(200, "ok")
+        channel -> channel |> Aida.Channel.callback(conn)
+      end
+    rescue
+      error ->
+        Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{params: conn.params}])
+        conn |> Plug.Conn.send_resp(200, "ok")
     end
   end
 
@@ -86,12 +89,8 @@ defmodule Aida.Channel.Facebook do
           end)
       end
 
-      body = cond do
-        true -> "ok"
-      end
-
       conn
-      |> Plug.Conn.send_resp(200, body)
+      |> Plug.Conn.send_resp(200, "ok")
     end
 
     def callback(_channel, conn) do
@@ -119,12 +118,18 @@ defmodule Aida.Channel.Facebook do
         _ ->
           MessagesPerDay.log_received_message(channel.bot_id)
 
-          bot = BotManager.find(channel.bot_id)
-          session = Session.load(session_id)
-          reply = Bot.chat(bot, Message.new(text, session))
-          reply.session |> Session.save
+          try do
+            bot = BotManager.find(channel.bot_id)
+            session = Session.load(session_id)
+            reply = Bot.chat(bot, Message.new(text, session))
+            reply.session |> Session.save
 
-          send_message(channel, reply.reply, sender_id)
+            send_message(channel, reply.reply, sender_id)
+          rescue
+            error ->
+              Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: channel.bot_id, message: message}])
+              send_message(channel, ["Oops! Something went wrong"], sender_id)
+          end
       end
     end
 
