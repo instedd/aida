@@ -1,5 +1,6 @@
 defprotocol Aida.Expr do
   def to_string(expr)
+  def eval(expr, context \\ %Aida.Expr.Context{})
   defdelegate parse(code), to: Aida.Expr.Parser
 end
 

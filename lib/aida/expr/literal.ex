@@ -8,6 +8,10 @@ defmodule Aida.Expr.Literal do
         :string -> "'#{literal.value}'"
       end
     end
+
+    def eval(literal, _context) do
+      literal.value
+    end
   end
 end
 

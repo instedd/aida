@@ -5,5 +5,9 @@ defmodule Aida.Expr.Variable do
     def to_string(var) do
       "${#{var.name}}"
     end
+
+    def eval(var, context) do
+      context.lookup.(var.name)
+    end
   end
 end

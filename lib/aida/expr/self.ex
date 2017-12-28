@@ -5,5 +5,9 @@ defmodule Aida.Expr.Self do
     def to_string(_self) do
       "."
     end
+
+    def eval(_self, context) do
+      context.self
+    end
   end
 end
