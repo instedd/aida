@@ -27,7 +27,8 @@ defmodule Aida.Message do
     respond(message, response[language(message)])
   end
   def respond(message, response) do
-    %{message | reply: message.reply ++ [response]}
+    new_reply = interpolate_vars(message.session, response)
+    %{message | reply: message.reply ++ [new_reply]}
   end
 
   @spec get_session(message :: t, key :: String.t) :: Session.value
@@ -52,5 +53,19 @@ defmodule Aida.Message do
 
   def curated_message(message) do
     String.replace(Message.content(message), ~r/\p{P}/, "")
+  end
+
+  @spec interpolate_vars(session :: Session.t, text :: String.t) :: String.t
+  defp interpolate_vars(session, text) do
+    ~r/\$\{\s*([a-z_]*)\s*\}/
+      |> Regex.scan(text, return: :index)
+      |> List.foldr(text, fn (match, text) ->
+        [{p_start, p_len}, {v_start, v_len}] = match
+        var_name = text |> String.slice(v_start, v_len)
+        var_value = session |> Session.lookup_var(var_name) |> to_string
+        <<text_before :: binary - size(p_start), _ :: binary - size(p_len), text_after :: binary>> = text
+        text_before <> var_value <> text_after
+      end)
+
   end
 end

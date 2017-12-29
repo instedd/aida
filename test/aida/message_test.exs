@@ -25,4 +25,27 @@ defmodule Aida.MessageTest do
     message = Message.new("Hi!") |> Message.respond("Hello")
     assert message.reply == ["Hello"]
   end
+
+  describe "variable interpolation" do
+    test "works with strings and numbers" do
+      session = Session.new("sid", %{"foo" => 1, "bar" => "baz"})
+      message = Message.new("Hi!", session)
+        |> Message.respond("foo: ${foo}, bar: ${bar}")
+      assert message.reply == ["foo: 1, bar: baz"]
+    end
+
+    test "accept whitespace inside brackets" do
+      session = Session.new("sid", %{"foo" => 1, "bar" => "baz"})
+      message = Message.new("Hi!", session)
+        |> Message.respond("foo: ${ foo }, bar: ${\tbar\t}")
+      assert message.reply == ["foo: 1, bar: baz"]
+    end
+
+    test "interpolate skill results" do
+      session = Session.new("sid", %{"skill/1/foo" => 1, "skill/2/bar" => "baz"})
+      message = Message.new("Hi!", session)
+        |> Message.respond("foo: ${foo}, bar: ${bar}")
+      assert message.reply == ["foo: 1, bar: baz"]
+    end
+  end
 end

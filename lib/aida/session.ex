@@ -67,4 +67,18 @@ defmodule Aida.Session do
   def is_new?(%Session{is_new?: value}) do
     value
   end
+
+  @spec lookup_var(session :: t, key :: String.t) :: value
+  def lookup_var(%Session{values: values} = session, key) do
+    case get(session, key) do
+      nil ->
+        match = values |> Enum.find(fn {k, _} -> k |> String.ends_with?("/#{key}") end)
+        case match do
+          {_, value} -> value
+          nil -> nil
+        end
+
+      value -> value
+    end
+  end
 end
