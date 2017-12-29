@@ -1,8 +1,6 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
-  alias Aida.{BotManager, Repo, Session, Message, Channel, SurveyQuestion}
-  alias Aida.DB.SkillUsage
-  import Ecto.Query
+  alias Aida.{BotManager, Session, Message, Channel, SurveyQuestion, ChannelProvider, DB}
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -22,8 +20,8 @@ defmodule Aida.Skill.Survey do
     DateTime.diff(skill.schedule, now, :milliseconds)
   end
 
-  def start_survey(survey, bot, session_id) do
-    channel = bot.channels |> hd()
+  def start_survey(survey, _bot, session_id) do
+    channel = ChannelProvider.find_channel(session_id)
     session = Session.load(session_id)
 
     if session |> Session.get("language") do
@@ -32,8 +30,7 @@ defmodule Aida.Skill.Survey do
 
       message = answer(survey, Message.new("", session))
 
-      user_id = session_id |> String.split("/") |> List.last
-      channel |> Channel.send_message(message.reply, user_id)
+      channel |> Channel.send_message(message.reply, session_id)
 
       Session.save(message.session)
     end
@@ -103,11 +100,7 @@ defmodule Aida.Skill.Survey do
     end
 
     def wake_up(skill, %{id: bot_id} = bot) do
-      SkillUsage
-        |> where([s], s.bot_id == ^bot_id)
-        |> distinct(true)
-        |> select([s], s.user_id)
-        |> Repo.all
+      DB.session_ids_by_bot(bot_id)
         |> Enum.each(&(Survey.start_survey(skill, bot, &1)))
 
       :ok

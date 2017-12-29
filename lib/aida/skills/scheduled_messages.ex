@@ -1,6 +1,6 @@
 defmodule Aida.Skill.ScheduledMessages do
   import Ecto.Query
-  alias Aida.{Message, Repo, Channel, Session, Skill, BotManager}
+  alias Aida.{Message, Repo, Channel, Session, Skill, BotManager, ChannelProvider}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
@@ -29,7 +29,7 @@ defmodule Aida.Skill.ScheduledMessages do
     :timer.minutes(delay)
   end
 
-  def send_message(bot, skill, session_id, last_usage) do
+  def send_message(skill, session_id, last_usage) do
     {_, skill_message} = skill.messages
       |> Enum.map(fn(message) ->
         {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
@@ -41,10 +41,7 @@ defmodule Aida.Skill.ScheduledMessages do
         DateTime.to_unix(deadline, :millisecond)
       end)
 
-    # TODO: we need to find the correct channel and sent the message through there
-    # Maybe storing the latest skill usage with the channel id or type?
-    # Use the first one for now
-    channel = bot.channels |> hd()
+    channel = ChannelProvider.find_channel(session_id)
 
     SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
 
@@ -52,8 +49,7 @@ defmodule Aida.Skill.ScheduledMessages do
     message = Message.new("", session)
     message = message |> Message.respond(skill_message)
 
-    user_id = session_id |> String.split("/") |> List.last
-    channel |> Channel.send_message(message.reply, user_id)
+    channel |> Channel.send_message(message.reply, session_id)
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
@@ -101,12 +97,12 @@ defmodule Aida.Skill.ScheduledMessages do
 
       never_reminded
         |> Enum.each(fn({user, last_usage}) ->
-          ScheduledMessages.send_message(bot, skill, user, last_usage)
+          ScheduledMessages.send_message(skill, user, last_usage)
         end)
 
       due_reminder
         |> Enum.each(fn({user, last_usage, _last_reminder}) ->
-          ScheduledMessages.send_message(bot, skill, user, last_usage)
+          ScheduledMessages.send_message(skill, user, last_usage)
         end)
 
       BotManager.schedule_wake_up(bot, skill, ScheduledMessages.delay(skill))

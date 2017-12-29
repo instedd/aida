@@ -30,6 +30,11 @@ defmodule Aida.Channel.Facebook do
     ChannelRegistry.find({:facebook, page_id})
   end
 
+  def find_channel(session_id) do
+    [_bot_id, _provider, page_id, _user_id] = session_id |> String.split("/")
+    find_channel_for_page_id(page_id)
+  end
+
   def callback(%{method: "GET"} = conn) do
     params = conn.params
     mode = params["hub.mode"]
@@ -98,22 +103,18 @@ defmodule Aida.Channel.Facebook do
       |> Plug.Conn.send_resp(200, "ok")
     end
 
-    def type(_) do
-      "facebook"
-    end
-
     def handle_message(channel, message) do
       sender_id = message["sender"]["id"]
 
       try do
         text = message["message"]["text"]
         recipient_id = message["recipient"]["id"]
-        session_id = "#{channel.bot_id}/#{type(channel)}/#{recipient_id}/#{sender_id}"
+        session_id = "#{channel.bot_id}/facebook/#{recipient_id}/#{sender_id}"
 
         case text do
           "##RESET" ->
             Session.delete(session_id)
-            send_message(channel, ["Session was reset"], sender_id)
+            send_message(channel, ["Session was reset"], session_id)
 
           nil -> :ok
 
@@ -127,7 +128,7 @@ defmodule Aida.Channel.Facebook do
             reply = Bot.chat(bot, Message.new(text, session))
             reply.session |> Session.save
 
-            send_message(channel, reply.reply, sender_id)
+            send_message(channel, reply.reply, session_id)
         end
       rescue
         error ->
@@ -159,7 +160,8 @@ defmodule Aida.Channel.Facebook do
       DateTime.diff(DateTime.utc_now, ts, :second) > 86400
     end
 
-    def send_message(channel, messages, recipient) do
+    def send_message(channel, messages, session_id) do
+      recipient = session_id |> String.split("/") |> List.last
       api = FacebookApi.new(channel.access_token)
 
       Enum.each(messages, fn message ->

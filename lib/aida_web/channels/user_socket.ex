@@ -2,7 +2,7 @@ defmodule AidaWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", AidaWeb.RoomChannel
+  channel "bot:*", AidaWeb.BotChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket

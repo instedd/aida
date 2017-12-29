@@ -1,11 +1,11 @@
 defmodule Aida.SurveyTest do
-  alias Aida.{Bot, BotManager, Skill, Skill.Survey, SessionStore, BotParser, TestChannel, Session, DB, Message}
+  alias Aida.{Bot, BotManager, Skill, Skill.Survey, SessionStore, BotParser, TestChannel, Session, DB, Message, ChannelProvider}
   use Aida.DataCase
   import Mock
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
   @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
-  @session_id "facebook/1234567890/0987654321"
+  @session_id "#{@bot_id}/facebook/1234567890/0987654321"
 
   test "calculate wake_up delay" do
     now = DateTime.utc_now
@@ -52,45 +52,43 @@ defmodule Aida.SurveyTest do
 
     test "starts the survey", %{bot: bot} do
       channel = TestChannel.new()
-      bot = %{bot | channels: [channel]}
 
-      Session.new(@session_id, %{"language" => "en"})
-      |> Session.save
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
 
-      DB.create_skill_usage(%{
-        bot_id: @bot_id,
-        user_id: @session_id,
-        last_usage: DateTime.utc_now,
-        skill_id: hd(bot.skills) |> Skill.id,
-        user_generated: true
-      })
+        Session.new(@session_id, %{"language" => "en"})
+        |> Session.save
 
-      Bot.wake_up(bot, "food_preferences")
+        Bot.wake_up(bot, "food_preferences")
 
-      assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], "0987654321"}
+        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], @session_id}
 
-      session = Session.load(@session_id)
-      assert session |> Session.get("survey/food_preferences") == %{"step" => 0}
+        session = Session.load(@session_id)
+        assert session |> Session.get("survey/food_preferences") == %{"step" => 0}
+      end
     end
 
     test "do not start the survey if the session doesn't have a language", %{bot: bot} do
       channel = TestChannel.new()
-      bot = %{bot | channels: [channel]}
 
-      Session.new(@session_id, %{})
-      |> Session.save
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
 
-      DB.create_skill_usage(%{
-        bot_id: @bot_id,
-        user_id: @session_id,
-        last_usage: DateTime.utc_now,
-        skill_id: hd(bot.skills) |> Skill.id,
-        user_generated: true
-      })
+        Session.new(@session_id, %{})
+        |> Session.save
 
-      Bot.wake_up(bot, "food_preferences")
+        DB.create_skill_usage(%{
+          bot_id: @bot_id,
+          user_id: @session_id,
+          last_usage: DateTime.utc_now,
+          skill_id: hd(bot.skills) |> Skill.id,
+          user_generated: true
+        })
 
-      refute_received {:send_message, _, _}
+        Bot.wake_up(bot, "food_preferences")
+
+        refute_received {:send_message, _, _}
+      end
     end
 
     test "accept user reply", %{bot: bot} do

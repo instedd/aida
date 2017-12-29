@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import './App.css'
 import '../node_modules/react-md/dist/react-md.light_blue-deep_orange.min.css'
 import BotIndex from './BotIndex'
+import Chat from './Chat'
 import { Toolbar } from 'react-md'
 import * as api from './api'
 
@@ -15,7 +16,6 @@ class App extends Component {
 
   componentWillMount() {
     api.fetchVersion().then((response) => {
-      console.log(response)
       this.setState({version: response || ''})
     })
   }
@@ -33,7 +33,7 @@ class App extends Component {
         <div className='sidebar' />
         <div className='main'>
           <BotIndex />
-
+          <Chat />
         </div>
         <div className='footer'>
           Version: {this.state.version}

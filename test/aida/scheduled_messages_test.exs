@@ -1,6 +1,7 @@
 defmodule Aida.ScheduledMessagesTest do
-  alias Aida.{Skill.ScheduledMessages, DelayedMessage, BotParser, Bot, DB, Skill, TestChannel, Session, SessionStore}
+  alias Aida.{Skill.ScheduledMessages, DelayedMessage, BotParser, Bot, DB, Skill, TestChannel, Session, SessionStore, ChannelProvider}
   use Aida.DataCase
+  import Mock
 
   describe "scheduled messages" do
     setup do
@@ -45,86 +46,95 @@ defmodule Aida.ScheduledMessagesTest do
 
     test "sends a message after 3 days", %{bot: bot} do
       channel = TestChannel.new()
-      bot = %{bot | channels: [channel]}
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
 
-      Session.save(Session.new(@session_id, %{"language" => "en"}))
+        Session.save(Session.new(@session_id, %{"language" => "en"}))
 
-      DB.create_or_update_skill_usage(%{
-        bot_id: bot.id,
-        user_id: @session_id,
-        last_usage: Timex.shift(DateTime.utc_now(), days: -3),
-        skill_id: (hd(bot.skills) |> Skill.id()),
-        user_generated: true
-      })
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot.id,
+          user_id: @session_id,
+          last_usage: Timex.shift(DateTime.utc_now(), days: -3),
+          skill_id: (hd(bot.skills) |> Skill.id()),
+          user_generated: true
+        })
 
-      Bot.wake_up(bot, "inactivity_check")
+        Bot.wake_up(bot, "inactivity_check")
 
-      assert_received {:send_message, ["Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?"], "1234"}
+        assert_received {:send_message, ["Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?"], @session_id}
+      end
     end
 
     test "sends a message after a month", %{bot: bot} do
       channel = TestChannel.new()
-      bot = %{bot | channels: [channel]}
 
-      Session.save(Session.new(@session_id, %{"language" => "en"}))
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
 
-      DB.create_or_update_skill_usage(%{
-        bot_id: bot.id,
-        user_id: @session_id,
-        last_usage: Timex.shift(DateTime.utc_now(), days: -40),
-        skill_id: (hd(bot.skills) |> Skill.id()),
-        user_generated: true
-      })
+        Session.save(Session.new(@session_id, %{"language" => "en"}))
 
-      Bot.wake_up(bot, "inactivity_check")
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot.id,
+          user_id: @session_id,
+          last_usage: Timex.shift(DateTime.utc_now(), days: -40),
+          skill_id: (hd(bot.skills) |> Skill.id()),
+          user_generated: true
+        })
 
-      assert_received {:send_message, ["Hey, I didn’t hear from you for the last month, is there anything I can help you with?"], "1234"}
+        Bot.wake_up(bot, "inactivity_check")
+
+        assert_received {:send_message, ["Hey, I didn’t hear from you for the last month, is there anything I can help you with?"], @session_id}
+      end
     end
 
     test "doesn't send a message if the timer is not yet overdue", %{bot: bot} do
       channel = TestChannel.new()
-      bot = %{bot | channels: [channel]}
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
 
-      Session.save(Session.new(@session_id, %{"language" => "en"}))
+        Session.save(Session.new(@session_id, %{"language" => "en"}))
 
-      DB.create_or_update_skill_usage(%{
-        bot_id: bot.id,
-        user_id: @session_id,
-        last_usage: DateTime.utc_now(),
-        skill_id: (hd(bot.skills) |> Skill.id()),
-        user_generated: true
-      })
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot.id,
+          user_id: @session_id,
+          last_usage: DateTime.utc_now(),
+          skill_id: (hd(bot.skills) |> Skill.id()),
+          user_generated: true
+        })
 
-      Bot.wake_up(bot, "inactivity_check")
+        Bot.wake_up(bot, "inactivity_check")
 
-      refute_received _
+        refute_received _
+      end
     end
 
     test "doesn't send a message if the reminder has already been sent", %{bot: bot} do
       channel = TestChannel.new()
-      bot = %{bot | channels: [channel]}
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
 
-      Session.save(Session.new(@session_id, %{"language" => "en"}))
+        Session.save(Session.new(@session_id, %{"language" => "en"}))
 
-      DB.create_or_update_skill_usage(%{
-        bot_id: bot.id,
-        user_id: @session_id,
-        last_usage: Timex.shift(DateTime.utc_now(), days: -3),
-        skill_id: (hd(bot.skills) |> Skill.id()),
-        user_generated: true
-      })
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot.id,
+          user_id: @session_id,
+          last_usage: Timex.shift(DateTime.utc_now(), days: -3),
+          skill_id: (hd(bot.skills) |> Skill.id()),
+          user_generated: true
+        })
 
-      DB.create_or_update_skill_usage(%{
-        bot_id: bot.id,
-        user_id: @session_id,
-        last_usage: Timex.shift(DateTime.utc_now(), days: -1),
-        skill_id: "inactivity_check",
-        user_generated: false
-      })
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot.id,
+          user_id: @session_id,
+          last_usage: Timex.shift(DateTime.utc_now(), days: -1),
+          skill_id: "inactivity_check",
+          user_generated: false
+        })
 
-      Bot.wake_up(bot, "inactivity_check")
+        Bot.wake_up(bot, "inactivity_check")
 
-      refute_received _
+        refute_received _
+      end
     end
   end
 end
