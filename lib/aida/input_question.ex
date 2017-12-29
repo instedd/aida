@@ -57,5 +57,7 @@ defmodule Aida.InputQuestion do
         text -> {:ok, text}
       end
     end
+
+    def relevant(%{relevant: relevant}), do: relevant
   end
 end

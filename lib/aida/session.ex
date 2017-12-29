@@ -81,4 +81,11 @@ defmodule Aida.Session do
       value -> value
     end
   end
+
+  def expr_context(session, self \\ nil) do
+    %Aida.Expr.Context{
+      self: self,
+      lookup: fn (name) -> Session.lookup_var(session, name) end
+    }
+  end
 end

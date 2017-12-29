@@ -4,4 +4,7 @@ defprotocol Aida.SurveyQuestion do
 
   @spec accept_answer(question :: Aida.SurveyQuestion.t, message :: Aida.Message.t) :: :error | {:ok, term}
   def accept_answer(question, message)
+
+  @spec relevant(question :: Aida.SurveyQuestion.t) :: Aida.Expr.t | nil
+  def relevant(question)
 end

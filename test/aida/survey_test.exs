@@ -144,5 +144,25 @@ defmodule Aida.SurveyTest do
 
       assert message |> Message.get_session("survey/food_preferences") == nil
     end
+
+    test "skip questions when the relevant attribute evaluates to false", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 1}})
+
+      message = Message.new("15", session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
+      assert message.reply == ["Any particular requests for your dinner?"]
+    end
+
+    test "do not skip questions when the relevant attribute evaluates to false", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 1}})
+
+      message = Message.new("20", session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+      assert message.reply == ["At what temperature do your like red wine the best?"]
+    end
   end
 end

@@ -61,16 +61,35 @@ defmodule Aida.Skill.Survey do
   def move_to_next_question(survey, message) do
     survey_state = case message |> Message.get_session(state_key(survey)) do
       %{"step" => step} = state ->
-        if step + 1 >= Enum.count(survey.questions) do
-          nil
-        else
-          %{state | "step" => step + 1}
+        case find_next_question(survey, message, step) do
+          nil -> nil
+          step -> %{state | "step" => step}
         end
       _ -> %{"step" => 0}
     end
 
     message
     |> Message.put_session(state_key(survey), survey_state)
+  end
+
+  defp find_next_question(survey, message, step) do
+    step = step + 1
+    if step >= Enum.count(survey.questions) do
+      nil
+    else
+      question = survey.questions |> Enum.at(step)
+      if question.relevant == nil do
+        step
+      else
+        context = message.session |> Session.expr_context
+        relevant = question |> SurveyQuestion.relevant |> Aida.Expr.eval(context)
+        if relevant == false do
+          find_next_question(survey, message, step)
+        else
+          step
+        end
+      end
+    end
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
@@ -107,8 +126,8 @@ defmodule Aida.Skill.Survey do
       message = case SurveyQuestion.accept_answer(question, message) do
         :error -> message
         {:ok, answer} ->
+          message = Message.put_session(message, Survey.answer_key(survey, question), answer)
           Survey.move_to_next_question(survey, message)
-            |> Message.put_session(Survey.answer_key(survey, question), answer)
       end
 
       Survey.answer(survey, message)

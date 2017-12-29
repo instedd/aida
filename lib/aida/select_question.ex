@@ -73,5 +73,7 @@ defmodule Aida.SelectQuestion do
         :error
       end
     end
+
+    def relevant(%{relevant: relevant}), do: relevant
   end
 end
