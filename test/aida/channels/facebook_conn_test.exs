@@ -3,10 +3,14 @@ defmodule Aida.Channel.FacebookConnTest do
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, BotManager, BotParser, SessionStore}
+  alias Aida.{ChannelRegistry, BotManager, BotParser, SessionStore, Session}
   alias Aida.Channel.Facebook
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
+  @fb_api_mock [
+    send_message: &__MODULE__.send_message_mock/3,
+    get_profile: &__MODULE__.get_profile_mock/2
+  ]
 
   setup do
     ChannelRegistry.start_link
@@ -14,6 +18,7 @@ defmodule Aida.Channel.FacebookConnTest do
     SessionStore.start_link
     :ok
   end
+
   describe "with bot" do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json") |> Poison.decode!
@@ -32,24 +37,84 @@ defmodule Aida.Channel.FacebookConnTest do
       assert response(conn, 200) == challenge
     end
 
-    test_with_mock "incoming facebook message", HTTPoison, [post: fn(_url,_par1,_par2) -> "<html></html>" end] do
+    test "incoming facebook message" do
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 
-      conn = build_conn(:post, "/callback/facebook", params)
-        |> Facebook.callback()
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", params)
+          |> Facebook.callback()
 
-      assert response(conn, 200) == "ok"
+        assert response(conn, 200) == "ok"
 
-      assert_message_sent("Hello, I'm a Restaurant bot")
-      assert_message_sent("I can do a number of things")
-      assert_message_sent("I can give you information about our menu")
-      assert_message_sent("I can give you information about our opening hours")
+        assert_message_sent("Hello, I'm a Restaurant bot")
+        assert_message_sent("I can do a number of things")
+        assert_message_sent("I can give you information about our menu")
+        assert_message_sent("I can give you information about our opening hours")
+      end
+    end
+
+    test "pull profile information" do
+      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", params)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        session = Session.load("#{@uuid}/facebook/1234567890/1234")
+        assert Session.get(session, "first_name") == "John"
+        assert Session.get(session, "last_name") == "Doe"
+        assert Session.get(session, "gender") == "male"
+
+        {:ok, pull_ts, 0} = Session.get(session, "facebook_profile_ts") |> DateTime.from_iso8601
+        assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
+      end
+    end
+
+    test "profile is not pull if it was already pulled within the last 24hs" do
+      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        Session.load("#{@uuid}/facebook/1234567890/1234")
+          |> Session.put("facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
+          |> Session.save
+
+        build_conn(:post, "/callback/facebook", params)
+          |> Facebook.callback()
+
+        session = Session.load("#{@uuid}/facebook/1234567890/1234")
+        assert Session.get(session, "first_name") == nil
+        assert Session.get(session, "last_name") == nil
+        assert Session.get(session, "gender") == nil
+      end
+    end
+
+    test "profile is pulled again when the last pull was more than a day ago" do
+      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        Session.load("#{@uuid}/facebook/1234567890/1234")
+          |> Session.put("first_name", "---")
+          |> Session.put("facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
+          |> Session.save
+
+        build_conn(:post, "/callback/facebook", params)
+          |> Facebook.callback()
+
+        session = Session.load("#{@uuid}/facebook/1234567890/1234")
+        assert Session.get(session, "first_name") == "John"
+        assert Session.get(session, "last_name") == "Doe"
+        assert Session.get(session, "gender") == "male"
+      end
     end
   end
 
   defp assert_message_sent(message) do
-    headers = [{"Content-type", "application/json"}]
-    json = %{message: %{text: message}, messaging_type: "RESPONSE", recipient: %{id: "1234"}}
-    assert called HTTPoison.post("https://graph.facebook.com/v2.6/me/messages?access_token=QWERTYUIOPASDFGHJKLZXCVBNM", Poison.encode!(json), headers)
+    api = FacebookApi.new("QWERTYUIOPASDFGHJKLZXCVBNM")
+    assert called FacebookApi.send_message(api, "1234", message)
   end
+
+  def send_message_mock(_api, _recipient, _message), do: :ok
+  def get_profile_mock(_api, _psid), do: %{"first_name" => "John", "last_name" => "Doe", "gender" => "male"}
 end

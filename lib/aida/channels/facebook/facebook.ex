@@ -103,46 +103,69 @@ defmodule Aida.Channel.Facebook do
     end
 
     def handle_message(channel, message) do
-      text = message["message"]["text"]
-      recipient_id = message["recipient"]["id"]
       sender_id = message["sender"]["id"]
-      session_id = "#{channel.bot_id}/#{type(channel)}/#{recipient_id}/#{sender_id}"
 
-      case text do
-        "##RESET" ->
-          Session.delete(session_id)
-          send_message(channel, ["Session was reset"], sender_id)
+      try do
+        text = message["message"]["text"]
+        recipient_id = message["recipient"]["id"]
+        session_id = "#{channel.bot_id}/#{type(channel)}/#{recipient_id}/#{sender_id}"
 
-        nil -> :ok
+        case text do
+          "##RESET" ->
+            Session.delete(session_id)
+            send_message(channel, ["Session was reset"], sender_id)
 
-        _ ->
-          MessagesPerDay.log_received_message(channel.bot_id)
+          nil -> :ok
 
-          try do
+          _ ->
+            MessagesPerDay.log_received_message(channel.bot_id)
+
             bot = BotManager.find(channel.bot_id)
             session = Session.load(session_id)
+              |> pull_profile(channel, sender_id)
+
             reply = Bot.chat(bot, Message.new(text, session))
             reply.session |> Session.save
 
             send_message(channel, reply.reply, sender_id)
-          rescue
-            error ->
-              Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: channel.bot_id, message: message}])
-              send_message(channel, ["Oops! Something went wrong"], sender_id)
-          end
+        end
+      rescue
+        error ->
+          Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: channel.bot_id, message: message}])
+          send_message(channel, ["Oops! Something went wrong"], sender_id)
       end
     end
 
+    defp pull_profile(session, channel, sender_id) do
+      must_pull = session |> Session.get("facebook_profile_ts") |> must_pull_profile?
+
+      if must_pull do
+        api = FacebookApi.new(channel.access_token)
+
+        profile = api |> FacebookApi.get_profile(sender_id)
+        session
+          |> Session.put("first_name", profile["first_name"])
+          |> Session.put("last_name", profile["last_name"])
+          |> Session.put("gender", profile["gender"])
+          |> Session.put("facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
+      else
+        session
+      end
+    end
+
+    defp must_pull_profile?(nil), do: true
+    defp must_pull_profile?(ts) do
+      {:ok, ts, _} = DateTime.from_iso8601(ts)
+      DateTime.diff(DateTime.utc_now, ts, :second) > 86400
+    end
+
     def send_message(channel, messages, recipient) do
-      url = "https://graph.facebook.com/v2.6/me/messages?access_token=#{channel.access_token}"
-      headers = [{"Content-type", "application/json"}]
+      api = FacebookApi.new(channel.access_token)
 
       Enum.each(messages, fn message ->
         MessagesPerDay.log_sent_message(channel.bot_id)
-        json = %{"recipient": %{"id": recipient}, "message": %{"text": message}, "messaging_type": "RESPONSE"}
-        HTTPoison.post url, Poison.encode!(json), headers
+        api |> FacebookApi.send_message(recipient, message)
       end)
-
     end
   end
 end
