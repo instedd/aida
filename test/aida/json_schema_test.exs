@@ -55,6 +55,7 @@ defmodule Aida.JsonSchemaTest do
     "type": "select_one",
     "choices": "a",
     "name": "a",
+    "relevant": "${q} = 0",
     "message": #{@valid_localized_string}
   })
   @valid_input_question ~s({
@@ -115,6 +116,16 @@ defmodule Aida.JsonSchemaTest do
     validate(~s({}), type, fn(validation_result) ->
       validation_result
       |> Enum.member?({"Required property #{thing} was not present.", []})
+    end)
+  end
+
+  defp assert_optional(thing, valid_value, type) do
+    validate(~s({}), type, fn(validation_result) ->
+      !Enum.member?(validation_result, {"Required property #{thing} was not present.", []})
+    end)
+
+    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+      !Enum.member?(validation_result, {"Schema does not allow additional properties.", [thing]})
     end)
   end
 
@@ -305,6 +316,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("name", :input_question)
     assert_non_empty_string("name", :input_question)
     assert_required("message", :input_question)
+    assert_optional("relevant", "${q} > 0", :input_question)
 
     @valid_input_question
     |> assert_valid(:input_question)
@@ -320,6 +332,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("name", :select_question)
     assert_non_empty_string("name", :select_question)
     assert_required("message", :select_question)
+    assert_optional("relevant", "${q} > 0", :select_question)
 
     @valid_select_question
     |> assert_valid(:select_question)

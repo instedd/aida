@@ -134,6 +134,7 @@
         {
           "type": "decimal",
           "name": "wine_temp",
+          "relevant": "${age} >= 18",
           "message": {
             "en": "At what temperature do your like red wine the best?",
             "es": "A qué temperatura preferís tomar el vino tinto?"
@@ -142,6 +143,7 @@
         {
           "type": "select_many",
           "name": "wine_grapes",
+          "relevant": "${age} >= 18",
           "choices": "grapes",
           "message": {
             "en": "What are your favorite wine grapes?",

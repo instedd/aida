@@ -151,7 +151,8 @@
         "type": {"enum": ["select_one", "select_many"]},
         "name": {"$ref": "#/definitions/non_empty_string"},
         "choices": {"$ref": "#/definitions/non_empty_string"},
-        "message": {"$ref": "#/definitions/localized_string"}
+        "message": {"$ref": "#/definitions/localized_string"},
+        "relevant": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
       "required": ["type", "name", "choices", "message"]
@@ -162,7 +163,8 @@
       "properties": {
         "type": {"enum": ["integer", "decimal", "text"]},
         "name": {"$ref": "#/definitions/non_empty_string"},
-        "message": {"$ref": "#/definitions/localized_string"}
+        "message": {"$ref": "#/definitions/localized_string"},
+        "relevant": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
       "required": ["type", "name", "message"]
