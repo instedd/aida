@@ -165,6 +165,7 @@ defmodule Aida.BotParserTest do
             %InputQuestion{
               name: "wine_temp",
               type: :decimal,
+              relevant: Aida.Expr.parse("${age} >= 18"),
               message: %{
                 "en" => "At what temperature do your like red wine the best?",
                 "es" => "A qué temperatura preferís tomar el vino tinto?"
@@ -173,6 +174,7 @@ defmodule Aida.BotParserTest do
             %SelectQuestion{
               name: "wine_grapes",
               type: :select_many,
+              relevant: Aida.Expr.parse("${age} >= 18"),
               choices: [
                 %Choice{
                   name: "merlot",

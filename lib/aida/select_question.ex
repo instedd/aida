@@ -3,8 +3,9 @@ defmodule Aida.SelectQuestion do
 
   @type t :: %__MODULE__{
     type: :select_one | :select_many,
-    choices: [Aida.Choice.t()],
-    name: String.t(),
+    choices: [Aida.Choice.t],
+    name: String.t,
+    relevant: nil | Aida.Expr.t,
     message: Aida.Bot.message
   }
   @enforce_keys [:type]
@@ -12,6 +13,7 @@ defmodule Aida.SelectQuestion do
   defstruct type: nil,
             choices: [],
             name: "",
+            relevant: nil,
             message: %{}
 
   defimpl Aida.SurveyQuestion, for: __MODULE__ do

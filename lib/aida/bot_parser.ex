@@ -113,6 +113,7 @@ defmodule Aida.BotParser do
       type: question_type,
       choices: choice_lists[question["choices"]],
       name: question["name"],
+      relevant: parse_expr(question["relevant"]),
       message: question["message"]
     }
   end
@@ -121,8 +122,15 @@ defmodule Aida.BotParser do
     %InputQuestion{
       type: question_type,
       name: question["name"],
+      relevant: parse_expr(question["relevant"]),
       message: question["message"]
     }
+  end
+
+  defp parse_expr(nil), do: nil
+
+  defp parse_expr(code) do
+    Aida.Expr.parse(code)
   end
 
   defp parse_survey_choice_list(choice_list) do

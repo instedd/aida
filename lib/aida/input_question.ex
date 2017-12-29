@@ -1,12 +1,14 @@
 defmodule Aida.InputQuestion do
   @type t :: %__MODULE__{
     type: :decimal | :integer | :text,
-    name: String.t(),
+    name: String.t,
+    relevant: nil | Aida.Expr.t,
     message: Aida.Bot.message
   }
 
   defstruct type: "",
             name: "",
+            relevant: nil,
             message: %{}
 
   defimpl Aida.SurveyQuestion, for: __MODULE__ do
