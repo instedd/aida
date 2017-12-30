@@ -31,9 +31,9 @@ defmodule AidaWeb.BotChannel do
         reply = Bot.chat(bot, Message.new(text, session))
         reply.session |> Session.save
 
-        reply.reply |> Enum.each fn message ->
+        reply.reply |> Enum.each(fn message ->
           push socket, "btu_msg", %{text: message, session: session_id}
-        end
+        end)
         {:noreply, socket}
     end
   end
