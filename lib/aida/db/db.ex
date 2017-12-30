@@ -152,7 +152,6 @@ defmodule Aida.DB do
   """
   def sessions_by_bot(bot_id) do
     Session
-      # TODO filter by bot_id
       |> where([s], like(s.id, ^"#{bot_id}/%"))
       |> Repo.all()
   end
