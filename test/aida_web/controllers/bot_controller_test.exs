@@ -72,13 +72,27 @@ defmodule AidaWeb.BotControllerTest do
       conn = get conn, bot_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
-        "manifest" => @valid_manifest}
+        "manifest" => @valid_manifest,
+        "temp" => false}
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post conn, bot_path(conn, :create), bot: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
     end
+
+    test "creates temporary bot", %{conn: conn} do
+      conn = post conn, bot_path(conn, :create), bot: Map.merge(@create_attrs, %{temp: true})
+      assert %{"id" => id} = json_response(conn, 201)["data"]
+
+      conn = get conn, bot_path(conn, :show, id)
+      assert json_response(conn, 200)["data"] == %{
+        "id" => id,
+        "manifest" => @valid_manifest,
+        "temp" => true
+      }
+    end
+
   end
 
   describe "update bot" do
@@ -91,7 +105,8 @@ defmodule AidaWeb.BotControllerTest do
       conn = get conn, bot_path(conn, :show, id)
       assert json_response(conn, 200)["data"] == %{
         "id" => id,
-        "manifest" => @updated_manifest}
+        "manifest" => @updated_manifest,
+        "temp" => false}
     end
 
     test "renders errors when data is invalid", %{conn: conn, bot: bot} do
