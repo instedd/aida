@@ -16,7 +16,7 @@ defmodule Aida.BotParser do
     Channel.WebSocket
   }
 
-  @spec parse(id :: String.t, manifest :: map) :: {atom, Bot.t}
+  @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
   def parse(id, manifest) do
     %Bot{
       id: id,
