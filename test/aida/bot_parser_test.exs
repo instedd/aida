@@ -14,7 +14,7 @@ defmodule Aida.BotParserTest do
     DelayedMessage,
     Variable
   }
-  alias Aida.Channel.Facebook
+  alias Aida.Channel.{Facebook, WebSocket}
 
   @uuid "f905a698-310f-473f-b2d0-00d30ad58b0c"
 
@@ -229,6 +229,10 @@ defmodule Aida.BotParserTest do
           page_id: "1234567890",
           verify_token: "qwertyuiopasdfghjklzxcvbnm",
           access_token: "QWERTYUIOPASDFGHJKLZXCVBNM"
+        },
+        %WebSocket{
+          bot_id: @uuid,
+          access_token: "qwertyuiopasdfghjklzxcvbnm"
         }
       ]
     }

@@ -17,12 +17,13 @@ class Chat extends Component {
     }
   }
 
-  setBotId() {
+  join() {
     let { channel } = this.state
     if (channel) { channel.leave() }
     this.setState({ botId: this.refs.botId.value })
 
-    channel = socket.channel(`bot:${this.refs.botId.value}`, {})
+    const { botId, accessToken } = this.refs
+    channel = socket.channel(`bot:${botId.value}`, {"access_token": accessToken.value})
 
     channel.join()
       .receive('ok', resp => {
@@ -91,10 +92,14 @@ class Chat extends Component {
           <Button onClick={() => this.sendMessage()} raised >Send</Button>
           <TextField ref='botId'
             label='bot id'
-            id='chat-input'
+            id='bot-id'
             className='md-cell md-cell--bottom'
           />
-          <Button onClick={() => this.setBotId()} raised >Set Bot Id</Button>
+          <TextField ref='accessToken'
+            label='access token'
+            id='access-token'
+            className='md-cell md-cell--bottom'/>
+          <Button onClick={() => this.join()} raised >Join</Button>
           <Button onClick={() => this.getNewSession()} raised >New Session</Button>
         </div>
       </div>

@@ -1,12 +1,14 @@
 defmodule Aida.Channel.WebSocket do
   alias Aida.Channel.WebSocket
+  alias Aida.ChannelRegistry
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
-    bot_id: String.t
+    bot_id: String.t,
+    access_token: String.t
   }
 
-  defstruct [:bot_id]
+  defstruct [:bot_id, :access_token]
 
   def init do
     :ok
@@ -16,9 +18,13 @@ defmodule Aida.Channel.WebSocket do
     %WebSocket{bot_id: bot_id}
   end
 
+  def find_channel_for_bot(bot_id) do
+    ChannelRegistry.find({:websocket, bot_id})
+  end
+
   def find_channel(session_id) do
     [bot_id, _provider, _uuid] = session_id |> String.split("/")
-    new(bot_id)
+    find_channel_for_bot(bot_id)
   end
 
   def callback(_channel) do
@@ -26,12 +32,13 @@ defmodule Aida.Channel.WebSocket do
   end
 
   defimpl Aida.Channel, for: __MODULE__ do
-    def start(_channel), do: :ok
+    def start(channel) do
+      ChannelRegistry.register({:websocket, channel.bot_id}, channel)
+    end
 
-    def stop(_channel) do
+    def stop(channel) do
       # TODO Handle channel disconnects
-      # We need to add this to the bot channels, and maybe the manifest
-      :ok
+      ChannelRegistry.unregister({:websocket, channel.bot_id})
     end
 
     def callback(_channel, _conn) do

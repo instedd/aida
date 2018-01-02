@@ -223,6 +223,10 @@
       "page_id": "1234567890",
       "verify_token": "qwertyuiopasdfghjklzxcvbnm",
       "access_token": "QWERTYUIOPASDFGHJKLZXCVBNM"
+    },
+    {
+      "type": "websocket",
+      "access_token": "qwertyuiopasdfghjklzxcvbnm"
     }
   ]
 }

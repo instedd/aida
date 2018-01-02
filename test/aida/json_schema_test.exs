@@ -83,6 +83,10 @@ defmodule Aida.JsonSchemaTest do
     "verify_token": "qwertyuiopasdfghjklzxcvbnm",
     "access_token": "qwertyuiopasdfghjklzxcvbnm"
   })
+  @valid_websocket_channel ~s({
+    "type": "websocket",
+    "access_token": "qwertyuiopasdfghjklzxcvbnm"
+  })
   @valid_manifest ~s({
     "version" : "1",
     "languages" : ["en"],
@@ -94,7 +98,7 @@ defmodule Aida.JsonSchemaTest do
       #{@valid_survey}
     ],
     "variables" : [],
-    "channels" : [#{@valid_facebook_channel}]
+    "channels" : [#{@valid_facebook_channel}, #{@valid_websocket_channel}]
   })
 
   defp validate(json_thing, type, fun) do
@@ -446,8 +450,22 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:facebook_channel)
   end
 
+  test "websocket_channel" do
+    assert_enum("type", "foo", :websocket_channel)
+    assert_valid_enum("type", "websocket", :websocket_channel)
+    assert_required("type", :websocket_channel)
+    assert_required("access_token", :websocket_channel)
+    assert_non_empty_string("access_token", :websocket_channel)
+
+    @valid_websocket_channel
+    |> assert_valid(:websocket_channel)
+  end
+
   test "channel" do
     @valid_facebook_channel
+    |> assert_valid(:channel)
+
+    @valid_websocket_channel
     |> assert_valid(:channel)
 
     ~s({})

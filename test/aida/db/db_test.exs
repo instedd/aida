@@ -63,7 +63,7 @@ defmodule Aida.DBTest do
 
       bot = bot_fixture()
       BotManager.flush()
-      assert %Aida.Bot{channels: [_]} = BotManager.find(bot.id)
+      assert %Aida.Bot{channels: [_, _]} = BotManager.find(bot.id)
 
       assert {:ok, bot} = DB.update_bot(bot, @update_attrs)
       BotManager.flush()

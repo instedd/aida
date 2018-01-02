@@ -1,13 +1,14 @@
 defmodule AidaWeb.BotChannel do
   use Phoenix.Channel
-  alias Aida.{Session, BotManager, DB, Bot, Message}
+  alias Aida.{Session, BotManager, Bot, Message, Channel.WebSocket}
 
-  def join("bot:" <> bot_id, _params, socket) do
-    case DB.get_bot!(bot_id) do
-      nil -> {:error, %{reason: "unauthorized"}}
-      _bot ->
+  def join("bot:" <> bot_id, %{"access_token" => access_token}, socket) do
+    case WebSocket.find_channel_for_bot(bot_id) do
+      %WebSocket{access_token: ^access_token} ->
         socket = assign(socket, :bot_id, bot_id)
         {:ok, socket}
+      _ ->
+        {:error, %{reason: "unauthorized"}}
     end
   end
 

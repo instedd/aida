@@ -12,7 +12,8 @@ defmodule Aida.BotParser do
     InputQuestion,
     Choice,
     Variable,
-    Channel.Facebook
+    Channel.Facebook,
+    Channel.WebSocket
   }
 
   @spec parse(id :: String.t, manifest :: map) :: {atom, Bot.t}
@@ -26,6 +27,13 @@ defmodule Aida.BotParser do
       channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
     }
     |> validate()
+  end
+
+  def parse!(id, manifest) do
+    case parse(id, manifest) do
+      {:ok, bot} -> bot
+      {:error, reason} -> raise reason
+    end
   end
 
   @spec parse_front_desk(front_desk :: map) :: FrontDesk.t
@@ -152,6 +160,13 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       page_id: channel["page_id"],
       verify_token: channel["verify_token"],
+      access_token: channel["access_token"]
+    }
+  end
+
+  defp parse_channel(bot_id, %{"type" => "websocket"} = channel) do
+    %WebSocket{
+      bot_id: bot_id,
       access_token: channel["access_token"]
     }
   end

@@ -196,7 +196,8 @@
 
     "channel": {
       "oneOf": [
-        {"$ref": "#/definitions/facebook_channel"}
+        {"$ref": "#/definitions/facebook_channel"},
+        {"$ref": "#/definitions/websocket_channel"}
       ]
     },
 
@@ -210,6 +211,15 @@
       },
       "additionalProperties": false,
       "required": ["type", "page_id", "verify_token", "access_token"]
+    },
+
+    "websocket_channel": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["websocket"]},
+        "access_token": {"$ref": "#/definitions/non_empty_string"}
+      },
+      "required": ["type", "access_token"]
     },
 
     "variable": {
