@@ -108,7 +108,7 @@ defmodule Aida.SurveyTest do
       message = Message.new("bananas", session)
       message = Bot.chat(bot, message)
 
-      assert message.reply == ["At what temperature do your like red wine the best?"]
+      assert message.reply == ["Invalid temperature", "At what temperature do your like red wine the best?"]
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
     end
 
@@ -161,6 +161,31 @@ defmodule Aida.SurveyTest do
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
       assert message.reply == ["At what temperature do your like red wine the best?"]
+    end
+
+    test "validate input responses and continue if the value is valid", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
+
+      message = Message.new("20", session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session("survey/food_preferences/wine_temp") == 20.0
+      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 3}
+      assert message.reply == ["What are your favorite wine grapes?"]
+    end
+
+    test "validate input responses and return constraint message when the value is invalid", %{bot: bot} do
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
+
+      message = Message.new("200", session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session("survey/food_preferences/wine_temp") == nil
+      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+      assert message.reply == [
+        "Invalid temperature",
+        "At what temperature do your like red wine the best?"
+      ]
     end
   end
 end

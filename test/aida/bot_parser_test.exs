@@ -166,6 +166,11 @@ defmodule Aida.BotParserTest do
               name: "wine_temp",
               type: :decimal,
               relevant: Aida.Expr.parse("${age} >= 18"),
+              constraint: Aida.Expr.parse(". < 100"),
+              constraint_message: %{
+                "en" => "Invalid temperature",
+                "es" => "Temperatura inválida"
+              },
               message: %{
                 "en" => "At what temperature do your like red wine the best?",
                 "es" => "A qué temperatura preferís tomar el vino tinto?"
@@ -201,6 +206,10 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "What are your favorite wine grapes?",
                 "es" => "Que variedades de vino preferís?"
+              },
+              constraint_message: %{
+                "en" => "I don't know that wine",
+                "es" => "No conozco ese vino"
               }
             },
             %InputQuestion{

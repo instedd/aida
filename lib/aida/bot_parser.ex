@@ -122,7 +122,8 @@ defmodule Aida.BotParser do
       choices: choice_lists[question["choices"]],
       name: question["name"],
       relevant: parse_expr(question["relevant"]),
-      message: question["message"]
+      message: question["message"],
+      constraint_message: question["constraint_message"]
     }
   end
 
@@ -131,7 +132,9 @@ defmodule Aida.BotParser do
       type: question_type,
       name: question["name"],
       relevant: parse_expr(question["relevant"]),
-      message: question["message"]
+      message: question["message"],
+      constraint: parse_expr(question["constraint"]),
+      constraint_message: question["constraint_message"]
     }
   end
 

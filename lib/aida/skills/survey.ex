@@ -117,7 +117,12 @@ defmodule Aida.Skill.Survey do
     def put_response(survey, message) do
       question = Survey.current_question(survey, message)
       message = case SurveyQuestion.accept_answer(question, message) do
-        :error -> message
+        :error ->
+          if question.constraint_message do
+            message |> Message.respond(question.constraint_message)
+          else
+            message
+          end
         {:ok, answer} ->
           message = Message.put_session(message, Survey.answer_key(survey, question), answer)
           Survey.move_to_next_question(survey, message)

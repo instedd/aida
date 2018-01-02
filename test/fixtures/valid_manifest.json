@@ -135,6 +135,11 @@
           "type": "decimal",
           "name": "wine_temp",
           "relevant": "${age} >= 18",
+          "constraint": ". < 100",
+          "constraint_message": {
+            "en": "Invalid temperature",
+            "es": "Temperatura inválida"
+          },
           "message": {
             "en": "At what temperature do your like red wine the best?",
             "es": "A qué temperatura preferís tomar el vino tinto?"
@@ -148,6 +153,10 @@
           "message": {
             "en": "What are your favorite wine grapes?",
             "es": "Que variedades de vino preferís?"
+          },
+          "constraint_message": {
+            "en": "I don't know that wine",
+            "es": "No conozco ese vino"
           }
         },
         {

@@ -133,6 +133,12 @@ defmodule Aida.JsonSchemaTest do
     end)
   end
 
+  defp assert_dependency(thing, valid_value, dependency, type) do
+    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+      Enum.member?(validation_result, {"Property #{thing} depends on #{dependency} to be present but it was not.", []})
+    end)
+  end
+
   defp assert_minimum_properties(type) do
     validate(~s({}), type, fn(validation_result) ->
       validation_result
@@ -321,6 +327,9 @@ defmodule Aida.JsonSchemaTest do
     assert_non_empty_string("name", :input_question)
     assert_required("message", :input_question)
     assert_optional("relevant", "${q} > 0", :input_question)
+    assert_optional("constraint", ". < 10", :input_question)
+    assert_optional("constraint_message", "error", :input_question)
+    assert_dependency("constraint", ". < 10", "constraint_message", :input_question)
 
     @valid_input_question
     |> assert_valid(:input_question)
@@ -337,6 +346,7 @@ defmodule Aida.JsonSchemaTest do
     assert_non_empty_string("name", :select_question)
     assert_required("message", :select_question)
     assert_optional("relevant", "${q} > 0", :select_question)
+    assert_optional("constraint_message", "error", :select_question)
 
     @valid_select_question
     |> assert_valid(:select_question)

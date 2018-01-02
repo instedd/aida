@@ -6,7 +6,8 @@ defmodule Aida.SelectQuestion do
     choices: [Aida.Choice.t],
     name: String.t,
     relevant: nil | Aida.Expr.t,
-    message: Aida.Bot.message
+    message: Aida.Bot.message,
+    constraint_message: nil | Aida.Bot.message
   }
   @enforce_keys [:type]
 
@@ -14,7 +15,8 @@ defmodule Aida.SelectQuestion do
             choices: [],
             name: "",
             relevant: nil,
-            message: %{}
+            message: %{},
+            constraint_message: nil
 
   defimpl Aida.SurveyQuestion, for: __MODULE__ do
     def valid_answer?(%{type: :select_one} = question, message) do
