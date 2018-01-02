@@ -8,6 +8,7 @@ defmodule Aida.DB.Bot do
   @foreign_key_type :binary_id
   schema "bots" do
     field :manifest, JSON
+    field :temp, :boolean, default: false
 
     timestamps()
   end
@@ -15,7 +16,7 @@ defmodule Aida.DB.Bot do
   @doc false
   def changeset(%Bot{} = bot, attrs) do
     bot
-    |> cast(attrs, [:manifest])
+    |> cast(attrs, [:manifest, :temp])
     |> validate_required([:manifest])
   end
 end
