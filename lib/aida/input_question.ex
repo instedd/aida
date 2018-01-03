@@ -79,7 +79,7 @@ defmodule Aida.InputQuestion do
     def validate_constraint(%{constraint: nil}, _, _), do: true
 
     def validate_constraint(%{constraint: constraint}, session, value) do
-      context = session |> Session.expr_context(value)
+      context = session |> Session.expr_context(self: value)
       Expr.eval(constraint, context)
     end
 

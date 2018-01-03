@@ -231,7 +231,7 @@ defmodule Aida.BotTest do
       %{bot: bot}
     end
 
-    test "evaluate relevance for keyword responder skill", %{bot: bot} do
+    test "introduction message includes only relevant skills", %{bot: bot} do
       session = Session.new("sid", %{"language" => "en", "age" => 14})
       input = Message.new("Hi!", session)
       output = bot |> Bot.chat(input)
@@ -243,8 +243,20 @@ defmodule Aida.BotTest do
       ]
     end
 
-    test "evaluate relevance for keyword responder skill 2", %{bot: bot} do
+    test "only relevant skills receive the message", %{bot: bot} do
       session = Session.new("sid", %{"language" => "en", "age" => 14})
+      input = Message.new("menu", session)
+      output = bot |> Bot.chat(input)
+
+      assert output.reply == [
+        "Sorry, I didn't understand that",
+        "I can do a number of things",
+        "I can give you information about our opening hours"
+      ]
+    end
+
+    test "relevance expressions containing undefined variables are considered false", %{bot: bot} do
+      session = Session.new("sid", %{"language" => "en"})
       input = Message.new("menu", session)
       output = bot |> Bot.chat(input)
 

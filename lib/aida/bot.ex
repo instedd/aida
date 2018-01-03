@@ -99,7 +99,12 @@ defmodule Aida.Bot do
   defp evaluate_skill_relevance(skill, session) do
     case skill |> Skill.relevant do
       nil -> true
-      expr -> Aida.Expr.eval(expr, session |> Session.expr_context)
+      expr ->
+        try do
+          Aida.Expr.eval(expr, session |> Session.expr_context(lookup_raises: true))
+        rescue
+          Aida.Expr.UnknownVariable -> false
+        end
     end
   end
 
