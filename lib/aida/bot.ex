@@ -56,20 +56,11 @@ defmodule Aida.Bot do
   end
 
   defp handle(bot, message) do
-    skills_by_confidence = bot
+    skills_sorted = bot
       |> relevant_skills(message.session)
-      |> Enum.map(fn(skill) ->
-        confidence = Skill.confidence(skill, message)
-        case confidence do
-          :threshold ->
-            %{"confidence" => threshold(bot), "skill" => skill}
-          confidence when confidence > 0 ->
-            %{"confidence" => confidence, "skill" => skill}
-          _ -> nil
-        end
-      end)
-
-    skills_sorted = Enum.reject(Enum.sort_by(skills_by_confidence, fn (skill) -> skill["confidence"] end, &>=/2), &is_nil/1)
+      |> Enum.map(&(evaluate_confidence(&1, bot, message)))
+      |> Enum.reject(&is_nil/1)
+      |> Enum.sort_by(fn (skill) -> skill.confidence end, &>=/2)
 
     case skills_sorted do
       [] -> message |> FrontDesk.not_understood(bot)
@@ -77,15 +68,26 @@ defmodule Aida.Bot do
         higher_confidence_skill = Enum.at(skills, 0)
 
         difference = case Enum.count(skills) do
-          1 -> higher_confidence_skill["confidence"]
-          _ -> higher_confidence_skill["confidence"] - Enum.at(skills, 1)["confidence"]
+          1 -> higher_confidence_skill.confidence
+          _ -> higher_confidence_skill.confidence - Enum.at(skills, 1).confidence
         end
 
         if threshold(bot) <= difference do
-          Skill.respond(higher_confidence_skill["skill"], message)
+          Skill.respond(higher_confidence_skill.skill, message)
         else
-          message |> FrontDesk.clarification(bot, Enum.map(skills, fn(skill) -> skill["skill"] end))
+          message |> FrontDesk.clarification(bot, Enum.map(skills, fn(skill) -> skill.skill end))
         end
+    end
+  end
+
+  defp evaluate_confidence(skill, bot, message) do
+    confidence = Skill.confidence(skill, message)
+    case confidence do
+      :threshold ->
+        %{confidence: threshold(bot), skill: skill}
+      confidence when confidence > 0 ->
+        %{confidence: confidence, skill: skill}
+      _ -> nil
     end
   end
 
