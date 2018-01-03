@@ -7,3 +7,5 @@ RUN \
 
 RUN mix local.hex --force
 RUN mix local.rebar --force
+
+CMD elixir --sname server -S mix phx.server

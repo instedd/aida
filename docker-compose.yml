@@ -19,7 +19,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile.dev
-    command: mix phx.server
     depends_on:
       - db
     working_dir: /app
