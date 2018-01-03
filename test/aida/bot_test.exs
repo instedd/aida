@@ -1,6 +1,6 @@
 defmodule Aida.BotTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message, DB}
+  alias Aida.{BotParser, Bot, Message, DB, Session}
 
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
@@ -210,6 +210,14 @@ defmodule Aida.BotTest do
       input2 = Message.new("eu quero falar português", output.session)
       output2 = bot |> Bot.chat(input2)
       assert output2.reply == @language_selection_speech
+    end
+
+    test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
+      session = Session.new("sid", %{"language" => "jp"})
+      input = Message.new("Hi!", session)
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+      assert output |> Message.get_session("language") == nil
     end
   end
 end

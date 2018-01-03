@@ -38,6 +38,12 @@ defmodule Aida.Bot do
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
+    message = if !(language(message) in bot.languages) do 
+                put_session(message, "language", nil) 
+              else 
+                message
+              end
+              
     cond do
       !language(message) && Enum.count(bot.languages) == 1 ->
         message
