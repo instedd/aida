@@ -97,6 +97,19 @@ defmodule Aida.BotManagerTest do
         refute called Bot.wake_up(bot, "skill_id")
       end
     end
+
+    test "do not crash if the wake_up call raises" do
+      bot = %Bot{id: @uuid}
+      skill = %{id: "skill_id"}
+      BotManager.start(bot)
+
+      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> raise "error" end] do
+        BotManager.schedule_wake_up(bot, skill, 1)
+        :timer.sleep(50)
+        assert called Bot.wake_up(bot, "skill_id")
+        assert GenServer.whereis({:global, BotManager})
+      end
+    end
   end
 
   test "loads existing bots when it starts" do

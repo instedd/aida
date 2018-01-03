@@ -103,7 +103,12 @@ defmodule Aida.BotManager do
     case @table |> :ets.lookup(bot_id) do
       [{_id, bot}] ->
         Logger.debug("Waking up bot: #{bot_id}, skill: #{skill_id}")
-        Bot.wake_up(bot, skill_id)
+        try do
+          Bot.wake_up(bot, skill_id)
+        rescue
+          error ->
+            Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: bot_id, skill_id: skill_id}])
+        end
       _ -> :not_found
     end
     {:noreply, state}
