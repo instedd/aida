@@ -36,7 +36,8 @@ defmodule Aida.FrontDesk do
 
     log_usage(bot.id, message.session.id)
 
-    bot.skills
+    bot
+      |> Bot.relevant_skills(message.session)
       |> Enum.reduce(message, fn(skill, message) ->
         !Bot.is_language_detector?(skill) && Skill.explain(skill, message) || message
       end)

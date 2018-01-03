@@ -252,6 +252,7 @@ defmodule Aida.JsonSchemaTest do
     assert_non_empty_string("name", :keyword_responder)
     assert_required("id", :keyword_responder)
     assert_non_empty_string("id", :keyword_responder)
+    assert_optional("relevant", "${age} > 18", :keyword_responder)
 
     @valid_keyword_responder
     |> assert_valid(:keyword_responder)
@@ -271,6 +272,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("name", :scheduled_messages)
     assert_non_empty_string("id", :scheduled_messages)
     assert_required("id", :scheduled_messages)
+    assert_optional("relevant", "${age} > 18", :scheduled_messages)
 
     @valid_scheduled_messages
     |> assert_valid(:scheduled_messages)
@@ -312,6 +314,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("choice_lists", :survey)
     assert_array("choice_lists", :survey)
     assert_empty_array("choice_lists", :survey)
+    assert_optional("relevant", "${age} > 18", :survey)
 
     @valid_survey
     |> assert_valid(:survey)

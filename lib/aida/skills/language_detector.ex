@@ -66,5 +66,7 @@ defmodule Aida.Skill.LanguageDetector do
     def id(_) do
       "language_detector"
     end
+
+    def relevant(_), do: nil
   end
 end

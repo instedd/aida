@@ -8,7 +8,8 @@ defmodule Aida.Skill.KeywordResponder do
     bot_id: String.t(),
     name: String.t(),
     keywords: %{},
-    response: %{}
+    response: %{},
+    relevant: nil | Aida.Expr.t
   }
 
   defstruct explanation: %{},
@@ -17,7 +18,8 @@ defmodule Aida.Skill.KeywordResponder do
             bot_id: "",
             name: "",
             keywords: %{},
-            response: %{}
+            response: %{},
+            relevant: nil
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, _bot) do
@@ -59,5 +61,7 @@ defmodule Aida.Skill.KeywordResponder do
     def id(%{id: id}) do
       id
     end
+
+    def relevant(skill), do: skill.relevant
   end
 end

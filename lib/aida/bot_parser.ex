@@ -71,7 +71,8 @@ defmodule Aida.BotParser do
       id: skill["id"],
       name: skill["name"],
       keywords: skill["keywords"],
-      response: skill["response"]
+      response: skill["response"],
+      relevant: parse_expr(skill["relevant"])
     }
   end
 
@@ -81,6 +82,7 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       name: skill["name"],
       schedule_type: skill["schedule_type"],
+      relevant: parse_expr(skill["relevant"]),
       messages: skill["messages"] |> Enum.map(&parse_delayed_message/1)
     }
   end
@@ -94,6 +96,7 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       name: skill["name"],
       schedule: schedule,
+      relevant: parse_expr(skill["relevant"]),
       questions: skill["questions"] |> Enum.map(&(parse_survey_question(&1, choice_lists)))
     }
   end

@@ -220,4 +220,39 @@ defmodule Aida.BotTest do
       assert output |> Message.get_session("language") == nil
     end
   end
+
+  describe "bot with skill relevances" do
+    setup do
+      manifest = File.read!("test/fixtures/valid_manifest_with_skill_relevances.json")
+        |> Poison.decode!
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(bot.id, manifest)
+
+      %{bot: bot}
+    end
+
+    test "evaluate relevance for keyword responder skill", %{bot: bot} do
+      session = Session.new("sid", %{"language" => "en", "age" => 14})
+      input = Message.new("Hi!", session)
+      output = bot |> Bot.chat(input)
+
+      assert output.reply == [
+        "Sorry, I didn't understand that",
+        "I can do a number of things",
+        "I can give you information about our opening hours"
+      ]
+    end
+
+    test "evaluate relevance for keyword responder skill 2", %{bot: bot} do
+      session = Session.new("sid", %{"language" => "en", "age" => 14})
+      input = Message.new("menu", session)
+      output = bot |> Bot.chat(input)
+
+      assert output.reply == [
+        "Sorry, I didn't understand that",
+        "I can do a number of things",
+        "I can give you information about our opening hours"
+      ]
+    end
+  end
 end

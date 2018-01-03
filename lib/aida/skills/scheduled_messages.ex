@@ -9,6 +9,7 @@ defmodule Aida.Skill.ScheduledMessages do
     bot_id: String.t(),
     name: String.t(),
     schedule_type: String.t(),
+    relevant: nil | Aida.Expr.t,
     messages: [Aida.DelayedMessage.t()]
   }
 
@@ -16,6 +17,7 @@ defmodule Aida.Skill.ScheduledMessages do
             bot_id: "",
             name: "",
             schedule_type: "",
+            relevant: nil,
             messages: []
 
   def delay(skill) do
@@ -128,5 +130,7 @@ defmodule Aida.Skill.ScheduledMessages do
     def id(%{id: id}) do
       id
     end
+
+    def relevant(skill), do: skill.relevant
   end
 end

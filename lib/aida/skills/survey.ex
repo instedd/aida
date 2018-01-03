@@ -7,6 +7,7 @@ defmodule Aida.Skill.Survey do
     bot_id: String.t(),
     name: String.t(),
     schedule: DateTime.t,
+    relevant: nil | Aida.Expr.t,
     questions: [Aida.SelectQuestion.t() | Aida.InputQuestion.t()]
   }
 
@@ -14,6 +15,7 @@ defmodule Aida.Skill.Survey do
             bot_id: "",
             name: "",
             schedule: DateTime.utc_now,
+            relevant: nil,
             questions: []
 
   def delay(skill, now \\ DateTime.utc_now) do
@@ -146,5 +148,7 @@ defmodule Aida.Skill.Survey do
     def id(%{id: id}) do
       id
     end
+
+    def relevant(skill), do: skill.relevant
   end
 end

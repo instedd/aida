@@ -24,6 +24,9 @@ defprotocol Aida.Skill do
 
   @spec wake_up(skill :: t, bot :: Aida.Bot.t) :: :ok
   def wake_up(skill, bot)
+
+  @spec relevant(skill :: t) :: Aida.Expr.t | nil
+  def relevant(skill)
 end
 
 defmodule Aida.Utils do

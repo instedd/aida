@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage, Session}
   alias __MODULE__
   import Message
   @type message :: map
@@ -38,12 +38,12 @@ defmodule Aida.Bot do
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
-    message = if !(language(message) in bot.languages) do 
-                put_session(message, "language", nil) 
-              else 
+    message = if !(language(message) in bot.languages) do
+                put_session(message, "language", nil)
+              else
                 message
               end
-              
+
     cond do
       !language(message) && Enum.count(bot.languages) == 1 ->
         message
@@ -56,7 +56,8 @@ defmodule Aida.Bot do
   end
 
   defp handle(bot, message) do
-    skills_by_confidence = bot.skills
+    skills_by_confidence = bot
+      |> relevant_skills(message.session)
       |> Enum.map(fn(skill) ->
         confidence = Skill.confidence(skill, message)
         case confidence do
@@ -88,11 +89,20 @@ defmodule Aida.Bot do
     end
   end
 
+  def relevant_skills(bot, session) do
+    bot.skills
+      |> Enum.filter(&(evaluate_skill_relevance(&1, session)))
+  end
+
+  defp evaluate_skill_relevance(skill, session) do
+    case skill |> Skill.relevant do
+      nil -> true
+      expr -> Aida.Expr.eval(expr, session |> Session.expr_context)
+    end
+  end
+
   defp language_detector(bot, message) do
-    skills = bot.skills
-      |> Enum.filter(fn(skill) ->
-        is_language_detector?(skill)
-      end)
+    skills = bot.skills |> Enum.filter(&is_language_detector?/1)
 
     case skills do
       [skill] ->
@@ -115,7 +125,7 @@ defmodule Aida.Bot do
     false
   end
 
-  def find_skill(bot, skill_id) do
+  defp find_skill(bot, skill_id) do
     skills = bot.skills
       |> Enum.filter(fn(skill) ->
         Skill.id(skill) == skill_id
