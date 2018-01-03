@@ -1,6 +1,6 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
-  alias Aida.{BotManager, Session, Message, Channel, SurveyQuestion, ChannelProvider, DB}
+  alias Aida.{BotManager, Session, Message, Channel, SurveyQuestion, ChannelProvider, DB, Skill}
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -23,18 +23,21 @@ defmodule Aida.Skill.Survey do
   end
 
   def start_survey(survey, _bot, session_id) do
-    channel = ChannelProvider.find_channel(session_id)
     session = Session.load(session_id)
 
-    if session |> Session.get("language") do
-      session = session
-        |> Session.put(state_key(survey), %{"step" => 0})
+    if Skill.is_relevant?(survey, session) do
+      channel = ChannelProvider.find_channel(session_id)
 
-      message = answer(survey, Message.new("", session))
+      if session |> Session.get("language") do
+        session = session
+          |> Session.put(state_key(survey), %{"step" => 0})
 
-      channel |> Channel.send_message(message.reply, session_id)
+        message = answer(survey, Message.new("", session))
 
-      Session.save(message.session)
+        channel |> Channel.send_message(message.reply, session_id)
+
+        Session.save(message.session)
+      end
     end
   end
 

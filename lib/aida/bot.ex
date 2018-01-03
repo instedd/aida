@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage, Session}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage}
   alias __MODULE__
   import Message
   @type message :: map
@@ -93,19 +93,7 @@ defmodule Aida.Bot do
 
   def relevant_skills(bot, session) do
     bot.skills
-      |> Enum.filter(&(evaluate_skill_relevance(&1, session)))
-  end
-
-  defp evaluate_skill_relevance(skill, session) do
-    case skill |> Skill.relevant do
-      nil -> true
-      expr ->
-        try do
-          Aida.Expr.eval(expr, session |> Session.expr_context(lookup_raises: true))
-        rescue
-          Aida.Expr.UnknownVariable -> false
-        end
-    end
+      |> Enum.filter(&(Skill.is_relevant?(&1, session)))
   end
 
   defp language_detector(bot, message) do

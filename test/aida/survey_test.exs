@@ -1,5 +1,5 @@
 defmodule Aida.SurveyTest do
-  alias Aida.{Bot, BotManager, Skill, Skill.Survey, SessionStore, BotParser, TestChannel, Session, DB, Message, ChannelProvider}
+  alias Aida.{Bot, BotManager, Skill, Skill.Survey, SessionStore, BotParser, TestChannel, Session, Message, ChannelProvider}
   use Aida.DataCase
   import Mock
 
@@ -77,13 +77,22 @@ defmodule Aida.SurveyTest do
         Session.new(@session_id, %{})
         |> Session.save
 
-        DB.create_skill_usage(%{
-          bot_id: @bot_id,
-          user_id: @session_id,
-          last_usage: DateTime.utc_now,
-          skill_id: hd(bot.skills) |> Skill.id,
-          user_generated: true
-        })
+        Bot.wake_up(bot, "food_preferences")
+
+        refute_received {:send_message, _, _}
+      end
+    end
+
+    test "do not start the survey for not relevant sessions" do
+      channel = TestChannel.new()
+      manifest = File.read!("test/fixtures/valid_manifest_with_skill_relevances.json")
+        |> Poison.decode!
+        |> Map.put("languages", ["en"])
+      bot = %{BotParser.parse!(@bot_id, manifest) | channels: [channel]}
+
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        Session.new(@session_id, %{"language" => "en", "opt_in" => false})
+        |> Session.save
 
         Bot.wake_up(bot, "food_preferences")
 
