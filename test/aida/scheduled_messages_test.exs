@@ -87,6 +87,33 @@ defmodule Aida.ScheduledMessagesTest do
       end
     end
 
+    test "doesn't send a message if the session is not relevant for the skill" do
+      channel = TestChannel.new
+      manifest = File.read!("test/fixtures/valid_manifest_with_skill_relevances.json")
+        |> Poison.decode!
+        |> Map.put("languages", ["en"])
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+      bot = BotParser.parse!(bot.id, manifest)
+
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
+
+        Session.save(Session.new(@session_id, %{"language" => "en"}))
+
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot.id,
+          user_id: @session_id,
+          last_usage: Timex.shift(DateTime.utc_now(), days: -40),
+          skill_id: (hd(bot.skills) |> Skill.id()),
+          user_generated: true
+        })
+
+        Bot.wake_up(bot, "inactivity_check")
+
+        refute_received _
+      end
+    end
+
     test "doesn't send a message if the timer is not yet overdue", %{bot: bot} do
       channel = TestChannel.new()
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do

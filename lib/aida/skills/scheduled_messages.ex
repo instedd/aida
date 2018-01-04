@@ -32,26 +32,29 @@ defmodule Aida.Skill.ScheduledMessages do
   end
 
   def send_message(skill, session_id, last_usage) do
-    {_, skill_message} = skill.messages
-      |> Enum.map(fn(message) ->
-        {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
-      end)
-      |> Enum.filter(fn({deadline, _message}) ->
-        DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
-      end)
-      |> Enum.min_by(fn({deadline, _message}) ->
-        DateTime.to_unix(deadline, :millisecond)
-      end)
-
-    channel = ChannelProvider.find_channel(session_id)
-
-    SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
-
     session = Session.load(session_id)
-    message = Message.new("", session)
-    message = message |> Message.respond(skill_message)
 
-    channel |> Channel.send_message(message.reply, session_id)
+    if Skill.is_relevant?(skill, session) do
+      {_, skill_message} = skill.messages
+        |> Enum.map(fn(message) ->
+          {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
+        end)
+        |> Enum.filter(fn({deadline, _message}) ->
+          DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
+        end)
+        |> Enum.min_by(fn({deadline, _message}) ->
+          DateTime.to_unix(deadline, :millisecond)
+        end)
+
+      channel = ChannelProvider.find_channel(session_id)
+
+      SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
+
+      message = Message.new("", session)
+      message = message |> Message.respond(skill_message)
+
+      channel |> Channel.send_message(message.reply, session_id)
+    end
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
