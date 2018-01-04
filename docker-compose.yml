@@ -33,6 +33,20 @@ services:
     ports:
       - 4000:80
 
+  ui:
+    image: instedd/aida-ui:dev
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db/aida-ui
+      SECRET_KEY_BASE: secret
+      SETTINGS__BACKEND__URL: http://app/
+      SETTINGS__BACKEND__PUBLIC_SOCKET_URL: ws://app.aida.lvh.me/socket
+      SETTINGS__BASE_URL: http://ui.aida.lvh.me
+    tmpfs: /app/tmp
+    ports:
+      - 80
+
   ngrok:
     image: wernight/ngrok
     ports:
