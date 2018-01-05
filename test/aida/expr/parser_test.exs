@@ -1,7 +1,7 @@
 defmodule Aida.Expr.ParserTest do
   use ExUnit.Case
   import Aida.Expr
-  alias Aida.Expr.{Literal, Comparison, Boolean, Arith, Call, Variable, Self}
+  alias Aida.Expr.{Literal, Comparison, Boolean, Arith, Call, Variable, Self, ParseError}
 
   describe "parse" do
     test "literals" do
@@ -54,6 +54,12 @@ defmodule Aida.Expr.ParserTest do
 
     test "self" do
       assert parse(".") == %Self{}
+    end
+
+    test "errors" do
+      assert_raise ParseError, ~r/Invalid expression: '@@@'/, fn ->
+        parse("@@@")
+      end
     end
   end
 
