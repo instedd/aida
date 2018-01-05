@@ -42,10 +42,10 @@ defmodule Aida.SurveyQuestionTest do
       }
     },
     %Choice{
-      name: "cabernet suavignon",
+      name: "cabernet sauvignon",
       labels: %{
-        "en" => ["cabernet suavignon"],
-        "es" => ["cabernet suavignon"]
+        "en" => ["cabernet sauvignon"],
+        "es" => ["cabernet sauvignon"]
       }
     }
   ]
@@ -117,7 +117,7 @@ defmodule Aida.SurveyQuestionTest do
       message = Message.new("syrah, merlot", @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("Cabernet suavignon, Merlot", @session)
+      message = Message.new("Cabernet sauvignon, Merlot", @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
       message = Message.new("foo", @session)
@@ -144,8 +144,8 @@ defmodule Aida.SurveyQuestionTest do
       message = Message.new("syrah, merlot", @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, ["syrah", "merlot"]}
 
-      message = Message.new("Cabernet suavignon, Merlot", @session)
-      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["cabernet suavignon", "merlot"]}
+      message = Message.new("Cabernet Sauvignon, Merlot", @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["cabernet sauvignon", "merlot"]}
 
       message = Message.new("foo", @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
