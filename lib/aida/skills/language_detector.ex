@@ -34,8 +34,7 @@ defmodule Aida.Skill.LanguageDetector do
     end
 
     def matching_languages(message, languages) do
-      Message.curated_message(message)
-      |> String.split
+      Message.words(message)
       |> Enum.reduce([], fn(word, acc) ->
         match = Map.keys(languages) |> Enum.find(fn(language) ->
           Enum.member?(languages[language], word)
