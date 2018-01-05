@@ -12,6 +12,7 @@ defmodule Aida.BotParserTest do
     InputQuestion,
     Choice,
     DelayedMessage,
+    FixedTimeMessage,
     Variable
   }
   alias Aida.Channel.{Facebook, WebSocket}
@@ -99,7 +100,7 @@ defmodule Aida.BotParserTest do
           id: "inactivity_check",
           bot_id: @uuid,
           name: "Inactivity Check",
-          schedule_type: "since_last_incoming_message",
+          schedule_type: :since_last_incoming_message,
           messages: [
             %DelayedMessage{
               delay: "1440",
@@ -120,6 +121,21 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
                 "es" => "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"
+              }
+            }
+          ]
+        },
+        %ScheduledMessages{
+          id: "happy_new_year",
+          bot_id: @uuid,
+          name: "Happy New Year",
+          schedule_type: :fixed_time,
+          messages: [
+            %FixedTimeMessage{
+              schedule: ~N[2018-01-01 00:00:00] |> DateTime.from_naive!("Etc/UTC"),
+              message: %{
+                "en" => "Happy new year!",
+                "es" => "Feliz año nuevo!"
               }
             }
           ]
@@ -329,7 +345,7 @@ defmodule Aida.BotParserTest do
           id: "inactivity_check",
           bot_id: @uuid,
           name: "Inactivity Check",
-          schedule_type: "since_last_incoming_message",
+          schedule_type: :since_last_incoming_message,
           relevant: Aida.Expr.parse("${opt_in} = true()"),
           messages: [
             %DelayedMessage{

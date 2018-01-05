@@ -1,26 +1,28 @@
 defmodule Aida.Skill.ScheduledMessages do
   import Ecto.Query
-  alias Aida.{Message, Repo, Channel, Session, Skill, BotManager, ChannelProvider}
+  alias Aida.{Message, Repo, Channel, Session, Skill, BotManager, ChannelProvider, DB}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
   @type t :: %__MODULE__{
-    id: String.t(),
-    bot_id: String.t(),
-    name: String.t(),
-    schedule_type: String.t(),
+    id: String.t,
+    bot_id: String.t,
+    name: String.t,
+    schedule_type: :since_last_incoming_message | :fixed_time,
     relevant: nil | Aida.Expr.t,
-    messages: [Aida.DelayedMessage.t()]
+    messages: [Aida.DelayedMessage.t | Aida.FixedTimeMessage.t]
   }
 
   defstruct id: "",
             bot_id: "",
             name: "",
-            schedule_type: "",
+            schedule_type: :since_last_incoming_message,
             relevant: nil,
             messages: []
 
-  def delay(skill) do
+  def delay(skill, now \\ DateTime.utc_now)
+
+  def delay(%{schedule_type: :since_last_incoming_message} = skill, _now) do
     message = skill.messages
       |> Enum.min_by(fn(message) -> message.delay end)
 
@@ -31,27 +33,20 @@ defmodule Aida.Skill.ScheduledMessages do
     :timer.minutes(delay)
   end
 
-  def send_message(skill, session_id, last_usage) do
+  def delay(%{schedule_type: :fixed_time, messages: [message | _]}, now) do
+    DateTime.diff(message.schedule, now, :milliseconds)
+  end
+
+  def send_message(skill, session_id, content) do
     session = Session.load(session_id)
 
     if Skill.is_relevant?(skill, session) do
-      {_, skill_message} = skill.messages
-        |> Enum.map(fn(message) ->
-          {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
-        end)
-        |> Enum.filter(fn({deadline, _message}) ->
-          DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
-        end)
-        |> Enum.min_by(fn({deadline, _message}) ->
-          DateTime.to_unix(deadline, :millisecond)
-        end)
-
       channel = ChannelProvider.find_channel(session_id)
 
       SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
 
       message = Message.new("", session)
-      message = message |> Message.respond(skill_message)
+      message = message |> Message.respond(content)
 
       channel |> Channel.send_message(message.reply, session_id)
     end
@@ -59,11 +54,15 @@ defmodule Aida.Skill.ScheduledMessages do
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, bot) do
-      BotManager.schedule_wake_up(bot, skill, ScheduledMessages.delay(skill))
+      delay = ScheduledMessages.delay(skill)
+      if delay > 0 do
+        BotManager.schedule_wake_up(bot, skill, delay)
+      end
+
       skill
     end
 
-    def wake_up(skill, bot) do
+    def wake_up(%{schedule_type: :since_last_incoming_message} = skill, bot) do
       skill_id = skill.id
       bot_id = bot.id
       reminder_deadlines = skill.messages
@@ -102,16 +101,37 @@ defmodule Aida.Skill.ScheduledMessages do
 
       never_reminded
         |> Enum.each(fn({user, last_usage}) ->
-          ScheduledMessages.send_message(skill, user, last_usage)
+          ScheduledMessages.send_message(skill, user, find_message_to_send(skill, last_usage))
         end)
 
       due_reminder
         |> Enum.each(fn({user, last_usage, _last_reminder}) ->
-          ScheduledMessages.send_message(skill, user, last_usage)
+          ScheduledMessages.send_message(skill, user, find_message_to_send(skill, last_usage))
         end)
 
       BotManager.schedule_wake_up(bot, skill, ScheduledMessages.delay(skill))
       :ok
+    end
+
+    def wake_up(%{schedule_type: :fixed_time, messages: [message | _]} = skill, bot) do
+      DB.session_ids_by_bot(bot.id)
+        |> Enum.each(fn session_id ->
+          ScheduledMessages.send_message(skill, session_id, message.message)
+        end)
+    end
+
+    defp find_message_to_send(skill, last_usage) do
+      {_, skill_message} = skill.messages
+        |> Enum.map(fn(message) ->
+          {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
+        end)
+        |> Enum.filter(fn({deadline, _message}) ->
+          DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt
+        end)
+        |> Enum.min_by(fn({deadline, _message}) ->
+          DateTime.to_unix(deadline, :millisecond)
+        end)
+      skill_message
     end
 
     def explain(%{}, message) do

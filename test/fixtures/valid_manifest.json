@@ -109,6 +109,21 @@
       ]
     },
     {
+      "type": "scheduled_messages",
+      "id": "happy_new_year",
+      "name": "Happy New Year",
+      "schedule_type": "fixed_time",
+      "messages": [
+        {
+          "schedule": "2018-01-01T00:00:00Z",
+          "message": {
+            "en": "Happy new year!",
+            "es": "Feliz año nuevo!"
+          }
+        }
+      ]
+    },
+    {
       "type": "survey",
       "id": "food_preferences",
       "name": "Food Preferences",

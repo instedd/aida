@@ -8,6 +8,7 @@ defmodule Aida.BotParser do
     Skill.ScheduledMessages,
     Skill.Survey,
     DelayedMessage,
+    FixedTimeMessage,
     SelectQuestion,
     InputQuestion,
     Choice,
@@ -77,13 +78,18 @@ defmodule Aida.BotParser do
   end
 
   defp parse_skill(%{"type" => "scheduled_messages"} = skill, bot_id) do
+    schedule_type = case skill["schedule_type"] do
+      "since_last_incoming_message" -> :since_last_incoming_message
+      "fixed_time" -> :fixed_time
+    end
+
     %ScheduledMessages{
       id: skill["id"],
       bot_id: bot_id,
       name: skill["name"],
-      schedule_type: skill["schedule_type"],
+      schedule_type: schedule_type,
       relevant: parse_expr(skill["relevant"]),
-      messages: skill["messages"] |> Enum.map(&parse_delayed_message/1)
+      messages: skill["messages"] |> Enum.map(&(parse_scheduled_message(&1, schedule_type)))
     }
   end
 
@@ -101,9 +107,17 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_delayed_message(message) do
+  defp parse_scheduled_message(message, :since_last_incoming_message) do
     %DelayedMessage{
       delay: message["delay"],
+      message: message["message"]
+    }
+  end
+
+  defp parse_scheduled_message(message, :fixed_time) do
+    {:ok, schedule, _} = message["schedule"] |> DateTime.from_iso8601()
+    %FixedTimeMessage{
+      schedule: schedule,
       message: message["message"]
     }
   end
