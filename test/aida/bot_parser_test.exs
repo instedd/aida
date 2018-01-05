@@ -573,4 +573,30 @@ defmodule Aida.BotParserTest do
     assert {:error, "Duplicated skill (language_detector)"} == BotParser.parse(@uuid, manifest)
   end
 
+  test "parse manifest with invalid expression" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+      |> Map.put("skills", [
+        %{
+            "type" => "keyword_responder",
+            "id" => "this is the same id",
+            "name" => "Food menu",
+            "relevant" => "${foo} < ...",
+            "explanation" => %{
+              "en" => "I can give you information about our menu"
+            },
+            "clarification" => %{
+              "en" => "For menu options, write 'menu'"
+            },
+            "keywords" => %{
+              "en" => ["menu","food"]
+            },
+            "response" => %{
+              "en" => "We have ${food_options}"
+            }
+          }
+      ])
+
+    assert {:error, "Invalid expression: '${foo} < ...'"} == BotParser.parse(@uuid, manifest)
+  end
+
 end

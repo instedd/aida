@@ -19,15 +19,19 @@ defmodule Aida.BotParser do
 
   @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
   def parse(id, manifest) do
-    %Bot{
-      id: id,
-      languages: manifest["languages"],
-      front_desk: parse_front_desk(manifest["front_desk"]),
-      skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
-      variables: manifest["variables"] |> Enum.map(&parse_variable/1),
-      channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
-    }
-    |> validate()
+    try do
+      %Bot{
+        id: id,
+        languages: manifest["languages"],
+        front_desk: parse_front_desk(manifest["front_desk"]),
+        skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
+        variables: manifest["variables"] |> Enum.map(&parse_variable/1),
+        channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
+      }
+      |> validate()
+    rescue
+      error -> {:error, Exception.message(error)}
+    end
   end
 
   def parse!(id, manifest) do
