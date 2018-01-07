@@ -20,17 +20,27 @@ defmodule Aida.Skill.LanguageDetector do
       :ok
     end
 
-    def explain(%{explanation: explanation}, message) do
+    def explain(_, message) do
+      message
+    end
+
+    def clarify(%{explanation: explanation}, message) do
       message |> Message.respond(explanation)
     end
 
-    def clarify(_, message) do
-      message
-    end
-
     def put_response(skill, message) do
-      message
-      |> Message.put_session("language", matching_languages(message, skill.languages) |> List.first)
+      matches = matching_languages(message, skill.languages)
+      current_lang = Message.language(message)
+
+      case {matches, current_lang} do
+        {[], nil} ->
+          clarify(skill, message)
+        {[], _} ->
+          message
+        {[lang | _], _} ->
+          message
+          |> Message.put_session("language", lang)
+      end
     end
 
     def matching_languages(message, languages) do
@@ -56,7 +66,7 @@ defmodule Aida.Skill.LanguageDetector do
       word_count = Enum.count(words_in_message)
 
       cond do
-        !Message.language(message) && word_count != 0 -> Enum.count(matches)/word_count
+        !Message.language(message) -> 1
         Message.language(message) && word_count == 1 -> Enum.count(matches)
         true -> 0
       end

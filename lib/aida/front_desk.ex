@@ -39,7 +39,7 @@ defmodule Aida.FrontDesk do
     bot
       |> Bot.relevant_skills(message.session)
       |> Enum.reduce(message, fn(skill, message) ->
-        !Bot.is_language_detector?(skill) && Skill.explain(skill, message) || message
+        Skill.explain(skill, message)
       end)
   end
 
