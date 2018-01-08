@@ -8,6 +8,9 @@ defmodule Aida.Expr.ParserTest do
       assert parse("123") == literal(123)
       assert parse("-123") == literal(-123)
       assert parse("'foo'") == literal("foo")
+      assert parse(~s("foo")) == literal("foo")
+      assert parse("“foo”") == literal("foo")
+      assert parse("‘foo’") == literal("foo")
     end
 
     test "comparisons" do

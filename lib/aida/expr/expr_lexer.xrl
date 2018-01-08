@@ -7,7 +7,10 @@ Ident = [a-z_]+
 Rules.
 
 {Integer} : {token, {integer, erlang:list_to_integer(TokenChars)}}.
-\'[^\']*\' : {token, {string, parse_string(TokenChars)}}.
+'[^']*' : {token, {string, parse_string(TokenChars)}}.
+"[^"]*" : {token, {string, parse_string(TokenChars)}}.
+\x{201c}[^\x{201d}]*\x{201d} : {token, {string, parse_string(TokenChars)}}.
+\x{2018}[^\x{2019}]*\x{2019} : {token, {string, parse_string(TokenChars)}}.
 = : {token, {'=', TokenLine}}.
 < : {token, {'<', TokenLine}}.
 <= : {token, {'<=', TokenLine}}.
@@ -33,7 +36,4 @@ mod : {token, {'mod', TokenLine}}.
 Erlang code.
 
 parse_string(Chars) ->
-  Bytes = erlang:list_to_binary(Chars),
-  Length = size(Bytes) - 2,
-  <<_, String:Length/binary, _>> = Bytes,
-  String.
+  erlang:list_to_binary(lists:droplast(tl(Chars))).
