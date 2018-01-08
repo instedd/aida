@@ -270,7 +270,7 @@
       "type": "object",
       "properties": {
         "name": {"$ref": "#/definitions/non_empty_string"},
-        "values": {"$ref": "#/definitions/localized_string"},
+        "values": {"$ref": "#/definitions/localized_string_or_empty"},
         "overrides": {"type": "array"}
       },
       "additionalProperties": false,
@@ -281,7 +281,7 @@
       "type": "object",
       "properties": {
         "relevant": {"$ref": "#/definitions/non_empty_string"},
-        "values": {"$ref": "#/definitions/localized_string"}
+        "values": {"$ref": "#/definitions/localized_string_or_empty"}
       },
       "additionalProperties": false,
       "required": ["relevant", "values"]
@@ -290,6 +290,13 @@
     "localized_string": {
       "type": "object",
       "patternProperties": {"^[a-z]{2,3}$": {"$ref": "#/definitions/non_empty_string"}},
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+
+    "localized_string_or_empty": {
+      "type": "object",
+      "patternProperties": {"^[a-z]{2,3}$": {"type": "string"}},
       "minProperties": 1,
       "additionalProperties": false
     },

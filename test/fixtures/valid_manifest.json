@@ -252,8 +252,8 @@
     {
       "name": "title",
       "values": {
-        "en": " ",
-        "es": " "
+        "en": "",
+        "es": ""
       },
       "overrides": [
         {

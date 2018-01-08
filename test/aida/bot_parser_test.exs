@@ -259,8 +259,8 @@ defmodule Aida.BotParserTest do
         %Variable{
           name: "title",
           values: %{
-            "en" => " ",
-            "es" => " "
+            "en" => "",
+            "es" => ""
           },
           overrides: [
             %Variable.Override{
