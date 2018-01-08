@@ -3,7 +3,7 @@ defmodule Aida.Expr.UnaryOp do
 
   defimpl Aida.Expr, for: __MODULE__ do
     def to_string(un) do
-      "(#{un.op}#{un.right |> Aida.Expr.to_string})"
+      "#{un.op}(#{un.value |> Aida.Expr.to_string})"
     end
 
     def eval(un, context) do
