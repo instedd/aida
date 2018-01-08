@@ -71,8 +71,8 @@ defmodule Aida.BotParserTest do
             "es" => ["menu", "comida"]
           },
           response: %{
-            "en" => "We have {food_options}",
-            "es" => "Tenemos {food_options}"
+            "en" => "We have ${food_options}",
+            "es" => "Tenemos ${food_options}"
           }
         },
         %KeywordResponder{
@@ -245,6 +245,45 @@ defmodule Aida.BotParserTest do
           values: %{
             "en" => "barbecue and pasta",
             "es" => "parrilla y pasta"
+          },
+          overrides: [
+            %Variable.Override{
+              relevant: Aida.Expr.parse("${age} > 18"),
+              values: %{
+                "en" => "barbecue and pasta and a exclusive selection of wines",
+                "es" => "parrilla y pasta además de nuestra exclusiva selección de vinos"
+              }
+            }
+          ]
+        },
+        %Variable{
+          name: "title",
+          values: %{
+            "en" => " ",
+            "es" => " "
+          },
+          overrides: [
+            %Variable.Override{
+              relevant: Aida.Expr.parse("${gender} = 'male'"),
+              values: %{
+                "en" => "Mr.",
+                "es" => "Sr."
+              }
+            },
+            %Variable.Override{
+              relevant: Aida.Expr.parse("${gender} = 'female'"),
+              values: %{
+                "en" => "Ms.",
+                "es" => "Sra."
+              }
+            }
+          ]
+        },
+        %Variable{
+          name: "full_name",
+          values: %{
+            "en" => "${title} ${first_name} ${last_name}",
+            "es" => "${title} ${first_name} ${last_name}"
           }
         }
       ],

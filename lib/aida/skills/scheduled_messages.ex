@@ -37,7 +37,7 @@ defmodule Aida.Skill.ScheduledMessages do
     DateTime.diff(message.schedule, now, :milliseconds)
   end
 
-  def send_message(skill, session_id, content) do
+  def send_message(skill, bot, session_id, content) do
     session = Session.load(session_id)
 
     if Skill.is_relevant?(skill, session) do
@@ -45,7 +45,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
       SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
 
-      message = Message.new("", session)
+      message = Message.new("", bot, session)
       message = message |> Message.respond(content)
 
       channel |> Channel.send_message(message.reply, session_id)
@@ -101,12 +101,12 @@ defmodule Aida.Skill.ScheduledMessages do
 
       never_reminded
         |> Enum.each(fn({user, last_usage}) ->
-          ScheduledMessages.send_message(skill, user, find_message_to_send(skill, last_usage))
+          ScheduledMessages.send_message(skill, bot, user, find_message_to_send(skill, last_usage))
         end)
 
       due_reminder
         |> Enum.each(fn({user, last_usage, _last_reminder}) ->
-          ScheduledMessages.send_message(skill, user, find_message_to_send(skill, last_usage))
+          ScheduledMessages.send_message(skill, bot, user, find_message_to_send(skill, last_usage))
         end)
 
       BotManager.schedule_wake_up(bot, skill, ScheduledMessages.delay(skill))
@@ -116,7 +116,7 @@ defmodule Aida.Skill.ScheduledMessages do
     def wake_up(%{schedule_type: :fixed_time, messages: [message | _]} = skill, bot) do
       DB.session_ids_by_bot(bot.id)
         |> Enum.each(fn session_id ->
-          ScheduledMessages.send_message(skill, session_id, message.message)
+          ScheduledMessages.send_message(skill, bot, session_id, message.message)
         end)
     end
 

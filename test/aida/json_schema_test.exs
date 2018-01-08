@@ -86,7 +86,15 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "values": {
       "en": "a"
-    }
+    },
+    "overrides": [
+      {
+        "relevant": "${age} > 18",
+        "values": {
+          "en": "b"
+        }
+      }
+    ]
   })
   @valid_facebook_channel ~s({
     "type": "facebook",
@@ -445,9 +453,15 @@ defmodule Aida.JsonSchemaTest do
     assert_required("name", :variable)
     assert_non_empty_string("name", :variable)
     assert_required("values", :variable)
+    assert_optional("overrides", [], :variable)
 
     @valid_variable
     |> assert_valid(:variable)
+  end
+
+  test "variable_override" do
+    assert_required("relevant", :variable_override)
+    assert_required("values", :variable_override)
   end
 
   test "localized_string" do

@@ -125,7 +125,7 @@ defmodule Aida.Channel.Facebook do
             session = Session.load(session_id)
               |> pull_profile(channel, sender_id)
 
-            reply = Bot.chat(bot, Message.new(text, session))
+            reply = Bot.chat(bot, Message.new(text, bot, session))
             reply.session |> Session.save
 
             send_message(channel, reply.reply, session_id)

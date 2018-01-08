@@ -15,7 +15,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "replies with the proper confidence 1", %{bot: bot} do
-      message = Message.new("message that says hours between words")
+      message = Message.new("message that says hours between words", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
@@ -24,7 +24,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "replies with the proper confidence 2", %{bot: bot} do
-      message = Message.new("message that says hours between more words than before")
+      message = Message.new("message that says hours between more words than before", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
@@ -33,7 +33,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "replies with the proper confidence when there is a comma", %{bot: bot} do
-      message = Message.new("message that says hours, and has a comma,")
+      message = Message.new("message that says hours, and has a comma,", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
@@ -42,7 +42,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "replies with the proper confidence when there is a question mark", %{bot: bot} do
-      message = Message.new("message that says hours? yes, and it is a question")
+      message = Message.new("message that says hours? yes, and it is a question", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
@@ -51,7 +51,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "does not give an exception with an empty message", %{bot: bot} do
-      message = Message.new("")
+      message = Message.new("", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
@@ -60,7 +60,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "returns 0 when there is no match", %{bot: bot} do
-      message = Message.new("message that says a lot of different words")
+      message = Message.new("message that says a lot of different words", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")
@@ -69,7 +69,7 @@ defmodule Aida.KeywordResponderTest do
     end
 
     test "replies with the proper confidence when there is more than 1 match", %{bot: bot} do
-      message = Message.new("message that says hours and also says time")
+      message = Message.new("message that says hours and also says time", bot)
       |> Message.put_session("language", "en")
 
       confidence = get_confidence_from_skill_id(bot.skills, message, "this is a different id")

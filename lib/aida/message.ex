@@ -1,19 +1,22 @@
 defmodule Aida.Message do
-  alias Aida.{Session, Message}
+  alias Aida.{Session, Message, Bot}
   @type t :: %__MODULE__{
     session: Session.t,
+    bot: Bot.t,
     content: String.t,
     reply: [String.t]
   }
 
   defstruct session: %Session{},
+            bot: %Bot{},
             content: "",
             reply: []
 
-  @spec new(content :: String.t, session :: Session.t) :: t
-  def new(content, session \\ Session.new) do
+  @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  def new(content, %Bot{} = bot, session \\ Session.new) do
     %Message{
       session: session,
+      bot: bot,
       content: content
     }
   end
@@ -27,7 +30,7 @@ defmodule Aida.Message do
     respond(message, response[language(message)])
   end
   def respond(message, response) do
-    new_reply = interpolate_vars(message.session, response)
+    new_reply = interpolate_vars(message, response)
     %{message | reply: message.reply ++ [new_reply]}
   end
 
@@ -55,15 +58,24 @@ defmodule Aida.Message do
     Regex.scan(~r/\w+/u, content |> String.downcase) |> Enum.map(&hd/1)
   end
 
-  @spec interpolate_vars(session :: Session.t, text :: String.t) :: String.t
-  defp interpolate_vars(session, text) do
+  defp lookup_var(message, key) do
+    case message.bot |> Bot.lookup_var(message.session, key) do
+      nil ->
+        message.session |> Session.lookup_var(key)
+      var ->
+        var[language(message)]
+    end
+  end
+
+  @spec interpolate_vars(message :: t, text :: String.t) :: String.t
+  defp interpolate_vars(message, text) do
     Regex.scan(~r/\$\{\s*([a-z_]*)\s*\}/, text, return: :index)
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       var_name = text |> String.slice(v_start, v_len)
-      var_value = session |> Session.lookup_var(var_name) |> to_string
-      <<text_before :: binary - size(p_start), _ :: binary - size(p_len), text_after :: binary>> = text
-      text_before <> var_value <> text_after
+      var_value = lookup_var(message, var_name) |> to_string
+      <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
+      text_before <> interpolate_vars(message, var_value) <> text_after
     end)
   end
 end

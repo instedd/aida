@@ -56,7 +56,22 @@ defmodule Aida.BotParser do
   defp parse_variable(var) do
     %Variable{
       name: var["name"],
-      values: var["values"]
+      values: var["values"],
+      overrides: parse_variable_overrides(var["overrides"])
+    }
+  end
+
+  @spec parse_variable_overrides(overrides :: nil | list) :: [Variable.Override.t]
+  defp parse_variable_overrides(nil), do: []
+  defp parse_variable_overrides(overrides) do
+    overrides |> Enum.map(&parse_variable_override/1)
+  end
+
+  @spec parse_variable_override(override :: map) :: Variable.Override.t
+  defp parse_variable_override(override) do
+    %Variable.Override{
+      relevant: parse_expr(override["relevant"]),
+      values: override["values"]
     }
   end
 

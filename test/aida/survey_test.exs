@@ -103,7 +103,7 @@ defmodule Aida.SurveyTest do
     test "accept user reply", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 0}})
 
-      message = Message.new("Yes", session)
+      message = Message.new("Yes", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 1}
@@ -114,7 +114,7 @@ defmodule Aida.SurveyTest do
     test "invalid reply should retry the question", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
 
-      message = Message.new("bananas", session)
+      message = Message.new("bananas", bot, session)
       message = Bot.chat(bot, message)
 
       assert message.reply == ["Invalid temperature", "At what temperature do your like red wine the best?"]
@@ -125,7 +125,7 @@ defmodule Aida.SurveyTest do
       bot = %{bot | front_desk: %{bot.front_desk | threshold: 0.5}}
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
 
-      message = Message.new("hours", session)
+      message = Message.new("hours", bot, session)
       message = Bot.chat(bot, message)
 
       assert message.reply == ["We are open every day from 7pm to 11pm"]
@@ -135,7 +135,7 @@ defmodule Aida.SurveyTest do
     test "accept user reply on select_many", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 3}})
 
-      message = Message.new("merlot, syrah", session)
+      message = Message.new("merlot, syrah", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
@@ -146,7 +146,7 @@ defmodule Aida.SurveyTest do
     test "clears the store to end the survey", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 4}})
 
-      message = Message.new("No, thanks!", session)
+      message = Message.new("No, thanks!", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == nil
@@ -155,7 +155,7 @@ defmodule Aida.SurveyTest do
     test "skip questions when the relevant attribute evaluates to false", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 1}})
 
-      message = Message.new("15", session)
+      message = Message.new("15", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
@@ -165,7 +165,7 @@ defmodule Aida.SurveyTest do
     test "do not skip questions when the relevant attribute evaluates to false", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 1}})
 
-      message = Message.new("20", session)
+      message = Message.new("20", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
@@ -175,7 +175,7 @@ defmodule Aida.SurveyTest do
     test "validate input responses and continue if the value is valid", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
 
-      message = Message.new("20", session)
+      message = Message.new("20", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == 20.0
@@ -186,7 +186,7 @@ defmodule Aida.SurveyTest do
     test "validate input responses and return constraint message when the value is invalid", %{bot: bot} do
       session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}})
 
-      message = Message.new("200", session)
+      message = Message.new("200", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == nil

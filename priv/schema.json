@@ -270,10 +270,21 @@
       "type": "object",
       "properties": {
         "name": {"$ref": "#/definitions/non_empty_string"},
-        "values": {"$ref": "#/definitions/localized_string"}
+        "values": {"$ref": "#/definitions/localized_string"},
+        "overrides": {"type": "array"}
       },
       "additionalProperties": false,
       "required": ["name", "values"]
+    },
+
+    "variable_override": {
+      "type": "object",
+      "properties": {
+        "relevant": {"$ref": "#/definitions/non_empty_string"},
+        "values": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["relevant", "values"]
     },
 
     "localized_string": {

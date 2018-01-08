@@ -1,7 +1,7 @@
 defmodule Aida.Bot do
   alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage}
   alias __MODULE__
-  import Message
+
   @type message :: map
 
   @type t :: %__MODULE__{
@@ -38,18 +38,18 @@ defmodule Aida.Bot do
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
-    message = if !(language(message) in bot.languages) do
-                put_session(message, "language", nil)
+    message = if !(Message.language(message) in bot.languages) do
+                Message.put_session(message, "language", nil)
               else
                 message
               end
 
     cond do
-      !language(message) && Enum.count(bot.languages) == 1 ->
+      !Message.language(message) && Enum.count(bot.languages) == 1 ->
         message
-          |> put_session("language", bot.languages |> List.first)
+          |> Message.put_session("language", bot.languages |> List.first)
           |> FrontDesk.greet(bot)
-      language(message) ->
+      Message.language(message) ->
         handle(bot, message)
       true -> language_detector(bot, message)
     end
@@ -135,5 +135,15 @@ defmodule Aida.Bot do
 
   def threshold(%Bot{front_desk: front_desk}) do
     front_desk |> FrontDesk.threshold
+  end
+
+  def lookup_var(%Bot{variables: variables}, session, key) do
+    variable =
+      variables
+      |> Enum.find(fn var -> var.name == key end)
+
+    if variable do
+      variable |> Variable.resolve_value(session)
+    end
   end
 end

@@ -22,7 +22,7 @@ defmodule Aida.Skill.Survey do
     DateTime.diff(skill.schedule, now, :milliseconds)
   end
 
-  def start_survey(survey, _bot, session_id) do
+  def start_survey(survey, bot, session_id) do
     session = Session.load(session_id)
 
     if Skill.is_relevant?(survey, session) do
@@ -32,7 +32,7 @@ defmodule Aida.Skill.Survey do
         session = session
           |> Session.put(state_key(survey), %{"step" => 0})
 
-        message = answer(survey, Message.new("", session))
+        message = answer(survey, Message.new("", bot, session))
 
         channel |> Channel.send_message(message.reply, session_id)
 
