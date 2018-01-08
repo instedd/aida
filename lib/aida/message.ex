@@ -68,14 +68,19 @@ defmodule Aida.Message do
   end
 
   @spec interpolate_vars(message :: t, text :: String.t) :: String.t
-  defp interpolate_vars(message, text) do
+  defp interpolate_vars(message, text, resolved_vars \\ []) do
     Regex.scan(~r/\$\{\s*([a-z_]*)\s*\}/, text, return: :index)
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       var_name = text |> String.slice(v_start, v_len)
-      var_value = lookup_var(message, var_name) |> to_string
+      var_value =
+        if var_name in resolved_vars do
+          "..."
+        else
+          lookup_var(message, var_name) |> to_string
+        end
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
-      text_before <> interpolate_vars(message, var_value) <> text_after
+      text_before <> interpolate_vars(message, var_value, [var_name | resolved_vars]) <> text_after
     end)
   end
 end

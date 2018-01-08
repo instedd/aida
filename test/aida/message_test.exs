@@ -64,5 +64,19 @@ defmodule Aida.MessageTest do
         |> Message.respond("Hi ${full_name}!")
       assert message.reply == ["Hi Mr. John Doe!"]
     end
+
+    test "interpolate breaks infinite loops" do
+      session = Session.new("sid", %{"language" => "en"})
+      devil_var = %Aida.Variable{
+        name: "loop_var",
+        values: %{
+          "en" => "[${loop_var}]"
+        }
+      }
+      bot = %{@bot | variables: [devil_var | @bot.variables]}
+      message = Message.new("Hi!", bot, session)
+        |> Message.respond("loop_var: ${loop_var}")
+      assert message.reply == ["loop_var: [...]"]
+    end
   end
 end
