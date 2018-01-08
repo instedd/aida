@@ -15,6 +15,7 @@ defmodule Aida.Expr.EvalTest do
       assert eval("2 * 3") == 6
       assert eval("8 div 4") == 2
       assert eval("5 mod 2") == 1
+      assert eval("- 2") == -2
     end
 
     test "number comparisons" do

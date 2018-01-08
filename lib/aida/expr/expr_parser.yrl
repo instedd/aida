@@ -1,36 +1,28 @@
 Nonterminals
   Literal
   Expr
-  Comparison
-  Boolean
-  Arith
   Call
   CallArgs
   Variable
   Self
+  BinaryOp
+  UnaryOp
   .
 
 Terminals
   integer
   string
-  cmp
-  bool
-  arith
   ident
   self
-  '('
-  ')'
-  ','
-  '${'
-  '}'
+  '(' ')' ',' '${' '}'
+  '=' '<' '<=' '>' '>=' '!=' 'and' 'or' '+' '-' '*' 'div' 'mod'
   .
 
 Rootsymbol Expr.
 
 Expr -> Literal : '$1'.
-Expr -> Comparison : '$1'.
-Expr -> Boolean : '$1'.
-Expr -> Arith : '$1'.
+Expr -> BinaryOp : '$1'.
+Expr -> UnaryOp : '$1'.
 Expr -> Call : '$1'.
 Expr -> Variable : '$1'.
 Expr -> Self : '$1'.
@@ -39,9 +31,21 @@ Expr -> '(' Expr ')' : '$2'.
 Literal -> integer : build_literal('$1').
 Literal -> string : build_literal('$1').
 
-Comparison -> Expr cmp Expr : build_comparison('$1', '$2', '$3').
-Boolean -> Expr bool Expr : build_boolean('$1', '$2', '$3').
-Arith -> Expr arith Expr : build_arith('$1', '$2', '$3').
+BinaryOp -> Expr '=' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '<' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '<=' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '>' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '>=' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '!=' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr 'and' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr 'or' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '+' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '-' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr '*' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr 'div' Expr : build_binary_Op('$1', '$2', '$3').
+BinaryOp -> Expr 'mod' Expr : build_binary_Op('$1', '$2', '$3').
+
+UnaryOp -> '-' Expr : build_unary_op('$1', '$2').
 
 CallArgs -> '$empty' : [].
 CallArgs -> Expr : ['$1'].
@@ -51,23 +55,21 @@ Call -> ident '(' CallArgs ')' : build_call('$1', '$3').
 Variable -> '${' ident '}' : build_variable('$2').
 Self -> self : build_self().
 
-Left 1 bool.
-Nonassoc 2 cmp.
-Left 3 arith.
+Left 1 'and' 'or'.
+Nonassoc 2 '=' '!=' '<' '<=' '>' '>='.
+Left 3 '+' '-'.
+Left 4 '*' 'div' 'mod'.
 
 Erlang code.
 
 build_literal({Type, Value}) ->
   #{'__struct__' => 'Elixir.Aida.Expr.Literal', type => Type, value => Value}.
 
-build_comparison(Left, {cmp, Op}, Right) ->
-  #{'__struct__' => 'Elixir.Aida.Expr.Comparison', op => Op, left => Left, right => Right}.
+build_binary_Op(Left, {Op, _}, Right) ->
+  #{'__struct__' => 'Elixir.Aida.Expr.BinaryOp', left => Left, op => Op, right => Right}.
 
-build_boolean(Left, {bool, Op}, Right) ->
-  #{'__struct__' => 'Elixir.Aida.Expr.Boolean', op => Op, left => Left, right => Right}.
-
-build_arith(Left, {arith, Op}, Right) ->
-  #{'__struct__' => 'Elixir.Aida.Expr.Arith', op => Op, left => Left, right => Right}.
+build_unary_op({Op, _}, Value) ->
+  #{'__struct__' => 'Elixir.Aida.Expr.UnaryOp', op => Op, value => Value}.
 
 build_call({ident, Id}, Args) ->
   Name = erlang:binary_to_atom(Id, utf8),
