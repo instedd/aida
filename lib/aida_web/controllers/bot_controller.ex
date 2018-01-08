@@ -57,6 +57,8 @@ defmodule AidaWeb.BotController do
         conn
       errors ->
         json_errors = errors |> JsonSchema.errors_to_json
+        Sentry.capture_message("Error while validating manifest", [extra: %{json_errors: json_errors, manifest: manifest}])
+
         conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
     end
   end

@@ -34,7 +34,7 @@ config :sentry,
   dsn: System.get_env("SENTRY_DSN"),
   public_dsn: System.get_env("SENTRY_PUBLIC_DSN"),
   environment_name: Mix.env || :dev,
-  included_environments: (if sentry_enabled, do: [:prod], else: []),
+  included_environments: (if sentry_enabled, do: [:prod, :dev], else: []),
   release: version
 
 # Import environment specific config. This must remain at the bottom
