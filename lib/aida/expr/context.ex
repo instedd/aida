@@ -1,3 +1,3 @@
 defmodule Aida.Expr.Context do
-  defstruct [:self, :lookup]
+  defstruct [:self, :var_lookup, :attr_lookup]
 end

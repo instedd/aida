@@ -7,7 +7,7 @@ defmodule Aida.Expr.Variable do
     end
 
     def eval(var, context) do
-      context.lookup.(var.name)
+      context.var_lookup.(var.name)
     end
   end
 end

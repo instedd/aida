@@ -93,7 +93,7 @@ defmodule Aida.Session do
 
     %Aida.Expr.Context{
       self: self,
-      lookup: fn (name) ->
+      var_lookup: fn (name) ->
         case Session.lookup_var(session, name) do
           nil ->
             if lookup_raises do
