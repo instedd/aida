@@ -3,11 +3,13 @@ defmodule Aida.Choice do
 
   @type t :: %__MODULE__{
     name: String.t(),
-    labels: %{}
+    labels: %{},
+    attributes: nil | %{required(String.t) => String.t | integer}
   }
 
   defstruct name: "",
-            labels: %{}
+            labels: %{},
+            attributes: nil
 
 
   def name(%Choice{name: name}) do

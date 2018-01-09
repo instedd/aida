@@ -202,6 +202,9 @@ defmodule Aida.BotParserTest do
                   labels: %{
                     "en" => ["merlot"],
                     "es" => ["merlot"]
+                  },
+                  attributes: %{
+                    "type" => "red"
                   }
                 },
                 %Choice{
@@ -209,6 +212,9 @@ defmodule Aida.BotParserTest do
                   labels: %{
                     "en" => ["syrah"],
                     "es" => ["syrah"]
+                  },
+                  attributes: %{
+                    "type" => "red"
                   }
                 },
                 %Choice{
@@ -216,6 +222,19 @@ defmodule Aida.BotParserTest do
                   labels: %{
                     "en" => ["malbec"],
                     "es" => ["malbec"]
+                  },
+                  attributes: %{
+                    "type" => "red"
+                  }
+                },
+                %Choice{
+                  name: "chardonnay",
+                  labels: %{
+                    "en" => ["chardonnay"],
+                    "es" => ["chardonnay"]
+                  },
+                  attributes: %{
+                    "type" => "white"
                   }
                 }
               ],
@@ -226,7 +245,8 @@ defmodule Aida.BotParserTest do
               constraint_message: %{
                 "en" => "I don't know that wine",
                 "es" => "No conozco ese vino"
-              }
+              },
+              choice_filter: Aida.Expr.parse("type = 'red' or type = 'white'")
             },
             %InputQuestion{
               name: "request",
