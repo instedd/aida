@@ -134,7 +134,6 @@ defmodule Aida.Channel.Facebook do
       rescue
         error ->
           Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: channel.bot_id, message: message}])
-          IO.puts Exception.format(:error, error, System.stacktrace)
           send_message(channel, ["Oops! Something went wrong"], sender_id)
       end
     end
