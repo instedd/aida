@@ -1,5 +1,5 @@
 defmodule Aida.Skill.KeywordResponder do
-  alias Aida.{Bot, Message}
+  alias Aida.{Bot, Message, Message.TextContent}
 
   @type t :: %__MODULE__{
     explanation: Bot.message,
@@ -42,7 +42,7 @@ defmodule Aida.Skill.KeywordResponder do
       message |> Message.respond(response)
     end
 
-    def confidence(%{keywords: keywords}, message) do
+    def confidence(%{keywords: keywords}, %{content: %TextContent{}} = message) do
       words_in_message = Message.words(message)
 
       matches = words_in_message
@@ -56,6 +56,8 @@ defmodule Aida.Skill.KeywordResponder do
         _ ->Enum.count(matches)/word_count
       end
     end
+
+    def confidence(_, _), do: 0
 
     def id(%{id: id}) do
       id

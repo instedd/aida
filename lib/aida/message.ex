@@ -1,15 +1,17 @@
 defmodule Aida.Message do
   alias Aida.{Session, Message, Bot}
+  alias Aida.Message.{TextContent, ImageContent}
+
   @type t :: %__MODULE__{
     session: Session.t,
     bot: Bot.t,
-    content: String.t,
+    content: TextContent.t | ImageContent.t,
     reply: [String.t]
   }
 
   defstruct session: %Session{},
             bot: %Bot{},
-            content: "",
+            content: %TextContent{},
             reply: []
 
   @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
@@ -17,12 +19,16 @@ defmodule Aida.Message do
     %Message{
       session: session,
       bot: bot,
-      content: content
+      content: %TextContent{ text: content }
     }
   end
 
-  def content(%{content: content}) do
-    content
+  def text_content(%{content: %TextContent{text: text}}) do
+    text
+  end
+
+  def text_content(_) do
+    ""
   end
 
   @spec respond(message :: t, response :: String.t | map) :: t
@@ -54,9 +60,11 @@ defmodule Aida.Message do
     get_session(message, "language")
   end
 
-  def words(%{content: content}) do
-    Regex.scan(~r/\w+/u, content |> String.downcase) |> Enum.map(&hd/1)
+  def words(%{content: %TextContent{text: text}}) do
+    Regex.scan(~r/\w+/u, text |> String.downcase) |> Enum.map(&hd/1)
   end
+
+  def words(_), do: []
 
   defp lookup_var(message, key) do
     case message.bot |> Bot.lookup_var(message.session, key) do

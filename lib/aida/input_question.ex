@@ -1,5 +1,5 @@
 defmodule Aida.InputQuestion do
-  alias Aida.{Session, Expr}
+  alias Aida.{Session, Expr, Message}
 
   @type t :: %__MODULE__{
     type: :decimal | :integer | :text,
@@ -19,7 +19,7 @@ defmodule Aida.InputQuestion do
 
   defimpl Aida.SurveyQuestion, for: __MODULE__ do
     def valid_answer?(%{type: :integer}, message) do
-      case Integer.parse(message.content) do
+      case Integer.parse(Message.text_content(message)) do
         :error -> false
         {int, ""} -> int >= 0
         _ -> false
@@ -27,7 +27,7 @@ defmodule Aida.InputQuestion do
     end
 
     def valid_answer?(%{type: :decimal}, message) do
-      case Float.parse(message.content) do
+      case Float.parse(Message.text_content(message)) do
         :error -> false
         {_, ""} -> true
         _ -> false
@@ -35,11 +35,11 @@ defmodule Aida.InputQuestion do
     end
 
     def valid_answer?(%{type: :text}, message) do
-      String.trim(message.content) != ""
+      String.trim(Message.text_content(message)) != ""
     end
 
     def accept_answer(question, message) do
-      case parse_answer(question, message.content) do
+      case parse_answer(question, Message.text_content(message)) do
         {:ok, value} ->
           if validate_constraint(question, message.session, value) do
             {:ok, value}

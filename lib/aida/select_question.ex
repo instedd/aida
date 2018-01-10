@@ -21,14 +21,14 @@ defmodule Aida.SelectQuestion do
   defimpl Aida.SurveyQuestion, for: __MODULE__ do
     def valid_answer?(%{type: :select_one} = question, message) do
       language = message |> Message.language()
-      response = message.content |> String.downcase
+      response = Message.text_content(message) |> String.downcase
 
       choice_exists?(question.choices, response, language)
     end
 
     def valid_answer?(%{type: :select_many} = question, message) do
       language = message |> Message.language()
-      responses = message.content |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+      responses = Message.text_content(message) |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
 
       responses |> Enum.all?(fn(response) ->
         choice_exists?(question.choices, response, language)
@@ -50,7 +50,7 @@ defmodule Aida.SelectQuestion do
     def accept_answer(%{type: :select_one} = question, message) do
       if question |> valid_answer?(message) do
         language = message |> Message.language()
-        response = message.content |> String.downcase
+        response = Message.text_content(message) |> String.downcase
 
         choice = find_choice(question.choices, response, language)
         |> Choice.name
@@ -64,7 +64,7 @@ defmodule Aida.SelectQuestion do
     def accept_answer(%{type: :select_many} = question, message) do
       if question |> valid_answer?(message) do
         language = message |> Message.language()
-        responses = message.content |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+        responses = Message.text_content(message) |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
 
         choices = responses |> Enum.map(fn(response) ->
           find_choice(question.choices, response, language)

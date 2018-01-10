@@ -1,5 +1,5 @@
 defmodule Aida.MessageTest do
-  alias Aida.{Message, Session}
+  alias Aida.{Message, Session, Message.TextContent}
   use ExUnit.Case
 
   @bot_id "99fbbf35-d198-474b-9eac-6e27ed9342ed"
@@ -9,7 +9,7 @@ defmodule Aida.MessageTest do
     message = Message.new("Hi!", @bot)
     assert %Message{
       session: %Session{is_new?: true},
-      content: "Hi!",
+      content: %TextContent{text: "Hi!"},
       reply: []
     } = message
   end
@@ -19,7 +19,7 @@ defmodule Aida.MessageTest do
     message = Message.new("Hi!", @bot, session)
     assert %Message{
       session: ^session,
-      content: "Hi!",
+      content: %TextContent{text: "Hi!"},
       reply: []
     } = message
   end

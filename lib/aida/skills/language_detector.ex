@@ -1,5 +1,5 @@
 defmodule Aida.Skill.LanguageDetector do
-  alias Aida.Message
+  alias Aida.{Message, Message.TextContent}
 
   @type t :: %__MODULE__{
     explanation: String.t(),
@@ -47,8 +47,8 @@ defmodule Aida.Skill.LanguageDetector do
       end)
     end
 
-    def confidence(%{languages: languages}, message) do
-      words_in_message = Message.content(message)
+    def confidence(%{languages: languages}, %{content: %TextContent{}} = message) do
+      words_in_message = Message.text_content(message)
       |> String.split
 
       matches = matching_languages(message, languages)
@@ -61,6 +61,8 @@ defmodule Aida.Skill.LanguageDetector do
         true -> 0
       end
     end
+
+    def confidence(_, _), do: 0
 
     def id(_) do
       "language_detector"

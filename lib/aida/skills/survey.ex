@@ -1,6 +1,6 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
-  alias Aida.{BotManager, Session, Message, Channel, SurveyQuestion, ChannelProvider, DB, Skill}
+  alias Aida.{BotManager, Session, Message, Channel, SurveyQuestion, ChannelProvider, DB, Skill, Message.TextContent}
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -136,7 +136,7 @@ defmodule Aida.Skill.Survey do
       Survey.answer(survey, message)
     end
 
-    def confidence(survey, message) do
+    def confidence(survey, %{content: %TextContent{}} = message) do
       case Survey.current_question(survey, message) do
         nil -> 0
         question ->
@@ -147,6 +147,8 @@ defmodule Aida.Skill.Survey do
           end
       end
     end
+
+    def confidence(_, _), do: 0
 
     def id(%{id: id}) do
       id
