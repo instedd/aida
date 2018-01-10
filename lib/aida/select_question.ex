@@ -1,5 +1,5 @@
 defmodule Aida.SelectQuestion do
-  alias Aida.{Message, Choice, Session}
+  alias Aida.{Message, Choice}
 
   @type t :: %__MODULE__{
     type: :select_one | :select_many,
@@ -39,21 +39,9 @@ defmodule Aida.SelectQuestion do
       end)
     end
 
-    defp available_choices(%{choice_filter: nil} = question, _message) do
-      question.choices
-    end
-
     defp available_choices(question, message) do
       question.choices
-      |> Enum.filter(fn choice ->
-        if choice.attributes do
-          attr_lookup = &Map.get(choice.attributes, &1)
-          context = message.session |> Session.expr_context(attr_lookup: attr_lookup)
-          question.choice_filter |> Aida.Expr.eval(context)
-        else
-          false
-        end
-      end)
+      |> Enum.filter(&Choice.available?(&1, question.choice_filter, message))
     end
 
     defp choice_exists?(choices, response, language) do

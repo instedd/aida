@@ -99,7 +99,7 @@ defmodule Aida.Session do
           case Session.lookup_var(session, name) do
             nil ->
               if lookup_raises do
-                raise Aida.Expr.UnknownVariable.exception("Could not find variable named '#{name}'")
+                raise Aida.Expr.UnknownVariableError.exception(name)
               else
                 nil
               end
