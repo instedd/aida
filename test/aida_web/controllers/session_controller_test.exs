@@ -1,6 +1,5 @@
 defmodule AidaWeb.SessionControllerTest do
   use AidaWeb.ConnCase
-  import AidaWeb.Router.Helpers
   alias Aida.{BotParser, SessionStore, DB, Repo}
   alias Aida.DB.{MessageLog, Bot}
   alias Aida.JsonSchema
@@ -116,6 +115,23 @@ defmodule AidaWeb.SessionControllerTest do
       response = json_response(conn, 200)["data"]
 
       assert response == []
+    end
+  end
+
+  describe "session_data" do
+    test "lists sessions data", %{conn: conn}  do
+      data = %{"foo" => 1, "bar" => 2}
+      bot_id = (Bot |> Repo.one).id
+      session_id = "#{bot_id}/facebook/1234567890/1234"
+      SessionStore.save(session_id, data) 
+
+      conn = get conn, bot_session_path(conn, :session_data, bot_id)
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id" => session_id,
+          "data" => data
+        }
+      ]
     end
   end
 

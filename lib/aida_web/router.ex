@@ -13,6 +13,7 @@ defmodule AidaWeb.Router do
   scope "/api", AidaWeb do
     pipe_through :api
     resources "/bots", BotController, except: [:new, :edit] do
+      get "/session_data", SessionController, :session_data
       resources "/sessions", SessionController, only: [:index] do
         get "/log", SessionController, :log
       end
