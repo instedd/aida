@@ -1,6 +1,5 @@
 defmodule Aida.DB.MessageLog do
   use Ecto.Schema
-  alias Aida.DB
   alias Aida.Repo
   import Ecto.Changeset
   alias __MODULE__
