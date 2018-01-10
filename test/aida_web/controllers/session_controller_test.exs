@@ -157,7 +157,7 @@ defmodule AidaWeb.SessionControllerTest do
       create_message_log(second_message_attrs)
       create_message_log(third_message_attrs)
 
-      conn = get conn, bot_session_path(conn, :log, bot_id, session_id)
+      conn = get conn, bot_session_session_path(conn, :log, bot_id, session_id)
       response = json_response(conn, 200)["data"]
       assert response |> Enum.count == 3
       assert response |> Enum.any?(&(is_equal?(&1, first_message_attrs)))

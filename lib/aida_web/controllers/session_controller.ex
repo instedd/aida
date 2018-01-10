@@ -8,8 +8,8 @@ defmodule AidaWeb.SessionController do
     query = Session 
             |> join(:inner, [s], m in MessageLog, m.session_id == s.id) 
             |> where([s], like(s.id, ^"#{bot_id}/%"))
-
-    query = from [s, m] in query, group_by: s.id, select: %{id: s.id, last_message: max(m.inserted_at), first_message: min(m.inserted_at)}
+            |> group_by([s, m], s.id)
+            |> select([s, m], %{id: s.id, first_message: min(m.inserted_at), last_message: max(m.inserted_at)})
 
     sessions = Repo.all(query)
     render(conn, "index.json", sessions: sessions)
