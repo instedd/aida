@@ -31,12 +31,23 @@ defmodule Aida.JsonSchemaTest do
     "delay": "1",
     "message": #{@valid_localized_string}
   })
+  @valid_fixed_time_message ~s({
+    "schedule": "2018-01-01T00:00:00Z",
+    "message": #{@valid_localized_string}
+  })
   @valid_scheduled_messages ~s({
     "type": "scheduled_messages",
     "id": "2",
     "name": "a",
     "schedule_type": "since_last_incoming_message",
     "messages": [#{@valid_delayed_message}]
+  })
+  @valid_scheduled_messages_fixed_time ~s({
+    "type": "scheduled_messages",
+    "id": "2",
+    "name": "a",
+    "schedule_type": "fixed_time",
+    "messages": [#{@valid_fixed_time_message}]
   })
   @valid_language_detector ~s({
     "type": "language_detector",
@@ -75,7 +86,15 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "values": {
       "en": "a"
-    }
+    },
+    "overrides": [
+      {
+        "relevant": "${age} > 18",
+        "values": {
+          "en": "b"
+        }
+      }
+    ]
   })
   @valid_facebook_channel ~s({
     "type": "facebook",
@@ -259,22 +278,29 @@ defmodule Aida.JsonSchemaTest do
   end
 
   test "scheduled_messages" do
-    assert_enum("type", "foo", :scheduled_messages)
-    assert_valid_enum("type", "scheduled_messages", :scheduled_messages)
-    assert_required("type", :scheduled_messages)
-    assert_required("schedule_type", :scheduled_messages)
-    assert_enum("schedule_type", "foo", :scheduled_messages)
-    assert_valid_enum("schedule_type", "since_last_incoming_message", :since_last_incoming_message)
-    assert_required("messages", :scheduled_messages)
-    assert_array("messages", :scheduled_messages)
-    reject_empty_array("messages", :scheduled_messages)
-    assert_non_empty_string("name", :scheduled_messages)
-    assert_required("name", :scheduled_messages)
-    assert_non_empty_string("id", :scheduled_messages)
-    assert_required("id", :scheduled_messages)
-    assert_optional("relevant", "${age} > 18", :scheduled_messages)
+    ~w(scheduled_messages_since_last_incoming_message scheduled_messages_fixed_time)a |> Enum.each(fn type ->
+      assert_enum("type", "foo", type)
+      assert_valid_enum("type", "scheduled_messages", type)
+      assert_required("type", type)
+      assert_required("schedule_type", type)
+      assert_enum("schedule_type", "foo", type)
+      assert_required("messages", type)
+      assert_array("messages", type)
+      reject_empty_array("messages", type)
+      assert_non_empty_string("name", type)
+      assert_required("name", type)
+      assert_non_empty_string("id", type)
+      assert_required("id", type)
+      assert_optional("relevant", "${age} > 18", type)
+    end)
+
+    assert_valid_enum("schedule_type", "since_last_incoming_message", :scheduled_messages_since_last_incoming_message)
+    assert_valid_enum("schedule_type", "fixed_time", :scheduled_messages_fixed_time)
 
     @valid_scheduled_messages
+    |> assert_valid(:scheduled_messages)
+
+    @valid_scheduled_messages_fixed_time
     |> assert_valid(:scheduled_messages)
   end
 
@@ -427,9 +453,15 @@ defmodule Aida.JsonSchemaTest do
     assert_required("name", :variable)
     assert_non_empty_string("name", :variable)
     assert_required("values", :variable)
+    assert_optional("overrides", [], :variable)
 
     @valid_variable
     |> assert_valid(:variable)
+  end
+
+  test "variable_override" do
+    assert_required("relevant", :variable_override)
+    assert_required("values", :variable_override)
   end
 
   test "localized_string" do

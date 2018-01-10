@@ -17,39 +17,39 @@ defmodule Aida.SkillUsageTest do
     end
 
     test "stores an interaction per sent message when the front_desk answers", %{bot: bot} do
-      input = Message.new("Hi!")
+      input = Message.new("Hi!", bot)
         |> Message.put_session("language", "en")
       bot |> Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 1
     end
 
     test "stores only one interaction per sent message for each skill", %{bot: bot} do
-      input = Message.new("english")
+      input = Message.new("english", bot)
       output = bot |> Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 2
 
-      input2 = Message.new("español", output.session)
+      input2 = Message.new("español", bot, output.session)
       bot |> Bot.chat(input2)
       assert Enum.count(DB.list_skill_usages()) == 2
     end
 
     test "stores one interaction per sent message for each skill", %{bot: bot} do
-      input = Message.new("english")
+      input = Message.new("english", bot)
       output = bot |> Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 2
 
-      input2 = Message.new("español", output.session)
+      input2 = Message.new("español", bot, output.session)
       output2 = bot |> Bot.chat(input2)
       assert Enum.count(DB.list_skill_usages()) == 2
 
-      input3 = Message.new("menu", output2.session)
+      input3 = Message.new("menu", bot, output2.session)
       bot |> Bot.chat(input3)
       assert Enum.count(DB.list_skill_usages()) == 3
 
     end
 
     test "stores an interaction per sent message with the proper data for language_detector", %{bot: bot} do
-      input = Message.new("english")
+      input = Message.new("english", bot)
       bot |> Bot.chat(input)
       skill_usage = Enum.at(DB.list_skill_usages(),0)
 
@@ -61,7 +61,7 @@ defmodule Aida.SkillUsageTest do
     end
 
     test "stores an interaction per sent message with the proper data when the front desk answers", %{bot: bot} do
-      input = Message.new("Hi!")
+      input = Message.new("Hi!", bot)
         |> Message.put_session("language", "en")
       bot |> Bot.chat(input)
 

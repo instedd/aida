@@ -12,6 +12,7 @@ defmodule Aida.BotParserTest do
     InputQuestion,
     Choice,
     DelayedMessage,
+    FixedTimeMessage,
     Variable
   }
   alias Aida.Channel.{Facebook, WebSocket}
@@ -70,8 +71,8 @@ defmodule Aida.BotParserTest do
             "es" => ["menu", "comida"]
           },
           response: %{
-            "en" => "We have {food_options}",
-            "es" => "Tenemos {food_options}"
+            "en" => "We have ${food_options}",
+            "es" => "Tenemos ${food_options}"
           }
         },
         %KeywordResponder{
@@ -99,7 +100,7 @@ defmodule Aida.BotParserTest do
           id: "inactivity_check",
           bot_id: @uuid,
           name: "Inactivity Check",
-          schedule_type: "since_last_incoming_message",
+          schedule_type: :since_last_incoming_message,
           messages: [
             %DelayedMessage{
               delay: "1440",
@@ -120,6 +121,21 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
                 "es" => "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"
+              }
+            }
+          ]
+        },
+        %ScheduledMessages{
+          id: "happy_new_year",
+          bot_id: @uuid,
+          name: "Happy New Year",
+          schedule_type: :fixed_time,
+          messages: [
+            %FixedTimeMessage{
+              schedule: ~N[2018-01-01 00:00:00] |> DateTime.from_naive!("Etc/UTC"),
+              message: %{
+                "en" => "Happy new year!",
+                "es" => "Feliz año nuevo!"
               }
             }
           ]
@@ -229,6 +245,45 @@ defmodule Aida.BotParserTest do
           values: %{
             "en" => "barbecue and pasta",
             "es" => "parrilla y pasta"
+          },
+          overrides: [
+            %Variable.Override{
+              relevant: Aida.Expr.parse("${age} > 18"),
+              values: %{
+                "en" => "barbecue and pasta and a exclusive selection of wines",
+                "es" => "parrilla y pasta además de nuestra exclusiva selección de vinos"
+              }
+            }
+          ]
+        },
+        %Variable{
+          name: "title",
+          values: %{
+            "en" => "",
+            "es" => ""
+          },
+          overrides: [
+            %Variable.Override{
+              relevant: Aida.Expr.parse("${gender} = 'male'"),
+              values: %{
+                "en" => "Mr.",
+                "es" => "Sr."
+              }
+            },
+            %Variable.Override{
+              relevant: Aida.Expr.parse("${gender} = 'female'"),
+              values: %{
+                "en" => "Ms.",
+                "es" => "Sra."
+              }
+            }
+          ]
+        },
+        %Variable{
+          name: "full_name",
+          values: %{
+            "en" => "${title} ${first_name} ${last_name}",
+            "es" => "${title} ${first_name} ${last_name}"
           }
         }
       ],
@@ -329,7 +384,7 @@ defmodule Aida.BotParserTest do
           id: "inactivity_check",
           bot_id: @uuid,
           name: "Inactivity Check",
-          schedule_type: "since_last_incoming_message",
+          schedule_type: :since_last_incoming_message,
           relevant: Aida.Expr.parse("${opt_in} = true()"),
           messages: [
             %DelayedMessage{
@@ -555,6 +610,32 @@ defmodule Aida.BotParserTest do
         ])
 
     assert {:error, "Duplicated skill (language_detector)"} == BotParser.parse(@uuid, manifest)
+  end
+
+  test "parse manifest with invalid expression" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+      |> Map.put("skills", [
+        %{
+            "type" => "keyword_responder",
+            "id" => "this is the same id",
+            "name" => "Food menu",
+            "relevant" => "${foo} < ...",
+            "explanation" => %{
+              "en" => "I can give you information about our menu"
+            },
+            "clarification" => %{
+              "en" => "For menu options, write 'menu'"
+            },
+            "keywords" => %{
+              "en" => ["menu","food"]
+            },
+            "response" => %{
+              "en" => "We have ${food_options}"
+            }
+          }
+      ])
+
+    assert {:error, "Invalid expression: '${foo} < ...'"} == BotParser.parse(@uuid, manifest)
   end
 
 end

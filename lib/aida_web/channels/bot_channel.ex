@@ -12,24 +12,38 @@ defmodule AidaWeb.BotChannel do
     end
   end
 
-  def handle_in("new_session", _message, socket) do
+  def handle_in("new_session", attrs, socket) do
     session_id = Ecto.UUID.generate
-    session = Session.new("#{socket.assigns.bot_id}/ws/#{session_id}")
-    session |> Session.save
+    data = case attrs do
+      %{"data" => %{} = data} -> data
+      _ -> %{}
+    end
+
+    Session.new(real_session_id(socket, session_id), data)
+      |> Session.save
+
     {:reply, {:ok, %{session: session_id}}, socket}
   end
 
+  def handle_in("put_data", %{"session" => session_id, "data" => data}, socket) do
+    Session.load(real_session_id(socket, session_id))
+      |> Session.merge(data)
+      |> Session.save
+
+    {:reply, :ok, socket}
+  end
+
   def handle_in("delete_session", %{"session" => session_id}, socket) do
-    Session.delete("#{socket.assigns.bot_id}/ws/#{session_id}")
-    {:reply, :ok , socket}
+    Session.delete(real_session_id(socket, session_id))
+    {:reply, :ok, socket}
   end
 
   def handle_in("utb_msg", %{"text" => text, "session" => session_id}, socket) do
     case BotManager.find(socket.assigns.bot_id) do
       :not_found -> {:stop, :not_found, socket}
       bot ->
-        session = Session.load("#{socket.assigns.bot_id}/ws/#{session_id}")
-        reply = Bot.chat(bot, Message.new(text, session))
+        session = Session.load(real_session_id(socket, session_id))
+        reply = Bot.chat(bot, Message.new(text, bot, session))
         reply.session |> Session.save
 
         reply.reply |> Enum.each(fn message ->
@@ -37,5 +51,9 @@ defmodule AidaWeb.BotChannel do
         end)
         {:noreply, socket}
     end
+  end
+
+  defp real_session_id(socket, session_id) do
+    "#{socket.assigns.bot_id}/ws/#{session_id}"
   end
 end

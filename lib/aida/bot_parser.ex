@@ -8,6 +8,7 @@ defmodule Aida.BotParser do
     Skill.ScheduledMessages,
     Skill.Survey,
     DelayedMessage,
+    FixedTimeMessage,
     SelectQuestion,
     InputQuestion,
     Choice,
@@ -18,15 +19,19 @@ defmodule Aida.BotParser do
 
   @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
   def parse(id, manifest) do
-    %Bot{
-      id: id,
-      languages: manifest["languages"],
-      front_desk: parse_front_desk(manifest["front_desk"]),
-      skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
-      variables: manifest["variables"] |> Enum.map(&parse_variable/1),
-      channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
-    }
-    |> validate()
+    try do
+      %Bot{
+        id: id,
+        languages: manifest["languages"],
+        front_desk: parse_front_desk(manifest["front_desk"]),
+        skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
+        variables: manifest["variables"] |> Enum.map(&parse_variable/1),
+        channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
+      }
+      |> validate()
+    rescue
+      error -> {:error, Exception.message(error)}
+    end
   end
 
   def parse!(id, manifest) do
@@ -51,7 +56,22 @@ defmodule Aida.BotParser do
   defp parse_variable(var) do
     %Variable{
       name: var["name"],
-      values: var["values"]
+      values: var["values"],
+      overrides: parse_variable_overrides(var["overrides"])
+    }
+  end
+
+  @spec parse_variable_overrides(overrides :: nil | list) :: [Variable.Override.t]
+  defp parse_variable_overrides(nil), do: []
+  defp parse_variable_overrides(overrides) do
+    overrides |> Enum.map(&parse_variable_override/1)
+  end
+
+  @spec parse_variable_override(override :: map) :: Variable.Override.t
+  defp parse_variable_override(override) do
+    %Variable.Override{
+      relevant: parse_expr(override["relevant"]),
+      values: override["values"]
     }
   end
 
@@ -77,13 +97,18 @@ defmodule Aida.BotParser do
   end
 
   defp parse_skill(%{"type" => "scheduled_messages"} = skill, bot_id) do
+    schedule_type = case skill["schedule_type"] do
+      "since_last_incoming_message" -> :since_last_incoming_message
+      "fixed_time" -> :fixed_time
+    end
+
     %ScheduledMessages{
       id: skill["id"],
       bot_id: bot_id,
       name: skill["name"],
-      schedule_type: skill["schedule_type"],
+      schedule_type: schedule_type,
       relevant: parse_expr(skill["relevant"]),
-      messages: skill["messages"] |> Enum.map(&parse_delayed_message/1)
+      messages: skill["messages"] |> Enum.map(&(parse_scheduled_message(&1, schedule_type)))
     }
   end
 
@@ -101,9 +126,17 @@ defmodule Aida.BotParser do
     }
   end
 
-  defp parse_delayed_message(message) do
+  defp parse_scheduled_message(message, :since_last_incoming_message) do
     %DelayedMessage{
       delay: message["delay"],
+      message: message["message"]
+    }
+  end
+
+  defp parse_scheduled_message(message, :fixed_time) do
+    {:ok, schedule, _} = message["schedule"] |> DateTime.from_iso8601()
+    %FixedTimeMessage{
+      schedule: schedule,
       message: message["message"]
     }
   end

@@ -43,8 +43,7 @@ defmodule Aida.Skill.KeywordResponder do
     end
 
     def confidence(%{keywords: keywords}, message) do
-      words_in_message = Message.curated_message(message)
-      |> String.split
+      words_in_message = Message.words(message)
 
       matches = words_in_message
       |> Enum.filter(fn(word) ->

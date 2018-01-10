@@ -54,8 +54,8 @@
         "es": ["menu","comida"]
       },
       "response": {
-        "en": "We have {food_options}",
-        "es": "Tenemos {food_options}"
+        "en": "We have ${food_options}",
+        "es": "Tenemos ${food_options}"
       }
     },
     {
@@ -104,6 +104,21 @@
           "message": {
             "en": "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
             "es": "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"
+          }
+        }
+      ]
+    },
+    {
+      "type": "scheduled_messages",
+      "id": "happy_new_year",
+      "name": "Happy New Year",
+      "schedule_type": "fixed_time",
+      "messages": [
+        {
+          "schedule": "2018-01-01T00:00:00Z",
+          "message": {
+            "en": "Happy new year!",
+            "es": "Feliz año nuevo!"
           }
         }
       ]
@@ -223,6 +238,45 @@
       "values": {
         "en": "barbecue and pasta",
         "es": "parrilla y pasta"
+      },
+      "overrides": [
+        {
+          "relevant": "${age} > 18",
+          "values": {
+            "en": "barbecue and pasta and a exclusive selection of wines",
+            "es": "parrilla y pasta además de nuestra exclusiva selección de vinos"
+          }
+        }
+      ]
+    },
+    {
+      "name": "title",
+      "values": {
+        "en": "",
+        "es": ""
+      },
+      "overrides": [
+        {
+          "relevant": "${gender} = 'male'",
+          "values": {
+            "en": "Mr.",
+            "es": "Sr."
+          }
+        },
+        {
+          "relevant": "${gender} = 'female'",
+          "values": {
+            "en": "Ms.",
+            "es": "Sra."
+          }
+        }
+      ]
+    },
+    {
+      "name": "full_name",
+      "values": {
+        "en": "${title} ${first_name} ${last_name}",
+        "es": "${title} ${first_name} ${last_name}"
       }
     }
   ],

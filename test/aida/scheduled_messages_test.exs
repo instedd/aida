@@ -1,14 +1,14 @@
 defmodule Aida.ScheduledMessagesTest do
-  alias Aida.{Skill.ScheduledMessages, DelayedMessage, BotParser, Bot, DB, Skill, TestChannel, Session, SessionStore, ChannelProvider}
+  alias Aida.{Skill.ScheduledMessages, DelayedMessage, FixedTimeMessage, BotParser, Bot, DB, Skill, TestChannel, Session, SessionStore, ChannelProvider, BotManager}
   use Aida.DataCase
   import Mock
 
-  describe "scheduled messages" do
+  describe "scheduled messages since last incoming message" do
     setup do
       %{skill: %ScheduledMessages{
           id: "inactivity_check",
           name: "Inactivity Check",
-          schedule_type: "since_last_incoming_message"
+          schedule_type: :since_last_incoming_message
         }}
     end
 
@@ -25,6 +25,67 @@ defmodule Aida.ScheduledMessagesTest do
     test "schedules for 20 minutes as min value", %{skill: skill} do
       skill = %{skill | messages: [%DelayedMessage{delay: "1"}]}
       assert ScheduledMessages.delay(skill) == :timer.minutes(20)
+    end
+  end
+
+  describe "scheduled messages with fixed time" do
+    @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
+    @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
+    @session_id "#{@bot_id}/facebook/1234567890/0987654321"
+
+    setup do
+      SessionStore.start_link
+      :ok
+    end
+
+    test "calculate wake_up delay" do
+      now = DateTime.utc_now
+      message = %FixedTimeMessage{schedule: now |> Timex.shift(hours: 10)}
+      skill = %ScheduledMessages{schedule_type: :fixed_time, messages: [message]}
+      assert ScheduledMessages.delay(skill, now) == :timer.hours(10)
+    end
+
+    test "init schedules wake_up" do
+      bot = %Bot{id: @bot_id}
+      message = %FixedTimeMessage{schedule: DateTime.utc_now |> Timex.shift(days: 1)}
+      skill = %ScheduledMessages{id: @skill_id, schedule_type: :fixed_time, messages: [message]}
+
+      schedule_wake_up_fn = fn(_bot, _skill, delay) ->
+        assert_in_delta delay, :timer.hours(24), :timer.seconds(1)
+        :ok
+      end
+
+      with_mock BotManager, [schedule_wake_up: schedule_wake_up_fn] do
+        skill |> Skill.init(bot)
+        assert called BotManager.schedule_wake_up(bot, skill, :_)
+      end
+    end
+
+    test "init doesn't schedule wake_up if the survey is scheduled in the past" do
+      bot = %Bot{id: @bot_id}
+      message = %FixedTimeMessage{schedule: DateTime.utc_now |> Timex.shift(days: -1)}
+      skill = %ScheduledMessages{id: @skill_id, schedule_type: :fixed_time, messages: [message]}
+
+      with_mock BotManager, [schedule_wake_up: fn(_bot, _skill, _delay) -> :ok end] do
+        skill |> Skill.init(bot)
+        refute called BotManager.schedule_wake_up(:_, :_, :_)
+      end
+    end
+
+    test "send message at fixed time" do
+      channel = TestChannel.new
+      message = %FixedTimeMessage{message: %{"en" => "Hello"}}
+      skill = %ScheduledMessages{id: @skill_id, schedule_type: :fixed_time, messages: [message]}
+      bot = %Bot{id: @bot_id, skills: [skill], channels: [channel]}
+
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        Session.new(@session_id, %{"language" => "en"})
+        |> Session.save
+
+        Bot.wake_up(bot, @skill_id)
+
+        assert_received {:send_message, ["Hello"], @session_id}
+      end
     end
   end
 

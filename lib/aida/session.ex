@@ -63,6 +63,11 @@ defmodule Aida.Session do
     %{session | values: Map.put(values, key, value)}
   end
 
+  @spec merge(session :: Session.t, new_values :: values) :: t
+  def merge(%Session{values: values} = session, new_values) do
+    %{session | values: Map.merge(values, new_values)}
+  end
+
   @spec is_new?(session :: Session.t) :: boolean
   def is_new?(%Session{is_new?: value}) do
     value

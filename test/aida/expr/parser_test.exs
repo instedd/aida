@@ -1,46 +1,52 @@
 defmodule Aida.Expr.ParserTest do
   use ExUnit.Case
   import Aida.Expr
-  alias Aida.Expr.{Literal, Comparison, Boolean, Arith, Call, Variable, Self}
+  alias Aida.Expr.{Literal, BinaryOp, UnaryOp, Call, Variable, Self, ParseError}
 
   describe "parse" do
     test "literals" do
       assert parse("123") == literal(123)
+      assert parse("-123") == literal(-123)
       assert parse("'foo'") == literal("foo")
+      assert parse(~s("foo")) == literal("foo")
+      assert parse("“foo”") == literal("foo")
+      assert parse("‘foo’") == literal("foo")
     end
 
     test "comparisons" do
-      assert parse("1 = 2") == cmp(:=, literal(1), literal(2))
-      assert parse("1 < 2") == cmp(:<, literal(1), literal(2))
-      assert parse("1 <= 2") == cmp(:<=, literal(1), literal(2))
-      assert parse("1 > 2") == cmp(:>, literal(1), literal(2))
-      assert parse("1 >= 2") == cmp(:>=, literal(1), literal(2))
-      assert parse("1 != 2") == cmp(:!=, literal(1), literal(2))
+      assert parse("1 = 2") == binop(literal(1), :=, literal(2))
+      assert parse("1 < 2") == binop(literal(1), :<, literal(2))
+      assert parse("1 <= 2") == binop(literal(1), :<=, literal(2))
+      assert parse("1 > 2") == binop(literal(1), :>, literal(2))
+      assert parse("1 >= 2") == binop(literal(1), :>=, literal(2))
+      assert parse("1 != 2") == binop(literal(1), :!=, literal(2))
     end
 
     test "boolean operators" do
-      assert parse("1 and 2") == bool(:and, literal(1), literal(2))
-      assert parse("1 or 2") == bool(:or, literal(1), literal(2))
+      assert parse("1 and 2") == binop(literal(1), :and, literal(2))
+      assert parse("1 or 2") == binop(literal(1), :or, literal(2))
     end
 
     test "arithmetic operators" do
-      assert parse("1 + 2") == arith(:+, literal(1), literal(2))
-      assert parse("1 - 2") == arith(:-, literal(1), literal(2))
-      assert parse("1 * 2") == arith(:*, literal(1), literal(2))
-      assert parse("1 div 2") == arith(:div, literal(1), literal(2))
-      assert parse("1 mod 2") == arith(:mod, literal(1), literal(2))
+      assert parse("1 + 2") == binop(literal(1), :+, literal(2))
+      assert parse("1 - 2") == binop(literal(1), :-, literal(2))
+      assert parse("1 * 2") == binop(literal(1), :*, literal(2))
+      assert parse("1 div 2") == binop(literal(1), :div, literal(2))
+      assert parse("1 mod 2") == binop(literal(1), :mod, literal(2))
+      assert parse("- 2") == unaryop(:-, literal(2))
     end
 
     test "precedence" do
-      assert parse("1 and 2 and 3") == bool(:and, bool(:and, literal(1), literal(2)), literal(3))
-      assert parse("1 or 2 or 3") == bool(:or, bool(:or, literal(1), literal(2)), literal(3))
-      assert parse("1 + 2 + 3") == arith(:+, arith(:+, literal(1), literal(2)), literal(3))
-      assert parse("1 < 2 and 3 < 4") == bool(:and, cmp(:<, literal(1), literal(2)), cmp(:<, literal(3), literal(4)))
-      assert parse("1 + 2 = 3 - 4") == cmp(:=, arith(:+, literal(1), literal(2)), arith(:-, literal(3), literal(4)))
+      assert parse("1 and 2 and 3") == binop(binop(literal(1), :and, literal(2)), :and, literal(3))
+      assert parse("1 or 2 or 3") == binop(binop(literal(1), :or, literal(2)), :or, literal(3))
+      assert parse("1 + 2 + 3") == binop(binop(literal(1), :+, literal(2)), :+, literal(3))
+      assert parse("1 * 2 + 3 * 4") == binop(binop(literal(1), :*, literal(2)), :+, binop(literal(3), :*, literal(4)))
+      assert parse("1 < 2 and 3 < 4") == binop(binop(literal(1), :<, literal(2)), :and, binop(literal(3), :<, literal(4)))
+      assert parse("1 + 2 = 3 - 4") == binop(binop(literal(1), :+, literal(2)), :=, binop(literal(3), :-, literal(4)))
     end
 
     test "parentheses" do
-      assert parse("1 and (2 and 3)") == bool(:and, literal(1), bool(:and, literal(2), literal(3)))
+      assert parse("1 and (2 and 3)") == binop(literal(1), :and, binop(literal(2), :and, literal(3)))
     end
 
     test "variables" do
@@ -55,6 +61,12 @@ defmodule Aida.Expr.ParserTest do
     test "self" do
       assert parse(".") == %Self{}
     end
+
+    test "errors" do
+      assert_raise ParseError, ~r/Invalid expression: '@@@'/, fn ->
+        parse("@@@")
+      end
+    end
   end
 
   defp literal(value) when is_integer(value) do
@@ -65,16 +77,12 @@ defmodule Aida.Expr.ParserTest do
     %Literal{type: :string, value: value}
   end
 
-  defp cmp(op, left, right) do
-    %Comparison{op: op, left: left, right: right}
+  defp binop(left, op, right) do
+    %BinaryOp{left: left, op: op, right: right}
   end
 
-  defp bool(op, left, right) do
-    %Boolean{op: op, left: left, right: right}
-  end
-
-  defp arith(op, left, right) do
-    %Arith{op: op, left: left, right: right}
+  defp unaryop(op, value) do
+    %UnaryOp{op: op, value: value}
   end
 
   defp var(name) do

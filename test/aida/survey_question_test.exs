@@ -1,5 +1,5 @@
 defmodule Aida.SurveyQuestionTest do
-  alias Aida.{SelectQuestion, Choice, Session, Message, SurveyQuestion, InputQuestion}
+  alias Aida.{SelectQuestion, Choice, Session, Message, SurveyQuestion, InputQuestion, Bot}
   use ExUnit.Case
 
   @yes_no [
@@ -42,14 +42,15 @@ defmodule Aida.SurveyQuestionTest do
       }
     },
     %Choice{
-      name: "cabernet suavignon",
+      name: "cabernet sauvignon",
       labels: %{
-        "en" => ["cabernet suavignon"],
-        "es" => ["cabernet suavignon"]
+        "en" => ["cabernet sauvignon"],
+        "es" => ["cabernet sauvignon"]
       }
     }
   ]
 
+  @bot %Bot{}
   @session Session.new("1", %{"language" => "en"})
 
   describe "select_one" do
@@ -64,13 +65,13 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("Yes", @session)
+      message = Message.new("Yes", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("yes", @session)
+      message = Message.new("yes", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
@@ -85,19 +86,19 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("Yes", @session)
+      message = Message.new("Yes", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, "yes"}
 
-      message = Message.new("Sure", @session)
+      message = Message.new("Sure", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, "yes"}
 
-      message = Message.new("Ok", @session)
+      message = Message.new("Ok", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, "yes"}
 
-      message = Message.new("Nope", @session)
+      message = Message.new("Nope", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, "no"}
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
@@ -114,19 +115,19 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("syrah, merlot", @session)
+      message = Message.new("syrah, merlot", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("Cabernet suavignon, Merlot", @session)
+      message = Message.new("Cabernet sauvignon, Merlot", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("foo, merlot", @session)
+      message = Message.new("foo, merlot", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("merlot, foo", @session)
+      message = Message.new("merlot, foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
@@ -141,19 +142,19 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("syrah, merlot", @session)
+      message = Message.new("syrah, merlot", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, ["syrah", "merlot"]}
 
-      message = Message.new("Cabernet suavignon, Merlot", @session)
-      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["cabernet suavignon", "merlot"]}
+      message = Message.new("Cabernet Sauvignon, Merlot", @bot, @session)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["cabernet sauvignon", "merlot"]}
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
 
-      message = Message.new("foo, merlot", @session)
+      message = Message.new("foo, merlot", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
 
-      message = Message.new("merlot, foo", @session)
+      message = Message.new("merlot, foo", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
@@ -169,22 +170,22 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("123456", @session)
+      message = Message.new("123456", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("1", @session)
+      message = Message.new("1", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("-3", @session)
+      message = Message.new("-3", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("3a", @session)
+      message = Message.new("3a", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("merlot, foo", @session)
+      message = Message.new("merlot, foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
@@ -198,13 +199,13 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("123456", @session)
+      message = Message.new("123456", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, 123456}
 
-      message = Message.new("1", @session)
+      message = Message.new("1", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, 1}
 
-      message = Message.new("-3", @session)
+      message = Message.new("-3", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
@@ -220,34 +221,34 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("123.456", @session)
+      message = Message.new("123.456", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("1.2", @session)
+      message = Message.new("1.2", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("-3.2", @session)
+      message = Message.new("-3.2", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("3", @session)
+      message = Message.new("3", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("-3", @session)
+      message = Message.new("-3", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new("0.1", @session)
+      message = Message.new("0.1", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new(".1", @session)
+      message = Message.new(".1", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("-3a", @session)
+      message = Message.new("-3a", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
 
-      message = Message.new("merlot.foo", @session)
+      message = Message.new("merlot.foo", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
@@ -261,34 +262,34 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("123.456", @session)
+      message = Message.new("123.456", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, 123.456}
 
-      message = Message.new("1.2", @session)
+      message = Message.new("1.2", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, 1.2}
 
-      message = Message.new("-3.2", @session)
+      message = Message.new("-3.2", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, -3.2}
 
-      message = Message.new("3", @session)
+      message = Message.new("3", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, 3}
 
-      message = Message.new("-3", @session)
+      message = Message.new("-3", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, -3}
 
-      message = Message.new("0.1", @session)
+      message = Message.new("0.1", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, 0.1}
 
-      message = Message.new(".1", @session)
+      message = Message.new(".1", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
 
-      message = Message.new("-3a", @session)
+      message = Message.new("-3a", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
 
-      message = Message.new("foo", @session)
+      message = Message.new("foo", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
 
-      message = Message.new("merlot.foo", @session)
+      message = Message.new("merlot.foo", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
@@ -304,10 +305,10 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("lalala llala", @session)
+      message = Message.new("lalala llala", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == true
 
-      message = Message.new(" ", @session)
+      message = Message.new(" ", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
@@ -321,10 +322,10 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      message = Message.new("lalala llala", @session)
+      message = Message.new("lalala llala", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == {:ok, "lalala llala"}
 
-      message = Message.new(" ", @session)
+      message = Message.new(" ", @bot, @session)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
