@@ -9,7 +9,7 @@ defprotocol Aida.Channel do
   def callback(channel, conn)
 
   # @spec send_message(channel :: Aida.Channel.t, messages :: ) :: String.t
-  def send_message(channel, messages, recipient)
+  def send_message(channel, messages, session_id)
 end
 
 defmodule Aida.ChannelProvider do

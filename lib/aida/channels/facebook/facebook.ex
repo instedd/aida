@@ -5,7 +5,7 @@ defmodule Aida.Channel.Facebook do
   alias Aida.Bot
   alias Aida.Message
   alias Aida.Session
-  alias Aida.DB.MessagesPerDay
+  alias Aida.DB.{MessagesPerDay, MessageLog}
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
@@ -125,6 +125,7 @@ defmodule Aida.Channel.Facebook do
             session = Session.load(session_id)
               |> pull_profile(channel, sender_id)
 
+            MessageLog.create(channel.bot_id, session_id, text, "incoming")
             reply = Bot.chat(bot, Message.new(text, bot, session))
             reply.session |> Session.save
 
@@ -165,6 +166,7 @@ defmodule Aida.Channel.Facebook do
       api = FacebookApi.new(channel.access_token)
 
       Enum.each(messages, fn message ->
+        MessageLog.create(channel.bot_id, session_id, message, "outgoing")
         MessagesPerDay.log_sent_message(channel.bot_id)
         api |> FacebookApi.send_message(recipient, message)
       end)
