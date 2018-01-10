@@ -1,5 +1,5 @@
 defmodule Aida.SelectQuestion do
-  alias Aida.{Message, Choice}
+  alias Aida.{Message, Choice, Session}
 
   @type t :: %__MODULE__{
     type: :select_one | :select_many,
@@ -24,20 +24,39 @@ defmodule Aida.SelectQuestion do
     def valid_answer?(%{type: :select_one} = question, message) do
       language = message |> Message.language()
       response = Message.text_content(message) |> String.downcase
+      choices = available_choices(question, message)
 
-      choice_exists?(question.choices, response, language)
+      choice_exists?(choices, response, language)
     end
 
     def valid_answer?(%{type: :select_many} = question, message) do
       language = message |> Message.language()
       responses = Message.text_content(message) |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+      choices = available_choices(question, message)
 
       responses |> Enum.all?(fn(response) ->
-        choice_exists?(question.choices, response, language)
+        choice_exists?(choices, response, language)
       end)
     end
 
-    def choice_exists?(choices, response, language) do
+    defp available_choices(%{choice_filter: nil} = question, _message) do
+      question.choices
+    end
+
+    defp available_choices(question, message) do
+      question.choices
+      |> Enum.filter(fn choice ->
+        if choice.attributes do
+          attr_lookup = &Map.get(choice.attributes, &1)
+          context = message.session |> Session.expr_context(attr_lookup: attr_lookup)
+          question.choice_filter |> Aida.Expr.eval(context)
+        else
+          false
+        end
+      end)
+    end
+
+    defp choice_exists?(choices, response, language) do
       find_choice(choices, response, language) != nil
     end
 

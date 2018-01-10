@@ -50,8 +50,48 @@ defmodule Aida.SurveyQuestionTest do
     }
   ]
 
+  @entrees [
+    %Choice{
+      name: "spaghetti",
+      labels: %{
+        "en" => ["spaghetti"]
+      },
+      attributes: %{
+        "food_type" => "pasta"
+      }
+    },
+    %Choice{
+      name: "lasagne",
+      labels: %{
+        "en" => ["lasagne"]
+      },
+      attributes: %{
+        "food_type" => "pasta"
+      }
+    },
+    %Choice{
+      name: "hamburger",
+      labels: %{
+        "en" => ["hamburger"]
+      },
+      attributes: %{
+        "food_type" => "meat"
+      }
+    },
+    %Choice{
+      name: "barbacue",
+      labels: %{
+        "en" => ["barbacue"]
+      },
+      attributes: %{
+        "food_type" => "meat"
+      }
+    }
+  ]
+
   @bot %Bot{}
   @session Session.new("1", %{"language" => "en"})
+  @session_with_food_type Session.new("1", %{"language" => "en", "food_type" => "pasta"})
 
   describe "select_one" do
     test "valid_answer?" do
@@ -72,6 +112,41 @@ defmodule Aida.SurveyQuestionTest do
       assert SurveyQuestion.valid_answer?(question, message) == true
 
       message = Message.new("foo", @bot, @session)
+      assert SurveyQuestion.valid_answer?(question, message) == false
+    end
+
+    test "valid_answer? with choice filter" do
+      question = %SelectQuestion{
+        type: :select_one,
+        choices: @entrees,
+        name: "entree",
+        message: %{"en" => "What do you want for dinner?"},
+        choice_filter: Aida.Expr.parse("food_type = ${food_type}")
+      }
+
+      message = Message.new("spaghetti", @bot, @session_with_food_type)
+      assert SurveyQuestion.valid_answer?(question, message) == true
+
+      message = Message.new("hamburger", @bot, @session_with_food_type)
+      assert SurveyQuestion.valid_answer?(question, message) == false
+
+      message = Message.new("spaghetti", @bot, @session)
+      assert SurveyQuestion.valid_answer?(question, message) == false
+    end
+
+    test "valid_answer? with choice filter but no attributes" do
+      question = %SelectQuestion{
+        type: :select_one,
+        choices: @yes_no,
+        name: "smoker",
+        message: %{
+          "en" => "do you smoke?",
+          "es" => "fumás?"
+        },
+        choice_filter: Aida.Expr.parse("enabled = true()")
+      }
+
+      message = Message.new("yes", @bot, @session)
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
@@ -99,6 +174,22 @@ defmodule Aida.SurveyQuestionTest do
       assert SurveyQuestion.accept_answer(question, message) == {:ok, "no"}
 
       message = Message.new("foo", @bot, @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+    end
+
+    test "accept_answer with choice filter" do
+      question = %SelectQuestion{
+        type: :select_one,
+        choices: @entrees,
+        name: "entree",
+        message: %{"en" => "What do you want for dinner?"},
+        choice_filter: Aida.Expr.parse("food_type = ${food_type}")
+      }
+
+      message = Message.new("spaghetti", @bot, @session_with_food_type)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, "spaghetti"}
+
+      message = Message.new("hamburger", @bot, @session_with_food_type)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
@@ -131,6 +222,22 @@ defmodule Aida.SurveyQuestionTest do
       assert SurveyQuestion.valid_answer?(question, message) == false
     end
 
+    test "valid_answer? with choice filter" do
+      question = %SelectQuestion{
+        type: :select_many,
+        choices: @entrees,
+        name: "entree",
+        message: %{"en" => "What do you want for dinner?"},
+        choice_filter: Aida.Expr.parse("food_type = ${food_type}")
+      }
+
+      message = Message.new("spaghetti, lasagne", @bot, @session_with_food_type)
+      assert SurveyQuestion.valid_answer?(question, message) == true
+
+      message = Message.new("spaghetti, hamburger", @bot, @session_with_food_type)
+      assert SurveyQuestion.valid_answer?(question, message) == false
+    end
+
     test "accept_answer" do
       question = %SelectQuestion{
         type: :select_many,
@@ -155,6 +262,22 @@ defmodule Aida.SurveyQuestionTest do
       assert SurveyQuestion.accept_answer(question, message) == :error
 
       message = Message.new("merlot, foo", @bot, @session)
+      assert SurveyQuestion.accept_answer(question, message) == :error
+    end
+
+    test "accept_answer with choice filter" do
+      question = %SelectQuestion{
+        type: :select_many,
+        choices: @entrees,
+        name: "entree",
+        message: %{"en" => "What do you want for dinner?"},
+        choice_filter: Aida.Expr.parse("food_type = ${food_type}")
+      }
+
+      message = Message.new("spaghetti, lasagne", @bot, @session_with_food_type)
+      assert SurveyQuestion.accept_answer(question, message) == {:ok, ["spaghetti", "lasagne"]}
+
+      message = Message.new("spaghetti, hamburger", @bot, @session_with_food_type)
       assert SurveyQuestion.accept_answer(question, message) == :error
     end
   end
