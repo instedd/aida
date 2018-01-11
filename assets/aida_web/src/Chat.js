@@ -39,7 +39,7 @@ class Chat extends Component {
       this.setState({
         messages: [
           ...messages,
-          [Date(), payload.text]
+          payload.text
         ]
       })
     })
@@ -53,7 +53,7 @@ class Chat extends Component {
     this.setState({
       messages: [
         ...messages,
-        [Date(), this.refs.chatInput.value]
+        this.refs.chatInput.value
       ]
     })
 
@@ -78,8 +78,8 @@ class Chat extends Component {
       <div className='main-container'>
         <div className='content'>
           <List>
-            {map(messages, (message) =>
-              <ListItem primaryText={message[1]} key={message[0]} />
+            {map(messages, (message, index) =>
+              <ListItem primaryText={message} key={index} />
             )}
           </List>
           <TextField ref='chatInput'
