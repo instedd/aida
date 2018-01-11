@@ -80,7 +80,7 @@ defmodule Aida.Message do
     Regex.scan(~r/\$\{\s*([a-z_]*)\s*\}/, text, return: :index)
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
-      var_name = text |> String.slice(v_start, v_len)
+      var_name = text |> Kernel.binary_part(v_start, v_len)
       var_value =
         if var_name in resolved_vars do
           "..."

@@ -58,6 +58,13 @@ defmodule Aida.MessageTest do
       assert message.reply == ["We have barbecue and pasta"]
     end
 
+    test "interpolate in a unicode message" do
+      session = Session.new("sid", %{"language" => "en"})
+      message = Message.new("Hi!", @bot, session)
+        |> Message.respond("We have “${food_options}”")
+      assert message.reply == ["We have “barbecue and pasta”"]
+    end
+
     test "interpolate recursively" do
       session = Session.new("sid", %{"language" => "en", "first_name" => "John", "last_name" => "Doe", "gender" => "male"})
       message = Message.new("Hi!", @bot, session)
