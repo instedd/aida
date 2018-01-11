@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, DB.SkillUsage, Channel}
   alias __MODULE__
 
   @type message :: map
@@ -8,9 +8,9 @@ defmodule Aida.Bot do
     id: String.t,
     languages: [String.t],
     front_desk: FrontDesk.t,
-    skills: [map],
+    skills: [Skill.t],
     variables: [Variable.t],
-    channels: []
+    channels: [Channel.t]
   }
 
   defstruct id: nil,
