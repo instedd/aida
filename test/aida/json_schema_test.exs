@@ -28,7 +28,7 @@ defmodule Aida.JsonSchemaTest do
     "response": #{@valid_localized_string}
   })
   @valid_delayed_message ~s({
-    "delay": "1",
+    "delay": 1,
     "message": #{@valid_localized_string}
   })
   @valid_fixed_time_message ~s({
@@ -183,6 +183,13 @@ defmodule Aida.JsonSchemaTest do
     end)
   end
 
+  defp assert_integer(thing, type) do
+    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
+      validation_result
+      |> Enum.member?({"Type mismatch. Expected Integer but got Object.", [thing]})
+    end)
+  end
+
   defp assert_array(thing, type) do
     validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
       validation_result
@@ -228,13 +235,6 @@ defmodule Aida.JsonSchemaTest do
     validate(~s({"#{thing}": ""}), type, fn(validation_result) ->
       validation_result
       |> Enum.member?({"Expected value to have a minimum length of 1 but was 0.", [thing]})
-    end)
-  end
-
-  defp assert_digit(thing, type) do
-    validate(~s({"#{thing}": "a"}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"String \"a\" does not match pattern \"^\\\\d+$\".", [thing]})
     end)
   end
 
@@ -311,8 +311,8 @@ defmodule Aida.JsonSchemaTest do
 
   test "delayed_message" do
     assert_required("delay", :delayed_message)
-    assert_non_empty_string("delay", :delayed_message)
-    assert_digit("delay", :delayed_message)
+    assert_integer("delay", :delayed_message)
+    assert_min("delay", 1, :delayed_message)
     assert_required("message", :delayed_message)
 
     @valid_delayed_message

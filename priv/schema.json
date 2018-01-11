@@ -137,7 +137,7 @@
     "delayed_message": {
       "type": "object",
       "properties": {
-        "delay": {"type": "string", "pattern": "^\\d+$", "minLength": 1},
+        "delay": {"type": "integer", "minimum": 1},
         "message": {"$ref": "#/definitions/localized_string"}
       },
       "additionalProperties": false,

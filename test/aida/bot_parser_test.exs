@@ -103,21 +103,21 @@ defmodule Aida.BotParserTest do
           schedule_type: :since_last_incoming_message,
           messages: [
             %DelayedMessage{
-              delay: "1440",
+              delay: 1440,
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last day, is there anything I can help you with?",
                 "es" => "Hola! Desde ayer que no sé nada de vos, ¿puedo ayudarte en algo?"
               }
             },
             %DelayedMessage{
-              delay: "2880",
+              delay: 2880,
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?",
                 "es" => "Hola! Hace 2 días que no sé nada de vos, ¿puedo ayudarte en algo?"
               }
             },
             %DelayedMessage{
-              delay: "43200",
+              delay: 43200,
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
                 "es" => "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"
@@ -408,21 +408,21 @@ defmodule Aida.BotParserTest do
           relevant: Aida.Expr.parse("${opt_in} = true()"),
           messages: [
             %DelayedMessage{
-              delay: "1440",
+              delay: 1440,
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last day, is there anything I can help you with?",
                 "es" => "Hola! Desde ayer que no sé nada de vos, ¿puedo ayudarte en algo?"
               }
             },
             %DelayedMessage{
-              delay: "2880",
+              delay: 2880,
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last 2 days, is there anything I can help you with?",
                 "es" => "Hola! Hace 2 días que no sé nada de vos, ¿puedo ayudarte en algo?"
               }
             },
             %DelayedMessage{
-              delay: "43200",
+              delay: 43200,
               message: %{
                 "en" => "Hey, I didn’t hear from you for the last month, is there anything I can help you with?",
                 "es" => "Hola! Hace un mes que no sé nada de vos, ¿puedo ayudarte en algo?"

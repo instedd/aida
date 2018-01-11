@@ -26,8 +26,8 @@ defmodule Aida.Skill.ScheduledMessages do
     message = skill.messages
       |> Enum.min_by(fn(message) -> message.delay end)
 
-    delay = (div(String.to_integer(message.delay), 2))
-    delay = [delay, 24*60] |> Enum.min()
+    delay = (div(message.delay, 2))
+    delay = [delay, 24 * 60] |> Enum.min()
     delay = [delay, 20] |> Enum.max()
 
     :timer.minutes(delay)
@@ -67,7 +67,7 @@ defmodule Aida.Skill.ScheduledMessages do
       bot_id = bot.id
       reminder_deadlines = skill.messages
         |> Enum.map(fn(message) ->
-          Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}"))
+          Timex.shift(DateTime.utc_now(), minutes: -message.delay)
         end)
 
       reminded_users = SkillUsage
@@ -123,7 +123,7 @@ defmodule Aida.Skill.ScheduledMessages do
     defp find_message_to_send(skill, last_usage) do
       {_, skill_message} = skill.messages
         |> Enum.map(fn(message) ->
-          {Timex.shift(DateTime.utc_now(), minutes: String.to_integer("-#{message.delay}")), message.message}
+          {Timex.shift(DateTime.utc_now(), minutes: -message.delay), message.message}
         end)
         |> Enum.filter(fn({deadline, _message}) ->
           DateTime.compare(deadline, Timex.to_datetime(last_usage)) != :lt

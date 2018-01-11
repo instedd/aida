@@ -1,10 +1,10 @@
 defmodule Aida.DelayedMessage do
   @type t :: %__MODULE__{
-    delay: String.t(),
+    delay: pos_integer,
     message: Aida.Bot.message
   }
 
-  defstruct delay: "",
+  defstruct delay: 1,
             message: %{}
 
 end

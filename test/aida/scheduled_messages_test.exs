@@ -13,17 +13,17 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "schedules for half the delay interval", %{skill: skill} do
-      skill = %{skill | messages: [%DelayedMessage{delay: "180"}]}
+      skill = %{skill | messages: [%DelayedMessage{delay: 180}]}
       assert ScheduledMessages.delay(skill) == :timer.minutes(90)
     end
 
     test "schedules for 24hs as max value", %{skill: skill} do
-      skill = %{skill | messages: [%DelayedMessage{delay: "#{24*60*3}"}]}
+      skill = %{skill | messages: [%DelayedMessage{delay: 24 * 60 *3}]}
       assert ScheduledMessages.delay(skill) == :timer.hours(24)
     end
 
     test "schedules for 20 minutes as min value", %{skill: skill} do
-      skill = %{skill | messages: [%DelayedMessage{delay: "1"}]}
+      skill = %{skill | messages: [%DelayedMessage{delay: 1}]}
       assert ScheduledMessages.delay(skill) == :timer.minutes(20)
     end
   end
