@@ -125,7 +125,7 @@ defmodule Aida.Channel.Facebook do
             session = Session.load(session_id)
               |> pull_profile(channel, sender_id)
 
-            MessageLog.create(channel.bot_id, session_id, text, "incoming")
+            MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, content: text, content_type: "text", direction: "incoming"})
             reply = Bot.chat(bot, Message.new(text, bot, session))
             reply.session |> Session.save
 
@@ -166,7 +166,7 @@ defmodule Aida.Channel.Facebook do
       api = FacebookApi.new(channel.access_token)
 
       Enum.each(messages, fn message ->
-        MessageLog.create(channel.bot_id, session_id, message, "outgoing")
+        MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, content: message, content_type: "text", direction: "outgoing"})
         MessagesPerDay.log_sent_message(channel.bot_id)
         api |> FacebookApi.send_message(recipient, message)
       end)

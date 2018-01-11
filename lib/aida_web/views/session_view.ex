@@ -35,7 +35,8 @@ defmodule AidaWeb.SessionView do
     %{
       timestamp: log.timestamp,
       direction: log.direction,
-      content: log.content
+      content: log.content,
+      content_type: log.content_type
     }
   end
 

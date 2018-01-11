@@ -9,6 +9,7 @@ defmodule Aida.DB.MessageLog do
     field :session_id, :string
     field :direction, :string
     field :content, :string
+    field :content_type, :string
 
     timestamps()
   end
@@ -16,15 +17,13 @@ defmodule Aida.DB.MessageLog do
   @doc false
   def changeset(%MessageLog{} = message_log, attrs) do
     message_log
-      |> cast(attrs, [:bot_id, :session_id, :direction, :content])
-      |> validate_required([:bot_id, :session_id, :direction, :content])
+      |> cast(attrs, [:bot_id, :session_id, :direction, :content, :content_type])
+      |> validate_required([:bot_id, :session_id, :direction, :content, :content_type])
   end
 
-  def create(bot_id, session_id, content, direction) do
-    attrs = %{bot_id: bot_id, session_id: session_id, direction: direction, content: content}
-
+  def create(params) do
     %MessageLog{}
-    |> MessageLog.changeset(attrs)
-    |> Repo.insert
+      |> MessageLog.changeset(params)
+      |> Repo.insert
   end
 end
