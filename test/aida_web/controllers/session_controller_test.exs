@@ -24,6 +24,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: session_id, 
         direction: "incoming", 
         content: "Hi!",
+        content_type: "text",
         inserted_at: "2018-01-08T16:00:00",
         updated_at: "2018-01-08T16:00:00"
       }
@@ -33,6 +34,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: session_id, 
         direction: "outgoing", 
         content: "Hello, I'm a Restaurant bot",
+        content_type: "text",
         inserted_at: "2018-01-08T16:05:00",
         updated_at: "2018-01-08T16:05:00"
       }
@@ -42,6 +44,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: session_id, 
         direction: "incoming", 
         content: "menu",
+        content_type: "text",
         inserted_at: "2018-01-08T16:30:00",
         updated_at: "2018-01-08T16:30:00"
       }
@@ -81,6 +84,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: first_session_id, 
         direction: "incoming", 
         content: "Hi!",
+        content_type: "text",
         inserted_at: "2018-01-08T16:00:00",
         updated_at: "2018-01-08T16:00:00"
       }
@@ -90,6 +94,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: first_session_id, 
         direction: "outgoing", 
         content: "Hello, I'm a Restaurant bot",
+        content_type: "text",
         inserted_at: "2018-01-08T16:05:00",
         updated_at: "2018-01-08T16:05:00"
       }
@@ -99,6 +104,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: first_session_id, 
         direction: "incoming", 
         content: "menu",
+        content_type: "text",
         inserted_at: "2018-01-08T16:30:00",
         updated_at: "2018-01-08T16:30:00"
       }
@@ -147,6 +153,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: session_id, 
         direction: "incoming", 
         content: "Hi!",
+        content_type: "text",
         inserted_at: "2018-01-08T16:00:00",
         updated_at: "2018-01-08T16:00:00"
       }
@@ -156,6 +163,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: session_id, 
         direction: "outgoing", 
         content: "Hello, I'm a Restaurant bot",
+        content_type: "text",
         inserted_at: "2018-01-08T16:05:00",
         updated_at: "2018-01-08T16:05:00"
       }
@@ -165,6 +173,7 @@ defmodule AidaWeb.SessionControllerTest do
         session_id: session_id, 
         direction: "incoming", 
         content: "menu",
+        content_type: "text",
         inserted_at: "2018-01-08T16:30:00",
         updated_at: "2018-01-08T16:30:00"
       }
@@ -194,12 +203,12 @@ defmodule AidaWeb.SessionControllerTest do
   # set created_at, updated_at properties
   defp create_message_log(attrs) do
     %MessageLog{}
-    |> Ecto.Changeset.cast(attrs, [:bot_id, :session_id, :direction, :content, :inserted_at, :updated_at])
+    |> Ecto.Changeset.cast(attrs, [:bot_id, :session_id, :direction, :content, :content_type, :inserted_at, :updated_at])
     |> Repo.insert
   end
 
   defp is_equal?(log_message, attrs) do
-    Ecto.DateTime.cast!(log_message["timestamp"]) == Ecto.DateTime.cast!(attrs.inserted_at) && log_message["direction"] == attrs.direction && log_message["content"] == attrs.content
+    Ecto.DateTime.cast!(log_message["timestamp"]) == Ecto.DateTime.cast!(attrs.inserted_at) && log_message["direction"] == attrs.direction && log_message["content"] == attrs.content && log_message["content_type"] == attrs.content_type
   end
 
 end

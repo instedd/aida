@@ -28,7 +28,7 @@ defmodule Aida.DB.Session do
     MessageLog 
       |> where([m], m.session_id == ^session_id)
       |> Repo.all
-      |> Enum.map(&(%{timestamp: &1.inserted_at, direction: &1.direction, content: &1.content}))
+      |> Enum.map(&(%{timestamp: &1.inserted_at, direction: &1.direction, content: &1.content, content_type: &1.content_type}))
   end
 
   @doc false
