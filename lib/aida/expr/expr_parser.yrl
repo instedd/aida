@@ -7,6 +7,7 @@ Nonterminals
   Self
   BinaryOp
   UnaryOp
+  Attribute
   .
 
 Terminals
@@ -25,6 +26,7 @@ Expr -> BinaryOp : '$1'.
 Expr -> UnaryOp : '$1'.
 Expr -> Call : '$1'.
 Expr -> Variable : '$1'.
+Expr -> Attribute : '$1'.
 Expr -> Self : '$1'.
 Expr -> '(' Expr ')' : '$2'.
 
@@ -53,6 +55,7 @@ CallArgs -> Expr ',' CallArgs : ['$1' | '$3'].
 Call -> ident '(' CallArgs ')' : build_call('$1', '$3').
 
 Variable -> '${' ident '}' : build_variable('$2').
+Attribute -> ident : build_attribute('$1').
 Self -> self : build_self().
 
 Left 1 'and' 'or'.
@@ -77,6 +80,9 @@ build_call({ident, Id}, Args) ->
 
 build_variable({ident, Id}) ->
   #{'__struct__' => 'Elixir.Aida.Expr.Variable', name => Id}.
+
+build_attribute({ident, Id}) ->
+  #{'__struct__' => 'Elixir.Aida.Expr.Attribute', name => Id}.
 
 build_self() ->
   #{'__struct__' => 'Elixir.Aida.Expr.Self'}.

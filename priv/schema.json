@@ -191,7 +191,8 @@
         "choices": {"$ref": "#/definitions/non_empty_string"},
         "message": {"$ref": "#/definitions/localized_string"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
-        "constraint_message": {"$ref": "#/definitions/localized_string"}
+        "constraint_message": {"$ref": "#/definitions/localized_string"},
+        "choice_filter": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
       "required": ["type", "name", "choices", "message"]
@@ -232,7 +233,8 @@
       "type": "object",
       "properties": {
         "name": {"$ref": "#/definitions/non_empty_string"},
-        "labels": {"$ref": "#/definitions/localized_keywords"}
+        "labels": {"$ref": "#/definitions/localized_keywords"},
+        "attributes": {"$ref": "#/definitions/attributes_dict"}
       },
       "additionalProperties": false,
       "required": ["name", "labels"]
@@ -322,6 +324,18 @@
     "non_empty_string": {
       "type": "string",
       "minLength": 1
+    },
+
+    "attributes_dict": {
+      "type": "object",
+      "patternProperties": {
+        ".*": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "integer"}
+          ]
+        }
+      }
     }
   }
 }

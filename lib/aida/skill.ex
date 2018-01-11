@@ -47,7 +47,7 @@ defmodule Aida.Skill.Utils do
         try do
           Aida.Expr.eval(expr, session |> Session.expr_context(lookup_raises: true))
         rescue
-          Aida.Expr.UnknownVariable -> false
+          Aida.Expr.UnknownVariableError -> false
         end
     end
   end

@@ -172,7 +172,8 @@
           "constraint_message": {
             "en": "I don't know that wine",
             "es": "No conozco ese vino"
-          }
+          },
+          "choice_filter": "type = 'red' or type = 'white'"
         },
         {
           "type": "text",
@@ -207,24 +208,43 @@
           "name": "grapes",
           "choices": [
             {
-              "name":"merlot",
+              "name": "merlot",
               "labels": {
                 "en": ["merlot"],
                 "es": ["merlot"]
+              },
+              "attributes": {
+                "type": "red"
               }
             },
             {
-              "name":"syrah",
+              "name": "syrah",
               "labels": {
                 "en": ["syrah"],
                 "es": ["syrah"]
+              },
+              "attributes": {
+                "type": "red"
               }
             },
             {
-              "name":"malbec",
+              "name": "malbec",
               "labels": {
                 "en": ["malbec"],
                 "es": ["malbec"]
+              },
+              "attributes": {
+                "type": "red"
+              }
+            },
+            {
+              "name": "chardonnay",
+              "labels": {
+                "en": ["chardonnay"],
+                "es": ["chardonnay"]
+              },
+              "attributes": {
+                "type": "white"
               }
             }
           ]

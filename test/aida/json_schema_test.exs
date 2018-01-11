@@ -56,7 +56,11 @@ defmodule Aida.JsonSchemaTest do
   })
   @valid_choice ~s({
     "name": "a",
-    "labels": #{@valid_localized_keywords}
+    "labels": #{@valid_localized_keywords},
+    "attributes": {
+      "foo": "x",
+      "bar": 1
+    }
   })
   @valid_choice_list ~s({
     "name": "a",
@@ -67,7 +71,8 @@ defmodule Aida.JsonSchemaTest do
     "choices": "a",
     "name": "a",
     "relevant": "${q} = 0",
-    "message": #{@valid_localized_string}
+    "message": #{@valid_localized_string},
+    "choice_filter": "state = ${state}"
   })
   @valid_input_question ~s({
     "type": "integer",
@@ -376,6 +381,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("message", :select_question)
     assert_optional("relevant", "${q} > 0", :select_question)
     assert_optional("constraint_message", "error", :select_question)
+    assert_optional("choice_filter", "${q} = q", :select_question)
 
     @valid_select_question
     |> assert_valid(:select_question)
@@ -385,6 +391,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("name", :choice)
     assert_non_empty_string("name", :choice)
     assert_required("labels", :choice)
+    assert_optional("attributes", {}, :choice)
 
     @valid_choice
     |> assert_valid(:choice)

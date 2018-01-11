@@ -1,7 +1,7 @@
 defmodule Aida.Expr.ParserTest do
   use ExUnit.Case
   import Aida.Expr
-  alias Aida.Expr.{Literal, BinaryOp, UnaryOp, Call, Variable, Self, ParseError}
+  alias Aida.Expr.{Literal, BinaryOp, UnaryOp, Call, Variable, Self, Attribute, ParseError}
 
   describe "parse" do
     test "literals" do
@@ -53,6 +53,10 @@ defmodule Aida.Expr.ParserTest do
       assert parse("${foo}") == var("foo")
     end
 
+    test "attributes" do
+      assert parse("foo") == attr("foo")
+    end
+
     test "function calls" do
       assert parse("true()") == call(:true, [])
       assert parse("selected(${var}, 2)") == call(:selected, [var("var"), literal(2)])
@@ -91,5 +95,9 @@ defmodule Aida.Expr.ParserTest do
 
   defp call(name, args) do
     %Call{name: name, args: args}
+  end
+
+  defp attr(name) do
+    %Attribute{name: name}
   end
 end

@@ -159,7 +159,8 @@ defmodule Aida.BotParser do
       name: question["name"],
       relevant: parse_expr(question["relevant"]),
       message: question["message"],
-      constraint_message: question["constraint_message"]
+      constraint_message: question["constraint_message"],
+      choice_filter: parse_expr(question["choice_filter"])
     }
   end
 
@@ -190,7 +191,8 @@ defmodule Aida.BotParser do
   defp parse_survey_choice(choice) do
     %Choice{
       name: choice["name"],
-      labels: choice["labels"]
+      labels: choice["labels"],
+      attributes: choice["attributes"]
     }
   end
 

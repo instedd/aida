@@ -28,7 +28,7 @@ defmodule Aida.Variable do
         try do
           override.relevant |> Aida.Expr.eval(session |> Session.expr_context(lookup_raises: true))
         rescue
-          Aida.Expr.UnknownVariable -> false
+          Aida.Expr.UnknownVariableError -> false
         end
       end)
 

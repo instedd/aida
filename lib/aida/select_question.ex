@@ -7,7 +7,8 @@ defmodule Aida.SelectQuestion do
     name: String.t,
     relevant: nil | Aida.Expr.t,
     message: Aida.Bot.message,
-    constraint_message: nil | Aida.Bot.message
+    constraint_message: nil | Aida.Bot.message,
+    choice_filter: nil | Aida.Expr.t
   }
   @enforce_keys [:type]
 
@@ -16,26 +17,34 @@ defmodule Aida.SelectQuestion do
             name: "",
             relevant: nil,
             message: %{},
-            constraint_message: nil
+            constraint_message: nil,
+            choice_filter: nil
 
   defimpl Aida.SurveyQuestion, for: __MODULE__ do
     def valid_answer?(%{type: :select_one} = question, message) do
       language = message |> Message.language()
       response = Message.text_content(message) |> String.downcase
+      choices = available_choices(question, message)
 
-      choice_exists?(question.choices, response, language)
+      choice_exists?(choices, response, language)
     end
 
     def valid_answer?(%{type: :select_many} = question, message) do
       language = message |> Message.language()
       responses = Message.text_content(message) |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+      choices = available_choices(question, message)
 
       responses |> Enum.all?(fn(response) ->
-        choice_exists?(question.choices, response, language)
+        choice_exists?(choices, response, language)
       end)
     end
 
-    def choice_exists?(choices, response, language) do
+    defp available_choices(question, message) do
+      question.choices
+      |> Enum.filter(&Choice.available?(&1, question.choice_filter, message))
+    end
+
+    defp choice_exists?(choices, response, language) do
       find_choice(choices, response, language) != nil
     end
 

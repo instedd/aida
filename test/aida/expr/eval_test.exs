@@ -40,7 +40,12 @@ defmodule Aida.Expr.EvalTest do
 
     test "variables" do
       lookup_fn = fn ("foo") -> 42 end
-      assert eval("${foo}", %Context{lookup: lookup_fn}) == 42
+      assert eval("${foo}", %Context{var_lookup: lookup_fn}) == 42
+    end
+
+    test "attributes" do
+      lookup_fn = fn ("foo") -> 42 end
+      assert eval("foo", %Context{attr_lookup: lookup_fn}) == 42
     end
 
     test "function calls" do
@@ -48,7 +53,7 @@ defmodule Aida.Expr.EvalTest do
       assert eval("false()") == false
 
       lookup_fn = fn ("foo") -> [1, 2, 3] end
-      context = %Context{lookup: lookup_fn}
+      context = %Context{var_lookup: lookup_fn}
       assert eval("selected(${foo}, 1)", context) == true
       assert eval("selected(${foo}, 'bar')", context) == false
     end

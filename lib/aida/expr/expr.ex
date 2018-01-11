@@ -5,12 +5,28 @@ defprotocol Aida.Expr do
 end
 
 defmodule Aida.Expr.ParseError do
-    defexception [:message]
+  defexception [:message]
 
-    def exception(message) do
-      %__MODULE__{message: message}
-    end
+  def exception(message) do
+    %__MODULE__{message: message}
   end
+end
+
+defmodule Aida.Expr.UnknownVariableError do
+  defexception [:message]
+
+  def exception(var_name) do
+    %__MODULE__{message: "Could not find variable named '#{var_name}'"}
+  end
+end
+
+defmodule Aida.Expr.UnknownAttributeError do
+  defexception [:message]
+
+  def exception(attr_name) do
+    %__MODULE__{message: "Could not find attribute named '#{attr_name}'"}
+  end
+end
 
 defmodule Aida.Expr.Parser do
   def parse(code) do

@@ -90,20 +90,23 @@ defmodule Aida.Session do
   def expr_context(session, options \\ []) do
     self = options[:self]
     lookup_raises = options[:lookup_raises]
+    attr_lookup = options[:attr_lookup]
 
     %Aida.Expr.Context{
       self: self,
-      lookup: fn (name) ->
-        case Session.lookup_var(session, name) do
-          nil ->
-            if lookup_raises do
-              raise Aida.Expr.UnknownVariable.exception("Could not find variable named '#{name}'")
-            else
-              nil
-            end
-          value -> value
-        end
-      end
+      var_lookup:
+        fn (name) ->
+          case Session.lookup_var(session, name) do
+            nil ->
+              if lookup_raises do
+                raise Aida.Expr.UnknownVariableError.exception(name)
+              else
+                nil
+              end
+            value -> value
+          end
+        end,
+      attr_lookup: attr_lookup
     }
   end
 end
