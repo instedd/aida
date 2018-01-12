@@ -1,4 +1,4 @@
-defmodule Aida.Choice do
+defmodule Aida.Skill.Survey.Choice do
   alias Aida.Session
   alias __MODULE__
 

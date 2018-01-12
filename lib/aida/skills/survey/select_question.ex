@@ -1,9 +1,9 @@
-defmodule Aida.SelectQuestion do
-  alias Aida.{Message, Choice}
+defmodule Aida.Skill.Survey.SelectQuestion do
+  alias Aida.{Message, Skill.Survey.Choice}
 
   @type t :: %__MODULE__{
     type: :select_one | :select_many,
-    choices: [Aida.Choice.t],
+    choices: [Choice.t],
     name: String.t,
     relevant: nil | Aida.Expr.t,
     message: Aida.Bot.message,
@@ -20,7 +20,7 @@ defmodule Aida.SelectQuestion do
             constraint_message: nil,
             choice_filter: nil
 
-  defimpl Aida.SurveyQuestion, for: __MODULE__ do
+  defimpl Aida.Skill.Survey.Question, for: __MODULE__ do
     def valid_answer?(%{type: :select_one} = question, message) do
       language = message |> Message.language()
       response = Message.text_content(message) |> String.downcase

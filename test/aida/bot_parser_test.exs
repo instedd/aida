@@ -7,12 +7,12 @@ defmodule Aida.BotParserTest do
     Skill.KeywordResponder,
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
+    Skill.ScheduledMessages.DelayedMessage,
+    Skill.ScheduledMessages.FixedTimeMessage,
     Skill.Survey,
-    SelectQuestion,
-    InputQuestion,
-    Choice,
-    DelayedMessage,
-    FixedTimeMessage,
+    Skill.Survey.SelectQuestion,
+    Skill.Survey.InputQuestion,
+    Skill.Survey.Choice,
     Variable
   }
   alias Aida.Channel.{Facebook, WebSocket}

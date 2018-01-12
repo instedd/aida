@@ -1,5 +1,5 @@
 defmodule Aida.ChoiceTest do
-  alias Aida.{Bot, Choice, Session, Message}
+  alias Aida.{Bot, Skill.Survey.Choice, Session, Message}
   import Aida.Expr
   use ExUnit.Case
 

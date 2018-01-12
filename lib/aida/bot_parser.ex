@@ -7,11 +7,6 @@ defmodule Aida.BotParser do
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
     Skill.Survey,
-    DelayedMessage,
-    FixedTimeMessage,
-    SelectQuestion,
-    InputQuestion,
-    Choice,
     Variable,
     Channel.Facebook,
     Channel.WebSocket
@@ -127,7 +122,7 @@ defmodule Aida.BotParser do
   end
 
   defp parse_scheduled_message(message, :since_last_incoming_message) do
-    %DelayedMessage{
+    %ScheduledMessages.DelayedMessage{
       delay: message["delay"],
       message: message["message"]
     }
@@ -135,7 +130,7 @@ defmodule Aida.BotParser do
 
   defp parse_scheduled_message(message, :fixed_time) do
     {:ok, schedule, _} = message["schedule"] |> DateTime.from_iso8601()
-    %FixedTimeMessage{
+    %ScheduledMessages.FixedTimeMessage{
       schedule: schedule,
       message: message["message"]
     }
@@ -153,7 +148,7 @@ defmodule Aida.BotParser do
   end
 
   defp parse_survey_question(question_type, question, choice_lists) when question_type == :select_one or question_type == :select_many do
-    %SelectQuestion{
+    %Survey.SelectQuestion{
       type: question_type,
       choices: choice_lists[question["choices"]],
       name: question["name"],
@@ -165,7 +160,7 @@ defmodule Aida.BotParser do
   end
 
   defp parse_survey_question(question_type, question, _) do
-    %InputQuestion{
+    %Survey.InputQuestion{
       type: question_type,
       name: question["name"],
       relevant: parse_expr(question["relevant"]),
@@ -189,7 +184,7 @@ defmodule Aida.BotParser do
   end
 
   defp parse_survey_choice(choice) do
-    %Choice{
+    %Survey.Choice{
       name: choice["name"],
       labels: choice["labels"],
       attributes: choice["attributes"]

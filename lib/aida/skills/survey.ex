@@ -1,6 +1,7 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
-  alias Aida.{BotManager, Session, Message, Channel, SurveyQuestion, ChannelProvider, DB, Skill, Message.TextContent}
+  alias __MODULE__.{Question, SelectQuestion, InputQuestion}
+  alias Aida.{BotManager, Session, Message, Channel, Skill.Survey.Question, ChannelProvider, DB, Skill, Message.TextContent}
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -8,7 +9,7 @@ defmodule Aida.Skill.Survey do
     name: String.t(),
     schedule: DateTime.t,
     relevant: nil | Aida.Expr.t,
-    questions: [Aida.SelectQuestion.t() | Aida.InputQuestion.t()]
+    questions: [SelectQuestion.t() | InputQuestion.t()]
   }
 
   defstruct id: "",
@@ -84,7 +85,7 @@ defmodule Aida.Skill.Survey do
         step
       else
         context = message.session |> Session.expr_context
-        relevant = question |> SurveyQuestion.relevant |> Aida.Expr.eval(context)
+        relevant = question |> Question.relevant |> Aida.Expr.eval(context)
         if relevant == false do
           find_next_question(survey, message, step)
         else
@@ -121,7 +122,7 @@ defmodule Aida.Skill.Survey do
 
     def put_response(survey, message) do
       question = Survey.current_question(survey, message)
-      message = case SurveyQuestion.accept_answer(question, message) do
+      message = case Question.accept_answer(question, message) do
         :error ->
           if question.constraint_message do
             message |> Message.respond(question.constraint_message)
@@ -140,7 +141,7 @@ defmodule Aida.Skill.Survey do
       case Survey.current_question(survey, message) do
         nil -> 0
         question ->
-          if question |> SurveyQuestion.valid_answer?(message) do
+          if question |> Question.valid_answer?(message) do
             1
           else
             :threshold

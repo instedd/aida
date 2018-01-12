@@ -1,5 +1,6 @@
 defmodule Aida.ScheduledMessagesTest do
-  alias Aida.{Skill.ScheduledMessages, DelayedMessage, FixedTimeMessage, BotParser, Bot, DB, Skill, TestChannel, Session, SessionStore, ChannelProvider, BotManager}
+  alias Aida.{Skill.ScheduledMessages, BotParser, Bot, DB, Skill, TestChannel, Session, SessionStore, ChannelProvider, BotManager}
+  alias Aida.Skill.ScheduledMessages.{DelayedMessage, FixedTimeMessage}
   use Aida.DataCase
   import Mock
 

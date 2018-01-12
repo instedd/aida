@@ -4,13 +4,33 @@ defmodule Aida.Skill.ScheduledMessages do
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
+  defmodule DelayedMessage do
+    @type t :: %__MODULE__{
+      delay: pos_integer,
+      message: Aida.Bot.message
+    }
+
+    defstruct delay: 1,
+              message: %{}
+  end
+
+  defmodule FixedTimeMessage do
+    @type t :: %__MODULE__{
+      schedule: DateTime.t,
+      message: Aida.Bot.message
+    }
+
+    defstruct schedule: DateTime.utc_now,
+              message: %{}
+  end
+
   @type t :: %__MODULE__{
     id: String.t,
     bot_id: String.t,
     name: String.t,
     schedule_type: :since_last_incoming_message | :fixed_time,
     relevant: nil | Aida.Expr.t,
-    messages: [Aida.DelayedMessage.t | Aida.FixedTimeMessage.t]
+    messages: [DelayedMessage.t | FixedTimeMessage.t]
   }
 
   defstruct id: "",

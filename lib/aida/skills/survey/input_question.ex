@@ -1,4 +1,4 @@
-defmodule Aida.InputQuestion do
+defmodule Aida.Skill.Survey.InputQuestion do
   alias Aida.{Session, Expr, Message}
 
   @type t :: %__MODULE__{
@@ -17,7 +17,7 @@ defmodule Aida.InputQuestion do
             constraint: nil,
             constraint_message: nil
 
-  defimpl Aida.SurveyQuestion, for: __MODULE__ do
+  defimpl Aida.Skill.Survey.Question, for: __MODULE__ do
     def valid_answer?(%{type: :integer}, message) do
       case Integer.parse(Message.text_content(message)) do
         :error -> false
