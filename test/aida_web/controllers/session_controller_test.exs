@@ -1,8 +1,9 @@
 defmodule AidaWeb.SessionControllerTest do
   use AidaWeb.ConnCase
-  alias Aida.{BotParser, SessionStore, DB, Repo}
+  alias Aida.{BotParser, SessionStore, DB, Repo, TestChannel, ChannelProvider}
   alias Aida.DB.{MessageLog, Bot}
   alias Aida.JsonSchema
+  import Mock
 
   setup %{conn: conn} do
     SessionStore.start_link
@@ -188,6 +189,18 @@ defmodule AidaWeb.SessionControllerTest do
       assert response |> Enum.any?(&(is_equal?(&1, first_message_attrs)))
       assert response |> Enum.any?(&(is_equal?(&1, second_message_attrs)))
       assert response |> Enum.any?(&(is_equal?(&1, third_message_attrs)))
+    end
+  end
+
+  describe "send_message" do
+    test "sends message to a session", %{conn: conn} do
+      channel = TestChannel.new()
+      bot_id = "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
+
+      with_mock ChannelProvider, [find_channel: fn "session_id" -> channel end] do
+        post conn, bot_session_session_path(conn, :send_message, bot_id, "session_id", message: "Hi!")
+        assert_received {:send_message, ["Hi!"], "session_id"}
+      end
     end
   end
 
