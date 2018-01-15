@@ -8,4 +8,8 @@ defmodule Aida.Repo do
   def init(_, opts) do
     {:ok, Keyword.put(opts, :url, System.get_env("DATABASE_URL"))}
   end
+
+  def count(query, field \\ :id) do
+    aggregate(query, :count, field)
+  end
 end
