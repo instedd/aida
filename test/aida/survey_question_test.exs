@@ -1,7 +1,8 @@
 defmodule Aida.SurveyQuestionTest do
   alias Aida.Skill.Survey.{Question, InputQuestion, SelectQuestion, Choice}
-  alias Aida.{Session, Message, Bot}
+  alias Aida.{Session, Message, Bot, Message.ImageContent}
   use ExUnit.Case
+  import Mock
 
   @yes_no [
     %Choice{
@@ -331,6 +332,48 @@ defmodule Aida.SurveyQuestionTest do
 
       message = Message.new("-3", @bot, @session)
       assert Question.accept_answer(question, message) == :error
+    end
+  end
+
+  describe "image" do
+    test "valid_answer?" do
+      question = %InputQuestion{
+        type: :image,
+        name: "face",
+        message: %{
+          "en" => "Can we see your face?",
+          "es" => "Podemos ver tu cara?"
+        }
+      }
+
+      url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
+
+      message = Message.new_from_image(url, @bot, @session)
+      assert Question.valid_answer?(question, message) == true
+
+      message = Message.new(url, @bot, @session)
+      assert Question.valid_answer?(question, message) == false
+    end
+
+    test "accept_answer" do
+      question = %InputQuestion{
+        type: :image,
+        name: "face",
+        message: %{
+          "en" => "Can we see your face?",
+          "es" => "Podemos ver tu cara?"
+        }
+      }
+
+      with_mock ImageContent, [pull_and_store_image: fn(content) -> %ImageContent{source_url: content.source_url, image_id: 8} end] do
+        url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
+
+        message = Message.new_from_image(url, @bot, @session)
+        assert Question.accept_answer(question, message) == {:ok, %{type: :image, id: 8}}
+
+        message = Message.new(url, @bot, @session)
+        assert Question.accept_answer(question, message) == :error
+      end
     end
   end
 

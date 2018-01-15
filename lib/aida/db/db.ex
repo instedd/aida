@@ -7,7 +7,7 @@ defmodule Aida.DB do
   alias Aida.Repo
   alias Aida.PubSub
 
-  alias Aida.DB.{Bot, SkillUsage, Session, MessagesPerDay}
+  alias Aida.DB.{Bot, SkillUsage, Session, MessagesPerDay, Image}
 
   @doc """
   Returns the list of bots.
@@ -348,4 +348,55 @@ defmodule Aida.DB do
       |> where([s], s.bot_id == ^bot_id)
       |> Repo.all()
   end
+
+
+  @doc """
+  Gets a single image.
+
+  Raises `Ecto.NoResultsError` if the Image does not exist.
+
+  ## Examples
+
+      iex> get_image!(123)
+      %Image{}
+
+      iex> get_image!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_image!(id), do: Repo.get!(Image, id)
+
+  @doc """
+  Gets a single image.
+
+  Returns `nil` if the Image does not exist.
+  """
+  def get_image(id), do: Repo.get(Image, id)
+
+  @doc """
+  Creates an image.
+
+  ## Examples
+
+      iex> create_image(%{field: value})
+      {:ok, %Image{}}
+
+      iex> create_image(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_image(attrs \\ %{}) do
+    result = %Image{}
+    |> Image.changeset(attrs)
+    |> Repo.insert()
+
+    # case result do
+    #   {:ok, image} -> PubSub.broadcast(image_created: image.id)
+    #   _ -> :ignore
+    # end
+
+    result
+  end
+
+
 end

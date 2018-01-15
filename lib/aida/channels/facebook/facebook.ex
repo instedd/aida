@@ -116,26 +116,60 @@ defmodule Aida.Channel.Facebook do
             Session.delete(session_id)
             send_message(channel, ["Session was reset"], session_id)
 
-          nil -> :ok
+          nil ->
+            attachment = if message["message"]["attachments"] do
+              Enum.at(message["message"]["attachments"], 0)
+            else
+              %{}
+            end
+
+            case attachment["type"] do
+              "image" ->
+                source_url =
+                  if (attachment["payload"] && attachment["payload"]["url"]) do
+                    attachment["payload"]["url"]
+                  else
+                    ""
+                  end
+                try do
+                  handle_by_message_type(channel, session_id, sender_id, :image, source_url)
+                rescue
+                  _ ->
+                    :ok
+                end
+              _ -> :ok
+            end
 
           _ ->
-            MessagesPerDay.log_received_message(channel.bot_id)
-
-            bot = BotManager.find(channel.bot_id)
-            session = Session.load(session_id)
-              |> pull_profile(channel, sender_id)
-
-            MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, content: text, content_type: "text", direction: "incoming"})
-            reply = Bot.chat(bot, Message.new(text, bot, session))
-            reply.session |> Session.save
-
-            send_message(channel, reply.reply, session_id)
+            handle_by_message_type(channel, session_id, sender_id, :text, text)
         end
       rescue
         error ->
           Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: channel.bot_id, message: message}])
           send_message(channel, ["Oops! Something went wrong"], sender_id)
       end
+    end
+
+    @spec handle_by_message_type(Aida.Channel.t, String.t, String.t, :text | :image, String.t) :: :ok
+    defp handle_by_message_type(channel, session_id, sender_id, message_type, message_string) do
+      MessagesPerDay.log_received_message(channel.bot_id)
+
+      bot = BotManager.find(channel.bot_id)
+      session = Session.load(session_id)
+        |> pull_profile(channel, sender_id)
+
+      MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, content: message_string, content_type: Atom.to_string(message_type), direction: "incoming"})
+
+      message =
+        case message_type do
+          :text -> Message.new(message_string, bot, session)
+          :image -> Message.new_from_image(message_string, bot, session)
+        end
+
+      reply = Bot.chat(bot, message)
+      reply.session |> Session.save
+
+      send_message(channel, reply.reply, session_id)
     end
 
     defp pull_profile(session, channel, sender_id) do

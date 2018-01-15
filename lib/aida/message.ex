@@ -23,12 +23,49 @@ defmodule Aida.Message do
     }
   end
 
+  @spec new_from_image(source_url :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  def new_from_image(source_url, %Bot{} = bot, session \\ Session.new) do
+    %Message{
+      session: session,
+      bot: bot,
+      content: %ImageContent{source_url: source_url}
+    }
+  end
+
   def text_content(%{content: %TextContent{text: text}}) do
     text
   end
 
   def text_content(_) do
     ""
+  end
+
+  def image_content(%{content: %ImageContent{} = content}) do
+    content
+  end
+
+  def image_content(_) do
+    nil
+  end
+
+  def image_id(%{content: %ImageContent{source_url: _, image_id: nil}}) do
+    :not_available
+  end
+
+  def image_id(%{content: %ImageContent{source_url: _, image_id: image_id}}) do
+    image_id
+  end
+
+  def image_id(_) do
+    :not_image_content
+  end
+
+  def pull_and_store_image(%{content: %ImageContent{source_url: _, image_id: nil} = content} = message) do
+    %{message | content: ImageContent.pull_and_store_image(content)}
+  end
+
+  def pull_and_store_image(%{content: %ImageContent{source_url: _, image_id: _}} = message) do
+    message
   end
 
   @spec respond(message :: t, response :: String.t | map) :: t

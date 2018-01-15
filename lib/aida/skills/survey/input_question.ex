@@ -1,8 +1,8 @@
 defmodule Aida.Skill.Survey.InputQuestion do
-  alias Aida.{Session, Expr, Message}
+  alias Aida.{Session, Expr, Message, Message.ImageContent}
 
   @type t :: %__MODULE__{
-    type: :decimal | :integer | :text,
+    type: :decimal | :integer | :text | :image,
     name: String.t,
     relevant: nil | Expr.t,
     message: Aida.Bot.message,
@@ -36,6 +36,24 @@ defmodule Aida.Skill.Survey.InputQuestion do
 
     def valid_answer?(%{type: :text}, message) do
       String.trim(Message.text_content(message)) != ""
+    end
+
+    def valid_answer?(%{type: :image}, %{content: %ImageContent{}}) do
+      true
+    end
+
+    def valid_answer?(%{type: :image}, _) do
+      false
+    end
+
+    def accept_answer(%{type: :image}, %{content: %ImageContent{}} = message) do
+      new_message = Message.pull_and_store_image(message)
+      new_id = Message.image_content(new_message).image_id
+      {:ok, %{type: :image, id: new_id}}
+    end
+
+    def accept_answer(%{type: :image}, _) do
+      :error
     end
 
     def accept_answer(question, message) do
