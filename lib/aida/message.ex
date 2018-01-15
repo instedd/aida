@@ -61,7 +61,7 @@ defmodule Aida.Message do
   end
 
   def pull_and_store_image(%{content: %ImageContent{source_url: _, image_id: nil} = content} = message) do
-    %{message | content: ImageContent.pull_and_store_image(content)}
+    %{message | content: ImageContent.pull_and_store_image(content, message.bot.id, message.session.id)}
   end
 
   def pull_and_store_image(%{content: %ImageContent{source_url: _, image_id: _}} = message) do

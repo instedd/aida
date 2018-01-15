@@ -3,8 +3,8 @@ defmodule AidaWeb.ImageController do
 
   alias Aida.DB
 
-  def image(conn, %{"id" => id}) do
-    image = DB.get_image(id)
+  def image(conn, %{"uuid" => uuid}) do
+    image = DB.get_image(uuid)
     conn
     |> put_resp_content_type(image.binary_type, "utf-8")
     |> send_resp(200, image.binary)

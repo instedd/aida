@@ -364,14 +364,14 @@ defmodule Aida.DB do
       ** (Ecto.NoResultsError)
 
   """
-  def get_image!(id), do: Repo.get!(Image, id)
+  def get_image!(id), do: Repo.get_by!(Image, uuid: id)
 
   @doc """
   Gets a single image.
 
   Returns `nil` if the Image does not exist.
   """
-  def get_image(id), do: Repo.get(Image, id)
+  def get_image(id), do: Repo.get_by(Image, uuid: id)
 
   @doc """
   Creates an image.
