@@ -112,6 +112,14 @@ defmodule Aida.Message do
     end
   end
 
+  defp display_var(value) when is_list(value) do
+    value |> Enum.join(", ") 
+  end
+
+  defp display_var(value) do
+    value |> to_string
+  end
+
   @spec interpolate_vars(message :: t, text :: String.t) :: String.t
   defp interpolate_vars(message, text, resolved_vars \\ []) do
     Regex.scan(~r/\$\{\s*([a-z_]*)\s*\}/, text, return: :index)
@@ -122,7 +130,7 @@ defmodule Aida.Message do
         if var_name in resolved_vars do
           "..."
         else
-          lookup_var(message, var_name) |> to_string
+          lookup_var(message, var_name) |> display_var
         end
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
       text_before <> interpolate_vars(message, var_value, [var_name | resolved_vars]) <> text_after

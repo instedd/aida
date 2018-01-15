@@ -85,5 +85,19 @@ defmodule Aida.MessageTest do
         |> Message.respond("loop_var: ${loop_var}")
       assert message.reply == ["loop_var: [...]"]
     end
+
+    test "interpolates correctly a multiple choice variable with two options" do
+      session = Session.new("sid", %{"pepe" => 3, "food" => ["barbecue", "pasta"]})
+      message = Message.new("Hi!", @bot, session)
+        |> Message.respond("We have ${food}")
+      assert message.reply == ["We have barbecue, pasta"]
+    end
+
+    test "interpolates correctly a multiple choice variable with more than two options" do
+      session = Session.new("sid", %{"pepe" => 3, "food" => ["barbecue", "pasta", "salad"]})
+      message = Message.new("Hi!", @bot, session)
+        |> Message.respond("We have ${food}")
+      assert message.reply == ["We have barbecue, pasta, salad"]
+    end
   end
 end
