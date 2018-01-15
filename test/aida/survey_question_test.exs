@@ -365,7 +365,7 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      with_mock ImageContent, [pull_and_store_image: fn(content, bot_id, session_id) -> %ImageContent{source_url: content.source_url, image_id: 8} end] do
+      with_mock ImageContent, [pull_and_store_image: fn(content, _bot_id, _session_id) -> %ImageContent{source_url: content.source_url, image_id: 8} end] do
         url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
 
         message = Message.new_from_image(url, @bot, @session)
