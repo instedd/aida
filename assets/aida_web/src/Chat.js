@@ -23,12 +23,11 @@ class Chat extends Component {
     this.setState({ botId: this.refs.botId.value })
 
     const { botId, accessToken } = this.refs
-    channel = socket.channel(`bot:${botId.value}`, {"access_token": accessToken.value})
+    channel = socket.channel(`bot:${botId.value}`, {'access_token': accessToken.value})
 
     channel.join()
       .receive('ok', resp => {
         console.log('Joined successfully', resp)
-        this.setState({ sessionId: resp.session_id })
       })
       .receive('error', resp => { console.log('Unable to join', resp) })
 
@@ -98,7 +97,8 @@ class Chat extends Component {
           <TextField ref='accessToken'
             label='access token'
             id='access-token'
-            className='md-cell md-cell--bottom'/>
+            className='md-cell md-cell--bottom'
+          />
           <Button onClick={() => this.join()} raised >Join</Button>
           <Button onClick={() => this.getNewSession()} raised >New Session</Button>
         </div>
