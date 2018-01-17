@@ -187,4 +187,16 @@ defmodule Aida.SchedulerTest do
 
     Scheduler.flush
   end
+
+  test "cancel a task", %{pid: pid} do
+    ts = Timex.shift(DateTime.utc_now, days: 1)
+    Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
+    assert Scheduler.cancel("test_task/#{pid}") == :ok
+    assert Scheduler.cancel("foo") == {:error, :not_found}
+
+    time_travel(ts) do
+      Scheduler.flush
+      refute_received _
+    end
+  end
 end

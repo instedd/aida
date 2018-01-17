@@ -24,6 +24,17 @@ defmodule Aida.Scheduler.Task do
     task |> Repo.delete
   end
 
+  def delete_by_name(name) do
+    result = Task
+      |> where([t], t.name == ^name)
+      |> Repo.delete_all
+
+    case result do
+      {0, _} -> {:error, :not_found}
+      {1, _} -> :ok
+    end
+  end
+
   def changeset(%Task{} = task, attrs) do
     task
     |> cast(attrs, [:name, :ts, :handler])

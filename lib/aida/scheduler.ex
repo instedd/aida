@@ -18,6 +18,11 @@ defmodule Aida.Scheduler do
     Aida.PubSub.broadcast(task_created: ts)
   end
 
+  @spec cancel(String.t) :: :ok | {:error, :not_found}
+  def cancel(name) do
+    Task.delete_by_name(name)
+  end
+
   def flush do
     GenServer.call(@server_ref, :flush)
   end
