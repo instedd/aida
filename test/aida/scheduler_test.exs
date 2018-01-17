@@ -199,4 +199,17 @@ defmodule Aida.SchedulerTest do
       refute_received _
     end
   end
+
+  test "do not crash when the task fails", %{pid: pid} do
+    ts1 = Timex.shift(DateTime.utc_now, days: 1)
+    Scheduler.appoint("test_task_1/#{pid}", ts1, InvalidHandler)
+    ts2 = Timex.shift(DateTime.utc_now, days: 2)
+    Scheduler.appoint("test_task_2/#{pid}", ts2, TestHandler)
+
+    time_travel(ts2) do
+      assert_receive {"test_task_2", ^ts2}
+    end
+
+    refute_received _
+  end
 end

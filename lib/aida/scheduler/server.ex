@@ -1,6 +1,7 @@
 defmodule Aida.Scheduler.Server do
   use GenServer
   alias Aida.Scheduler.Task
+  alias Aida.Logger
 
   @config Application.get_env(:aida, Aida.Scheduler, [])
   @batch_size @config |> Keyword.get(:batch_size, 100)
@@ -67,9 +68,7 @@ defmodule Aida.Scheduler.Server do
         {%State{next_ts: next_ts}, delay}
 
       _ ->
-        task.handler.handle_scheduled_task(task.name, task.ts)
-        task |> Task.delete
-
+        run_task(task)
         dispatch(tasks)
     end
   end
@@ -80,5 +79,17 @@ defmodule Aida.Scheduler.Server do
     now = DateTime.utc_now
     delay = next_ts - (now |> DateTime.to_unix(:milliseconds))
     max(delay, 0)
+  end
+
+  defp run_task(%Task{name: name, ts: ts, handler: handler, } = task) do
+    try do
+      handler.handle_scheduled_task(name, ts)
+    rescue
+      error ->
+        extra = %{task_name: name, task_ts: ts, task_handler: handler}
+        Sentry.capture_exception(error, stacktrace: System.stacktrace(), extra: extra, result: :none)
+        Logger.error("Error executing task: #{Exception.message(error)}")
+    end
+    task |> Task.delete
   end
 end
