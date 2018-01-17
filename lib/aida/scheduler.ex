@@ -1,4 +1,5 @@
 defmodule Aida.Scheduler do
+  alias Aida.Scheduler.Task
   @server_ref {:global, __MODULE__}
 
   @spec start_link() :: GenServer.on_start
@@ -12,7 +13,9 @@ defmodule Aida.Scheduler do
 
   @spec appoint(String.t, DateTime.t, :atom) :: :ok
   def appoint(name, ts, handler) do
-    GenServer.call(@server_ref, {:appoint, name, ts, handler})
+    task = Task.create(name, ts, handler)
+    ts = DateTime.to_unix(task.ts, :milliseconds)
+    Aida.PubSub.broadcast(task_created: ts)
   end
 
   def flush do

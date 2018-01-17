@@ -15,12 +15,14 @@ defmodule Aida.SchedulerTest do
   defmacro time_travel(ts, do: block) do
     quote do
       with_mock DateTime, [:passthrough], [utc_now: fn -> unquote(ts) end] do
+        # Make sure no messages were received before this time travel
+        refute_received _
         # Simulate a :timeout event on the server
         send GenServer.whereis({:global, Scheduler}), :timeout
+        # Run the test block
+        unquote(block)
         # Wait until all the messages are processed
         Scheduler.flush
-
-        unquote(block)
       end
     end
   end
@@ -37,10 +39,8 @@ defmodule Aida.SchedulerTest do
     ts = Timex.shift(DateTime.utc_now, days: 1)
     Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
 
-    refute_received _
-
     time_travel(ts) do
-      assert_received {"test_task", ^ts}
+      assert_receive {"test_task", ^ts}
     end
   end
 
@@ -50,16 +50,12 @@ defmodule Aida.SchedulerTest do
     Scheduler.appoint("test_task_1/#{pid}", ts1, TestHandler)
     Scheduler.appoint("test_task_2/#{pid}", ts2, TestHandler)
 
-    refute_received _
-
     time_travel(ts1) do
-      assert_received {"test_task_1", ^ts1}
+      assert_receive {"test_task_1", ^ts1}
     end
 
-    refute_received _
-
     time_travel(ts2) do
-      assert_received {"test_task_2", ^ts2}
+      assert_receive {"test_task_2", ^ts2}
     end
   end
 
@@ -73,6 +69,7 @@ defmodule Aida.SchedulerTest do
 
   test "load persisted tasks on startup", %{pid: pid} do
     Scheduler.stop
+
     ts = Timex.shift(DateTime.utc_now, days: 1)
     %Scheduler.Task{name: "test_task/#{pid}", ts: ts, handler: TestHandler}
     |> Ecto.Changeset.change
@@ -80,10 +77,8 @@ defmodule Aida.SchedulerTest do
 
     Scheduler.start_link
 
-    refute_received _
-
     time_travel(ts) do
-      assert_received {"test_task", ^ts}
+      assert_receive {"test_task", ^ts}
     end
   end
 
@@ -100,7 +95,7 @@ defmodule Aida.SchedulerTest do
     time_travel(ts) do
       (1..10) |> Enum.each(fn id ->
         task_id = "test_task_#{id}"
-        assert_received {^task_id, ^ts}
+        assert_receive {^task_id, ^ts}
       end)
     end
   end
@@ -121,7 +116,7 @@ defmodule Aida.SchedulerTest do
     time_travel(ts1) do
       (1..10) |> Enum.each(fn id ->
         task_id = "test_task_1_#{id}"
-        assert_received {^task_id, ^ts1}
+        assert_receive {^task_id, ^ts1}
       end)
     end
   end
@@ -137,21 +132,17 @@ defmodule Aida.SchedulerTest do
       Scheduler.appoint("test_task_2_#{id}/#{pid}", ts2, TestHandler)
     end)
 
-    refute_received _
-
     time_travel(ts1) do
       (1..10) |> Enum.each(fn id ->
         task_id = "test_task_1_#{id}"
-        assert_received {^task_id, ^ts1}
+        assert_receive {^task_id, ^ts1}
       end)
     end
-
-    refute_received _
 
     time_travel(ts2) do
       (1..10) |> Enum.each(fn id ->
         task_id = "test_task_2_#{id}"
-        assert_received {^task_id, ^ts2}
+        assert_receive {^task_id, ^ts2}
       end)
     end
   end
@@ -161,7 +152,7 @@ defmodule Aida.SchedulerTest do
     Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
 
     time_travel(ts) do
-      assert_received {"test_task", ^ts}
+      assert_receive {"test_task", ^ts}
     end
 
     assert [] = Scheduler.Task |> Aida.Repo.all
@@ -171,7 +162,7 @@ defmodule Aida.SchedulerTest do
     ts1 = Timex.shift(DateTime.utc_now, days: 1)
     Scheduler.appoint("test_task/#{pid}", ts1, TestHandler)
 
-    ts2 = Timex.shift(DateTime.utc_now, days: 1)
+    ts2 = Timex.shift(DateTime.utc_now, days: 2)
     Scheduler.appoint("test_task/#{pid}", ts2, TestHandler)
 
     assert [task] = Scheduler.Task |> Aida.Repo.all
@@ -179,19 +170,21 @@ defmodule Aida.SchedulerTest do
     assert %Scheduler.Task{name: ^task_id, ts: ^ts2, handler: TestHandler} = task
 
     time_travel(ts1) do
+      Scheduler.flush
       refute_received _
     end
 
     time_travel(ts2) do
-      assert_received {"test_task", ^ts2}
+      assert_receive {"test_task", ^ts2}
     end
   end
 
   test "schedule an already overdue task", %{pid: pid} do
     ts = DateTime.utc_now
     Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
-    Scheduler.flush
 
-    assert_received {"test_task", ^ts}
+    assert_receive {"test_task", ^ts}
+
+    Scheduler.flush
   end
 end

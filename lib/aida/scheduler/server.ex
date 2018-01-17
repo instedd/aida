@@ -17,28 +17,25 @@ defmodule Aida.Scheduler.Server do
   Initializes the server loading the existing tasks from the database
   """
   def init([]) do
+    Aida.PubSub.subscribe_scheduler
     {state, delay} = dispatch()
     {:ok, state, delay}
-  end
-
-  @doc """
-  Appoints a new task to the scheduler.
-
-  Stores the task in the database and in the list of tasks in memory.
-  """
-  def handle_call({:appoint, name, ts, handler}, _from, %State{next_ts: next_ts} = state) do
-    task = Task.create(name, ts, handler)
-    ts = DateTime.to_unix(task.ts, :milliseconds)
-    state = %{state | next_ts: min(next_ts, ts)}
-
-    {:reply, :ok, state, next_delay(state)}
   end
 
   @doc """
   Does nothing. Used for testing purposes to synchronously wait until all messages are processed.
   """
   def handle_call(:flush, _from, state) do
-    {:reply, :ok, state}
+    {:reply, :ok, state, next_delay(state)}
+  end
+
+  @doc """
+  Receives the PubSub notification about a new task. The notification includes
+  the timestamp of the task.
+  """
+  def handle_info({:task_created, ts}, %State{next_ts: next_ts} = state) do
+    state = %{state | next_ts: min(next_ts, ts)}
+    {:noreply, state, next_delay(state)}
   end
 
   @doc """
@@ -76,6 +73,8 @@ defmodule Aida.Scheduler.Server do
         dispatch(tasks)
     end
   end
+
+  defp next_delay(%State{next_ts: nil}), do: :infinity
 
   defp next_delay(%State{next_ts: next_ts}) do
     now = DateTime.utc_now
