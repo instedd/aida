@@ -74,31 +74,34 @@ class Chat extends Component {
     const { messages } = this.state
 
     return (
-      <div className='main-container'>
-        <div className='content'>
+      <div className='chat-container'>
+        <div className='chat'>
           <List>
             {map(messages, (message, index) =>
               <ListItem primaryText={message} key={index} />
             )}
           </List>
+        </div>
+        <div className='input'>
           <TextField ref='chatInput'
             label='What say you?'
             id='chat-input'
-            className='md-cell md-cell--bottom'
           />
         </div>
-        <div className='actions'>
+        <div className='buttons'>
           <Button onClick={() => this.sendMessage()} raised >Send</Button>
+        </div>
+        <div className='settings'>
           <TextField ref='botId'
             label='bot id'
             id='bot-id'
-            className='md-cell md-cell--bottom'
           />
           <TextField ref='accessToken'
             label='access token'
             id='access-token'
-            className='md-cell md-cell--bottom'
           />
+        </div>
+        <div className='actions'>
           <Button onClick={() => this.join()} raised >Join</Button>
           <Button onClick={() => this.getNewSession()} raised >New Session</Button>
         </div>

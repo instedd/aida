@@ -67,3 +67,35 @@
   grid-area: actions;
   justify-self: right;
 }
+
+.chat-container {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "chat chat chat"
+    "settings settings settings"
+    "actions actions actions"
+    "input input input"
+    "buttons buttons buttons"
+    ;
+}
+
+.chat {
+  grid-area: chat;
+}
+.input {
+  grid-area: input;
+  justify-self: stretch;
+}
+.settings {
+  grid-area: settings;
+  justify-self: stretch;
+}
+.buttons {
+  grid-area: buttons;
+}
+.actions {
+  justify-self: right;
+  grid-area: actions;
+}

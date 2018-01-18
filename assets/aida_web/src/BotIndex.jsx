@@ -28,6 +28,10 @@ class BotIndex extends Component {
     )
   }
 
+  use(bot) {
+    document.getElementById('bot-id').value = bot.id
+  }
+
   render() {
     const { bots } = this.state
 
@@ -37,6 +41,7 @@ class BotIndex extends Component {
         <List className='content'>
           {map(bots, (bot) =>
             <ListItem primaryText={bot.id} key={bot.id} >
+              <Button onClick={() => this.use(bot)} flat>Use</Button>
               <Button onClick={() => this.deleteBot(bot)} flat secondary>Delete</Button>
             </ListItem>
           )}
