@@ -2,7 +2,7 @@ Definitions.
 
 Integer  = -?[0-9]+
 WhiteSpace = [\s\t]
-Ident = [a-z_]+
+Ident = [a-z][a-zA-Z0-9_]*
 
 Rules.
 
