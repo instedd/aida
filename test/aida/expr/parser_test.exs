@@ -53,20 +53,28 @@ defmodule Aida.Expr.ParserTest do
       assert parse("${foo}") == var("foo")
     end
 
-    test "variables with uppercase" do
+    test "variables with uppercase in first position" do
+      assert parse("${Foo}") == var("Foo")
+    end
+
+    test "variables with uppercase in any position" do
       assert parse("${fOo}") == var("fOo")
     end
 
-    test "variables with digits" do
-      assert parse("${foo12312}") == var("foo12312")
+    test "variables with underscore in first position" do
+      assert parse("${_foo}") == var("_foo")
     end
 
-    test "variables with underscores" do
+    test "variables with underscore in any position" do
       assert parse("${foo_bar}") == var("foo_bar")
     end
 
+    test "variables with digits in valid position (every position but first one)" do
+      assert parse("${foo1}") == var("foo1")
+    end
+
     test "variables with uppercase, digits and underscores" do
-      assert parse("${foO_Bar_12345}") == var("foO_Bar_12345")
+      assert parse("${FoO_Bar_123}") == var("FoO_Bar_123")
     end
 
     test "attributes" do
@@ -85,18 +93,6 @@ defmodule Aida.Expr.ParserTest do
     test "errors" do
       assert_raise ParseError, ~r/Invalid expression: '@@@'/, fn ->
         parse("@@@")
-      end
-    end
-
-    test "error when variable starts with uppercase" do
-      assert_raise ParseError, "Invalid expression: '${Foo}'", fn ->
-        parse("${Foo}")
-      end
-    end
-
-    test "error when variable starts with underscore" do
-      assert_raise ParseError, "Invalid expression: '${_foo}'", fn ->
-        parse("${_foo}")
       end
     end
 
