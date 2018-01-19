@@ -122,7 +122,7 @@ defmodule Aida.Message do
 
   @spec interpolate_vars(message :: t, text :: String.t) :: String.t
   defp interpolate_vars(message, text, resolved_vars \\ []) do
-    Regex.scan(~r/\$\{\s*([a-z_]*)\s*\}/, text, return: :index)
+    Regex.scan(~r/\$\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}/, text, return: :index)
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       var_name = text |> Kernel.binary_part(v_start, v_len)
