@@ -249,6 +249,14 @@ defmodule Aida.BotParserTest do
               choice_filter: Aida.Expr.parse("type = 'red' or type = 'white'")
             },
             %InputQuestion{
+              name: "picture",
+              type: :image,
+              message: %{
+                "en" => "Can we see your home?",
+                "es" => "Podemos ver tu casa?"
+              }
+            },
+            %InputQuestion{
               name: "request",
               type: :text,
               message: %{

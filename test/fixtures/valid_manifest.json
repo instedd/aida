@@ -176,6 +176,14 @@
           "choice_filter": "type = 'red' or type = 'white'"
         },
         {
+          "type": "image",
+          "name": "picture",
+          "message": {
+            "en": "Can we see your home?",
+            "es": "Podemos ver tu casa?"
+          }
+        },
+        {
           "type": "text",
           "name": "request",
           "message": {

@@ -201,7 +201,7 @@
     "input_question": {
       "type": "object",
       "properties": {
-        "type": {"enum": ["integer", "decimal", "text"]},
+        "type": {"enum": ["integer", "decimal", "text", "image"]},
         "name": {"$ref": "#/definitions/non_empty_string"},
         "message": {"$ref": "#/definitions/localized_string"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},

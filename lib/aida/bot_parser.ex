@@ -140,6 +140,7 @@ defmodule Aida.BotParser do
     question_type = case question["type"] do
       "integer" -> :integer
       "decimal" -> :decimal
+      "image" -> :image
       "text" -> :text
       "select_one" -> :select_one
       "select_many" -> :select_many

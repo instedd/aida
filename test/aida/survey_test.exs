@@ -139,12 +139,12 @@ defmodule Aida.SurveyTest do
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
-      assert message.reply == ["Any particular requests for your dinner?"]
+      assert message.reply == ["Can we see your home?"]
       assert message |> Message.get_session("survey/food_preferences/wine_grapes") == ["merlot", "syrah"]
     end
 
     test "clears the store to end the survey", %{bot: bot} do
-      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 4}})
+      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 5}})
 
       message = Message.new("No, thanks!", bot, session)
       message = Bot.chat(bot, message)
@@ -159,7 +159,7 @@ defmodule Aida.SurveyTest do
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
-      assert message.reply == ["Any particular requests for your dinner?"]
+      assert message.reply == ["Can we see your home?"]
     end
 
     test "do not skip questions when the relevant attribute evaluates to false", %{bot: bot} do
