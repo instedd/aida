@@ -137,13 +137,13 @@ defmodule Aida.BotTest do
     setup :create_manifest_bot
 
     test "replies with language selection on the first message", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
     end
 
     test "selects language when the user sends 'english'", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -153,7 +153,7 @@ defmodule Aida.BotTest do
     end
 
     test "selects language when the user sends 'español'", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -163,7 +163,7 @@ defmodule Aida.BotTest do
     end
 
     test "after selecting language it doesn't switch when a phrase includes a different one", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -178,7 +178,7 @@ defmodule Aida.BotTest do
     end
 
     test "after selecting language only switches when just the new language is received", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -196,7 +196,7 @@ defmodule Aida.BotTest do
     end
 
     test "selects language when the user sends 'english' in a long sentence", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -206,7 +206,7 @@ defmodule Aida.BotTest do
     end
 
     test "selects language when the user sends 'español' in a long sentence", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -216,7 +216,7 @@ defmodule Aida.BotTest do
     end
 
     test "selects language when the user sends 'español' followed by a question mark", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -226,7 +226,7 @@ defmodule Aida.BotTest do
     end
 
     test "selects the first language when the user sends more than one", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -236,18 +236,18 @@ defmodule Aida.BotTest do
     end
 
     test "replies language selection when the user selects a not available language ", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Detect this!", bot)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("eu quero falar português", bot, output.session)
+      input2 = Message.new("eu quero falar em português", bot, output.session)
       output2 = bot |> Bot.chat(input2)
-      assert output2.reply == @language_selection_speech
+      assert output2.reply == ["Desculpe, eu não falo Português para agora"] ++ @language_selection_speech
     end
 
     test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
       session = Session.new({"sid", @session_uuid, %{"language" => "jp"}})
-      input = Message.new("Hi!", bot, session)
+      input = Message.new("Detect this!", bot, session)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
       assert output |> Message.get_session("language") == nil

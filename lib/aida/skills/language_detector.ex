@@ -1,5 +1,5 @@
 defmodule Aida.Skill.LanguageDetector do
-  alias Aida.{Message, Message.TextContent}
+  alias Aida.{Message, Message.TextContent, Skill.LanguageDetector.ISO6391, Skill.LanguageDetector.UnsupportedLanguageMessage}
 
   @type t :: %__MODULE__{
     explanation: String.t(),
@@ -34,13 +34,39 @@ defmodule Aida.Skill.LanguageDetector do
 
       case {matches, current_lang} do
         {[], nil} ->
-          clarify(skill, message)
+          try_to_detect_language_and_clarify(skill, message)
         {[], _} ->
           message
         {[lang | _], _} ->
           message
           |> Message.put_session("language", lang)
       end
+    end
+
+    def try_to_detect_language_and_clarify(skill, message) do
+      detected_language = detect_language(message)
+      case is_a_supported_language?(skill, detected_language) do
+        true -> clarify(skill, message)
+        _ -> unsupported_language(skill, message, detected_language)
+      end
+    end
+
+    def detect_language(message) do
+      message
+        |> Message.text_content
+        |> Paasaa.detect
+    end
+
+    def is_a_supported_language?(%{languages: languages}, detected_language) do
+      languages
+        |> Map.keys
+        |> Enum.member?(ISO6391.from_iso_639_3(detected_language))
+    end
+
+    def unsupported_language(%{explanation: explanation}, message, detected_language) do
+      message
+        |> Message.respond(UnsupportedLanguageMessage.for(detected_language))
+        |> Message.respond(explanation)
     end
 
     def matching_languages(message, languages) do
