@@ -1,7 +1,7 @@
 defmodule Aida.SchedulerTest do
   alias Aida.Scheduler
   use Aida.DataCase
-  import Mock
+  use Aida.TimeMachine
 
   defmodule TestHandler do
     @behaviour Aida.Scheduler.Handler
@@ -9,21 +9,6 @@ defmodule Aida.SchedulerTest do
     def handle_scheduled_task(task_id, ts) do
       [id, pid] = String.split(task_id, "/")
       send String.to_atom(pid), {id, ts}
-    end
-  end
-
-  defmacro time_travel(ts, do: block) do
-    quote do
-      with_mock DateTime, [:passthrough], [utc_now: fn -> unquote(ts) end] do
-        # Make sure no messages were received before this time travel
-        refute_received _
-        # Simulate a :timeout event on the server
-        send GenServer.whereis({:global, Scheduler}), :timeout
-        # Run the test block
-        unquote(block)
-        # Wait until all the messages are processed
-        Scheduler.flush
-      end
     end
   end
 
@@ -36,7 +21,7 @@ defmodule Aida.SchedulerTest do
   end
 
   test "schedule a task", %{pid: pid} do
-    ts = Timex.shift(DateTime.utc_now, days: 1)
+    ts = within(days: 1)
     Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
 
     time_travel(ts) do
@@ -45,8 +30,8 @@ defmodule Aida.SchedulerTest do
   end
 
   test "schedule two tasks", %{pid: pid} do
-    ts1 = Timex.shift(DateTime.utc_now, days: 1)
-    ts2 = Timex.shift(DateTime.utc_now, days: 2)
+    ts1 = within(days: 1)
+    ts2 = within(days: 2)
     Scheduler.appoint("test_task_1/#{pid}", ts1, TestHandler)
     Scheduler.appoint("test_task_2/#{pid}", ts2, TestHandler)
 
@@ -60,7 +45,7 @@ defmodule Aida.SchedulerTest do
   end
 
   test "scheduled task is persisted" do
-    ts = Timex.shift(DateTime.utc_now, hours: 10)
+    ts = within(hours: 10)
     Scheduler.appoint("my_task", ts, TestHandler)
 
     assert [task] = Scheduler.Task |> Aida.Repo.all
@@ -70,7 +55,7 @@ defmodule Aida.SchedulerTest do
   test "load persisted tasks on startup", %{pid: pid} do
     Scheduler.stop
 
-    ts = Timex.shift(DateTime.utc_now, days: 1)
+    ts = within(days: 1)
     %Scheduler.Task{name: "test_task/#{pid}", ts: ts, handler: TestHandler}
     |> Ecto.Changeset.change
     |> Aida.Repo.insert!
@@ -85,7 +70,7 @@ defmodule Aida.SchedulerTest do
   test "continue loading from db when the queue is empty", %{pid: pid} do
     Scheduler.stop
 
-    ts = Timex.shift(DateTime.utc_now, days: 1)
+    ts = within(days: 1)
     (1..10) |> Enum.each(fn id ->
       Scheduler.Task.create("test_task_#{id}/#{pid}", ts, TestHandler)
     end)
@@ -103,14 +88,14 @@ defmodule Aida.SchedulerTest do
   test "do not enqueue in last position if there are more tasks in the db", %{pid: pid} do
     Scheduler.stop
 
-    ts1 = Timex.shift(DateTime.utc_now, days: 1)
+    ts1 = within(days: 1)
     (1..10) |> Enum.each(fn id ->
       Scheduler.Task.create("test_task_1_#{id}/#{pid}", ts1, TestHandler)
     end)
 
     Scheduler.start_link
 
-    ts2 = Timex.shift(DateTime.utc_now, days: 2)
+    ts2 = within(days: 2)
     Scheduler.appoint("test_task_2/#{pid}", ts2, TestHandler)
 
     time_travel(ts1) do
@@ -122,12 +107,12 @@ defmodule Aida.SchedulerTest do
   end
 
   test "schedule many tasks for the same time", %{pid: pid} do
-    ts1 = Timex.shift(DateTime.utc_now, days: 1)
+    ts1 = within(days: 1)
     (1..10) |> Enum.each(fn id ->
       Scheduler.appoint("test_task_1_#{id}/#{pid}", ts1, TestHandler)
     end)
 
-    ts2 = Timex.shift(DateTime.utc_now, days: 2)
+    ts2 = within(days: 2)
     (1..10) |> Enum.each(fn id ->
       Scheduler.appoint("test_task_2_#{id}/#{pid}", ts2, TestHandler)
     end)
@@ -148,7 +133,7 @@ defmodule Aida.SchedulerTest do
   end
 
   test "scheduled task is deleted after execution", %{pid: pid} do
-    ts = Timex.shift(DateTime.utc_now, days: 1)
+    ts = within(days: 1)
     Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
 
     time_travel(ts) do
@@ -159,10 +144,10 @@ defmodule Aida.SchedulerTest do
   end
 
   test "reschedule task to a later timestamp", %{pid: pid} do
-    ts1 = Timex.shift(DateTime.utc_now, days: 1)
+    ts1 = within(days: 1)
     Scheduler.appoint("test_task/#{pid}", ts1, TestHandler)
 
-    ts2 = Timex.shift(DateTime.utc_now, days: 2)
+    ts2 = within(days: 2)
     Scheduler.appoint("test_task/#{pid}", ts2, TestHandler)
 
     assert [task] = Scheduler.Task |> Aida.Repo.all
@@ -189,7 +174,7 @@ defmodule Aida.SchedulerTest do
   end
 
   test "cancel a task", %{pid: pid} do
-    ts = Timex.shift(DateTime.utc_now, days: 1)
+    ts = within(days: 1)
     Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
     assert Scheduler.cancel("test_task/#{pid}") == :ok
     assert Scheduler.cancel("foo") == {:error, :not_found}
@@ -201,9 +186,9 @@ defmodule Aida.SchedulerTest do
   end
 
   test "do not crash when the task fails", %{pid: pid} do
-    ts1 = Timex.shift(DateTime.utc_now, days: 1)
+    ts1 = within(days: 1)
     Scheduler.appoint("test_task_1/#{pid}", ts1, InvalidHandler)
-    ts2 = Timex.shift(DateTime.utc_now, days: 2)
+    ts2 = within(days: 2)
     Scheduler.appoint("test_task_2/#{pid}", ts2, TestHandler)
 
     time_travel(ts2) do

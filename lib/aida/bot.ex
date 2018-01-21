@@ -30,10 +30,10 @@ defmodule Aida.Bot do
     {:ok, %{bot | skills: skills}}
   end
 
-  @spec wake_up(bot :: t, skill_id :: String.t) :: :ok
-  def wake_up(%Bot{} = bot, skill_id) do
+  @spec wake_up(bot :: t, skill_id :: String.t, data :: nil | String.t) :: :ok
+  def wake_up(%Bot{} = bot, skill_id, data \\ nil) do
     find_skill(bot, skill_id)
-      |> Skill.wake_up(bot)
+      |> Skill.wake_up(bot, data)
   end
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t

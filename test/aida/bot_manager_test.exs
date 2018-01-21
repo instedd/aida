@@ -1,6 +1,7 @@
 defmodule Aida.BotManagerTest do
   use Aida.DataCase
-  alias Aida.{DB, Bot, BotManager, BotParser, TestChannel, ChannelRegistry}
+  use Aida.TimeMachine
+  alias Aida.{DB, Bot, BotManager, BotParser, TestChannel, ChannelRegistry, Scheduler}
   import Mock
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
@@ -9,6 +10,7 @@ defmodule Aida.BotManagerTest do
     setup do
       ChannelRegistry.start_link
       BotManager.start_link
+      Scheduler.start_link
       :ok
     end
 
@@ -61,11 +63,27 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> :ok end] do
-        BotManager.schedule_wake_up(bot, skill, 50)
-        refute called Bot.wake_up(bot, "skill_id")
-        :timer.sleep(100)
-        assert called Bot.wake_up(bot, "skill_id")
+      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, within(hours: 1))
+        refute called Bot.wake_up(bot, "skill_id", nil)
+
+        time_travel(within(hours: 1)) do
+          assert called Bot.wake_up(bot, "skill_id", nil)
+        end
+      end
+    end
+
+    test "schedule wake up with data" do
+      bot = %Bot{id: @uuid}
+      skill = %{id: "skill_id"}
+      BotManager.start(bot)
+
+      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, "foo", within(hours: 1))
+
+        time_travel(within(hours: 1)) do
+          assert called Bot.wake_up(bot, "skill_id", "foo")
+        end
       end
     end
 
@@ -74,14 +92,18 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> :ok end] do
-        BotManager.schedule_wake_up(bot, skill, 50)
-        BotManager.schedule_wake_up(bot, skill, 100)
-        refute called Bot.wake_up(bot, "skill_id")
-        :timer.sleep(50)
-        refute called Bot.wake_up(bot, "skill_id")
-        :timer.sleep(100)
-        assert called Bot.wake_up(bot, "skill_id")
+      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, within(hours: 1))
+        BotManager.schedule_wake_up(bot, skill, within(hours: 2))
+        refute called Bot.wake_up(bot, "skill_id", nil)
+
+        time_travel(within(hours: 1)) do
+          refute called Bot.wake_up(bot, "skill_id", nil)
+        end
+
+        time_travel(within(hours: 2)) do
+          assert called Bot.wake_up(bot, "skill_id", nil)
+        end
       end
     end
 
@@ -90,11 +112,13 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> :ok end] do
-        BotManager.schedule_wake_up(bot, skill, 50)
+      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+        BotManager.schedule_wake_up(bot, skill, within(hours: 1))
         BotManager.stop(bot.id)
-        :timer.sleep(100)
-        refute called Bot.wake_up(bot, "skill_id")
+
+        time_travel(within(hours: 1)) do
+          refute called Bot.wake_up(:_, :_, :_)
+        end
       end
     end
 
@@ -103,11 +127,13 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id) -> raise "error" end] do
-        BotManager.schedule_wake_up(bot, skill, 1)
-        :timer.sleep(50)
-        assert called Bot.wake_up(bot, "skill_id")
-        assert GenServer.whereis({:global, BotManager})
+      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> raise "error" end] do
+        BotManager.schedule_wake_up(bot, skill, within(hours: 1))
+
+        time_travel(within(hours: 1)) do
+          assert called Bot.wake_up(bot, "skill_id", nil)
+          assert GenServer.whereis({:global, BotManager})
+        end
       end
     end
   end

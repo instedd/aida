@@ -11,11 +11,12 @@ defmodule Aida.Scheduler do
     GenServer.stop(@server_ref)
   end
 
-  @spec appoint(String.t, DateTime.t, :atom) :: :ok
+  @spec appoint(String.t, DateTime.t, atom) :: :ok
   def appoint(name, ts, handler) do
     task = Task.create(name, ts, handler)
     ts = DateTime.to_unix(task.ts, :milliseconds)
     Aida.PubSub.broadcast(task_created: ts)
+    :ok
   end
 
   @spec cancel(String.t) :: :ok | {:error, :not_found}

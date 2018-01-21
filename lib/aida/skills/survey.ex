@@ -19,10 +19,6 @@ defmodule Aida.Skill.Survey do
             relevant: nil,
             questions: []
 
-  def delay(skill, now \\ DateTime.utc_now) do
-    DateTime.diff(skill.schedule, now, :milliseconds)
-  end
-
   def start_survey(survey, bot, session_id) do
     session = Session.load(session_id)
 
@@ -97,15 +93,13 @@ defmodule Aida.Skill.Survey do
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, bot) do
-      delay = Survey.delay(skill)
-      if delay > 0 do
-        BotManager.schedule_wake_up(bot, skill, delay)
+      if DateTime.compare(skill.schedule, DateTime.utc_now) == :gt do
+        BotManager.schedule_wake_up(bot, skill, skill.schedule)
       end
-
       skill
     end
 
-    def wake_up(skill, %{id: bot_id} = bot) do
+    def wake_up(skill, %{id: bot_id} = bot, _data) do
       DB.session_ids_by_bot(bot_id)
         |> Enum.each(&(Survey.start_survey(skill, bot, &1)))
 

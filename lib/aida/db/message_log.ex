@@ -2,6 +2,7 @@ defmodule Aida.DB.MessageLog do
   use Ecto.Schema
   alias Aida.Repo
   import Ecto.Changeset
+  import Ecto.Query
   alias __MODULE__
 
   schema "message_logs" do
@@ -11,7 +12,7 @@ defmodule Aida.DB.MessageLog do
     field :content, :string
     field :content_type, :string
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false
@@ -24,6 +25,13 @@ defmodule Aida.DB.MessageLog do
   def create(params) do
     %MessageLog{}
       |> MessageLog.changeset(params)
-      |> Repo.insert
+      |> Repo.insert!
+  end
+
+  def get_last_incoming(bot_id, session_id) do
+    MessageLog
+    |> where([m], m.bot_id == ^bot_id and m.session_id == ^session_id)
+    |> where([m], m.direction == "incoming")
+    |> Repo.aggregate(:max, :inserted_at)
   end
 end

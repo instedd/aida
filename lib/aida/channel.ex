@@ -26,6 +26,7 @@ defmodule Aida.ChannelProvider do
     provider = case provider do
       "facebook" -> Facebook
       "ws" -> WebSocket
+      "test" -> Aida.TestChannel
     end
 
     provider.find_channel(session_id)
