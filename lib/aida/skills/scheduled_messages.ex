@@ -39,38 +39,6 @@ defmodule Aida.Skill.ScheduledMessages do
             relevant: nil,
             messages: []
 
-  def delay(skill, now \\ DateTime.utc_now)
-
-  def delay(%{schedule_type: :since_last_incoming_message} = skill, _now) do
-    message = skill.messages
-      |> Enum.min_by(fn(message) -> message.delay end)
-
-    delay = (div(message.delay, 2))
-    delay = [delay, 24 * 60] |> Enum.min()
-    delay = [delay, 20] |> Enum.max()
-
-    :timer.minutes(delay)
-  end
-
-  def delay(%{schedule_type: :fixed_time, messages: [message | _]}, now) do
-    DateTime.diff(message.schedule, now, :milliseconds)
-  end
-
-  def send_message(skill, bot, session_id, content) do
-    session = Session.load(session_id)
-
-    if Skill.is_relevant?(skill, session) do
-      channel = ChannelProvider.find_channel(session_id)
-
-      SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), session_id, false)
-
-      message = Message.new("", bot, session)
-      message = message |> Message.respond(content)
-
-      channel |> Channel.send_message(message.reply, session_id)
-    end
-  end
-
   @doc """
   Find the overdue and next messages
 
