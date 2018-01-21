@@ -98,6 +98,11 @@ defmodule Aida.Skill.ScheduledMessages do
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
+    def init(%{schedule_type: :since_last_incoming_message, messages: messages} = skill, _bot) do
+      messages = messages |> Enum.sort_by(&(&1.delay))
+      %{skill | messages: messages}
+    end
+
     def init(%{schedule_type: :fixed_time, messages: [message | _]} = skill, bot) do
       if DateTime.compare(message.schedule, DateTime.utc_now) == :gt do
         BotManager.schedule_wake_up(bot, skill, message.schedule)

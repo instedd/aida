@@ -74,6 +74,11 @@ defmodule Aida.ScheduledMessagesTest do
       %{skill: skill}
     end
 
+    test "init sorts the messages by delay", %{bot: bot, skill: skill} do
+      [m1, m2] = skill.messages
+      assert skill == %{skill | messages: [m2, m1]} |> Skill.init(bot)
+    end
+
     test "find enclosing messages", %{skill: skill} do
       assert {nil, %DelayedMessage{delay: 60}} = ScheduledMessages.find_enclosing_messages(skill, 40)
       assert {%DelayedMessage{delay: 60}, %DelayedMessage{delay: 1440}} = ScheduledMessages.find_enclosing_messages(skill, 60)
