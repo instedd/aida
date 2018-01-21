@@ -360,6 +360,7 @@ defmodule Aida.JsonSchemaTest do
     assert_valid_enum("type", "integer", :input_question)
     assert_valid_enum("type", "decimal", :input_question)
     assert_valid_enum("type", "text", :input_question)
+    assert_valid_enum("type", "image", :input_question)
     assert_required("name", :input_question)
     assert_non_empty_string("name", :input_question)
     assert_required("message", :input_question)
