@@ -167,6 +167,18 @@ defmodule Aida.ScheduledMessagesTest do
       expected_task_name = "#{bot.id}/#{skill.id}/#{session.id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^next_ts, handler: BotManager} = task
     end
+
+    test "don't do anything if the session id is invalid", %{bot: bot, skill: skill} do
+      skill |> Skill.wake_up(bot, "invalid_session_id")
+      refute_received _
+      assert [] = Scheduler.Task.load
+    end
+
+    test "don't do anything if the session id is nil", %{bot: bot, skill: skill} do
+      skill |> Skill.wake_up(bot, nil)
+      refute_received _
+      assert [] = Scheduler.Task.load
+    end
   end
 
   defp generate_session_id_for_test_channel(_context) do

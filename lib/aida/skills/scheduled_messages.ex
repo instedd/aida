@@ -93,27 +93,33 @@ defmodule Aida.Skill.ScheduledMessages do
       end
     end
 
-    def wake_up(%{schedule_type: :since_last_incoming_message} = skill, bot, session_id) do
+    def wake_up(%{schedule_type: :since_last_incoming_message} = skill, bot, session_id) when is_binary(session_id) do
       last_activity_ts = MessageLog.get_last_incoming(bot.id, session_id)
-      last_activity_delay = DateTime.diff(DateTime.utc_now, last_activity_ts)
-      {current_message, next_message} = ScheduledMessages.find_enclosing_messages(skill, last_activity_delay / 60)
+      if last_activity_ts do
+        last_activity_delay = DateTime.diff(DateTime.utc_now, last_activity_ts)
+        {current_message, next_message} = ScheduledMessages.find_enclosing_messages(skill, last_activity_delay / 60)
 
-      if current_message do
-        send_message(skill, bot, session_id, current_message.message)
-      end
+        if current_message do
+          send_message(skill, bot, session_id, current_message.message)
+        end
 
-      if next_message do
-        # Schedule for the next delayed message
-        wake_up_ts = Timex.shift(last_activity_ts, minutes: next_message.delay)
-        BotManager.schedule_wake_up(bot, skill, session_id, wake_up_ts)
+        if next_message do
+          # Schedule for the next delayed message
+          wake_up_ts = Timex.shift(last_activity_ts, minutes: next_message.delay)
+          BotManager.schedule_wake_up(bot, skill, session_id, wake_up_ts)
+        end
       end
     end
 
-    def wake_up(%{schedule_type: :fixed_time, messages: [fixed_message | _]} = skill, bot, _) do
+    def wake_up(%{schedule_type: :fixed_time, messages: [fixed_message | _]} = skill, bot, nil) do
       DB.session_ids_by_bot(bot.id)
       |> Enum.each(fn session_id ->
         send_message(skill, bot, session_id, fixed_message.message)
       end)
+    end
+
+    def wake_up(_skill, _bot, _data) do
+      :ok
     end
 
     def explain(%{}, message) do
