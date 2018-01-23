@@ -51,12 +51,11 @@ defmodule Aida.SkillUsageTest do
     test "stores an interaction per sent message with the proper data for language_detector", %{bot: bot} do
       input = Message.new("english", bot)
       bot |> Bot.chat(input)
-      skill_usage = Enum.at(DB.list_skill_usages(),0)
+      skill_usage = DB.list_skill_usages() |> Enum.find(&(&1.skill_id == "language_detector"))
 
       assert skill_usage.user_id == input.session.id
       assert skill_usage.bot_id == bot.id
       assert Date.to_string(skill_usage.last_usage) == Date.to_string(Date.utc_today())
-      assert skill_usage.skill_id == "language_detector"
       assert skill_usage.user_generated == true
     end
 
