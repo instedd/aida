@@ -1,7 +1,7 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
   alias __MODULE__.{Question, SelectQuestion, InputQuestion}
-  alias Aida.{BotManager, Session, Message, Channel, Skill.Survey.Question, ChannelProvider, DB, Skill, Message.TextContent}
+  alias Aida.{BotManager, Session, Message, Channel, Skill.Survey.Question, ChannelProvider, DB, Skill}
 
   @type t :: %__MODULE__{
     id: String.t(),
