@@ -7,24 +7,14 @@ defmodule Aida.SurveyTest do
   @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
   @session_id "#{@bot_id}/facebook/1234567890/0987654321"
 
-  test "calculate wake_up delay" do
-    now = DateTime.utc_now
-    survey = %Survey{schedule: now |> Timex.shift(hours: 10)}
-    assert Survey.delay(survey, now) == :timer.hours(10)
-  end
-
   test "init schedules wake_up" do
     bot = %Bot{id: @bot_id}
-    skill = %Survey{id: @skill_id, schedule: DateTime.utc_now |> Timex.shift(days: 1)}
+    schedule = DateTime.utc_now |> Timex.shift(days: 1)
+    skill = %Survey{id: @skill_id, schedule: schedule}
 
-    schedule_wake_up_fn = fn(_bot, _skill, delay) ->
-      assert_in_delta delay, :timer.hours(24), :timer.seconds(1)
-      :ok
-    end
-
-    with_mock BotManager, [schedule_wake_up: schedule_wake_up_fn] do
+    with_mock BotManager, [schedule_wake_up: fn(_bot, _skill, _ts) -> :ok end] do
       skill |> Skill.init(bot)
-      assert called BotManager.schedule_wake_up(bot, skill, :_)
+      assert called BotManager.schedule_wake_up(bot, skill, schedule)
     end
   end
 
@@ -32,7 +22,7 @@ defmodule Aida.SurveyTest do
     bot = %Bot{id: @bot_id}
     skill = %Survey{id: @skill_id, schedule: DateTime.utc_now |> Timex.shift(days: -1)}
 
-    with_mock BotManager, [schedule_wake_up: fn(_bot, _skill, _delay) -> :ok end] do
+    with_mock BotManager, [schedule_wake_up: fn(_bot, _skill, _ts) -> :ok end] do
       skill |> Skill.init(bot)
       refute called BotManager.schedule_wake_up(:_, :_, :_)
     end

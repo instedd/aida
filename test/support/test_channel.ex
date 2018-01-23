@@ -1,8 +1,13 @@
 defmodule Aida.TestChannel do
   defstruct [:pid]
 
-  def new() do
-    %Aida.TestChannel{pid: self()}
+  def new(pid \\ self()) do
+    %Aida.TestChannel{pid: pid}
+  end
+
+  def find_channel(session_id) do
+    [_bot_id, _provider, pid] = session_id |> String.split("/")
+    new(pid |> String.to_atom)
   end
 
   defimpl Aida.Channel, for: __MODULE__ do
@@ -18,10 +23,6 @@ defmodule Aida.TestChannel do
 
     def callback(_channel, conn) do
       conn
-    end
-
-    def type(_) do
-      "test"
     end
 
     def send_message(channel, messages, recipient) do

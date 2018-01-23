@@ -51,7 +51,8 @@ defmodule Aida.Mixfile do
       {:ex_json_schema, "~> 0.5.5"},
       {:cors_plug, "~> 1.4"},
       {:timex, "~> 3.0", override: true},
-      {:sentry, "~> 6.0"}
+      {:sentry, "~> 6.0"},
+      {:ecto_atom, "~> 1.0.0"}
     ]
   end
 

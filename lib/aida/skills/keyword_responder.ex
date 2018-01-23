@@ -26,7 +26,7 @@ defmodule Aida.Skill.KeywordResponder do
       skill
     end
 
-    def wake_up(_skill, _bot) do
+    def wake_up(_skill, _bot, _data) do
       :ok
     end
 

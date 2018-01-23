@@ -22,8 +22,8 @@ defprotocol Aida.Skill do
   @spec init(skill :: t, bot :: Aida.Bot.t) :: t
   def init(skill, bot)
 
-  @spec wake_up(skill :: t, bot :: Aida.Bot.t) :: :ok
-  def wake_up(skill, bot)
+  @spec wake_up(skill :: t, bot :: Aida.Bot.t, data :: nil | String.t) :: :ok
+  def wake_up(skill, bot, data)
 
   @spec relevant(skill :: t) :: Aida.Expr.t | nil
   def relevant(skill)

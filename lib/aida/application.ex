@@ -21,7 +21,8 @@ defmodule Aida.Application do
         worker(Aida.JsonSchema, []),
         worker(Aida.ChannelRegistry, []),
         worker(Aida.BotManager, []),
-        worker(Aida.SessionStore, [])
+        worker(Aida.SessionStore, []),
+        worker(Aida.Scheduler, [])
       ]
     else
       children
