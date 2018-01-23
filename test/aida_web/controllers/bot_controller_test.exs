@@ -76,6 +76,38 @@ defmodule AidaWeb.BotControllerTest do
         "temp" => false}
     end
 
+    test "render errors when variable name is invalid", %{conn: conn} do
+      manifest = File.read!("test/fixtures/valid_manifest.json")
+        |> Poison.decode!
+        |> Map.put("skills", [
+          %{
+            "type" => "keyword_responder",
+            "id" => "wine",
+            "name" => "Wine info",
+            "relevant" => "${4age} >= 18",
+            "explanation" => %{
+              "en" => "I can give you information about our wines",
+              "es" => "Te puedo dar información sobre nuestros vinos"
+            },
+            "clarification" => %{
+              "en" => "For wine options, write 'wine'",
+              "es" => "Para información sobre nuestros vinos, escribe 'vino'"
+            },
+            "keywords" => %{
+              "en" => ["wine"],
+              "es" => ["vino"]
+            },
+            "response" => %{
+              "en" => "We have malbec, cabernet and syrah",
+              "es" => "Tenemos malbec, cabernet y syrah"
+            }
+          }
+        ])
+
+      conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
+      assert json_response(conn, 422)["error"] == "Invalid expression: '${4age} >= 18'"
+    end
+
     test "renders errors when data is invalid", %{conn: conn} do
       conn = post conn, bot_path(conn, :create), bot: @invalid_attrs
       assert json_response(conn, 422)["errors"] != %{}
