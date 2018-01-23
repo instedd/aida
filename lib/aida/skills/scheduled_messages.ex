@@ -1,5 +1,5 @@
 defmodule Aida.Skill.ScheduledMessages do
-  alias Aida.{Message, Channel, Session, Skill, BotManager, ChannelProvider, DB, DB.MessageLog}
+  alias Aida.{Message, Channel, Session, Skill, BotManager, ChannelProvider, DB, DB.MessageLog, Recurrence}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
@@ -20,6 +20,16 @@ defmodule Aida.Skill.ScheduledMessages do
     }
 
     defstruct schedule: DateTime.utc_now,
+              message: %{}
+  end
+
+  defmodule RecurrentMessage do
+    @type t :: %__MODULE__{
+      recurrence: Recurrence.t,
+      message: Aida.Bot.message
+    }
+
+    defstruct recurrence: nil,
               message: %{}
   end
 

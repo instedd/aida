@@ -10,11 +10,13 @@ defmodule Aida.BotParserTest do
     Skill.ScheduledMessages,
     Skill.ScheduledMessages.DelayedMessage,
     Skill.ScheduledMessages.FixedTimeMessage,
+    Skill.ScheduledMessages.RecurrentMessage,
     Skill.Survey,
     Skill.Survey.SelectQuestion,
     Skill.Survey.InputQuestion,
     Skill.Survey.Choice,
-    Variable
+    Variable,
+    Recurrence
   }
   alias Aida.Channel.{Facebook, WebSocket}
 
@@ -137,6 +139,21 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "Happy new year!",
                 "es" => "Feliz año nuevo!"
+              }
+            }
+          ]
+        },
+        %ScheduledMessages{
+          id: "reminders",
+          bot_id: @uuid,
+          name: "Reminders",
+          schedule_type: :recurrent,
+          messages: [
+            %RecurrentMessage{
+              recurrence: %Recurrence.Daily{start: ~N[2018-01-01T10:00:00Z] |> DateTime.from_naive!("Etc/UTC"), every: 7},
+              message: %{
+                "en" => "Remember we're closed on Mondays",
+                "es" => "Recuerde que no abrimos los lunes"
               }
             }
           ]
