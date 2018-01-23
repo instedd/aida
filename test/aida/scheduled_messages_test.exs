@@ -1,6 +1,6 @@
 defmodule Aida.ScheduledMessagesTest do
-  alias Aida.{Skill.ScheduledMessages, Message, Bot, DB.MessageLog, Skill, Session, SessionStore, BotManager}
-  alias Aida.Skill.ScheduledMessages.{DelayedMessage, FixedTimeMessage}
+  alias Aida.{Skill.ScheduledMessages, Message, Bot, DB.MessageLog, Skill, Session, SessionStore, BotManager, Recurrence}
+  alias Aida.Skill.ScheduledMessages.{DelayedMessage, FixedTimeMessage, RecurrentMessage}
   alias Aida.Scheduler
   use Aida.DataCase
   use Aida.TimeMachine
@@ -179,6 +179,40 @@ defmodule Aida.ScheduledMessagesTest do
       skill |> Skill.wake_up(bot, nil)
       refute_received _
       assert [] = Scheduler.Task.load
+    end
+  end
+
+  describe "scheduled messages with recurrence" do
+    setup :generate_session_id_for_test_channel
+    setup :create_session
+    setup :create_bot
+
+    setup do
+      start = within(hours: 10)
+      recurrence = %Recurrence.Daily{start: start, every: 2}
+      message = %RecurrentMessage{recurrence: recurrence, message: %{"en" => "Hello"}}
+      skill = %ScheduledMessages{id: @skill_id, schedule_type: :recurrent, messages: [message]}
+      [skill: skill, start: start]
+    end
+
+    test "init schedules a wake_up", %{bot: bot, skill: skill, start: start} do
+      assert skill |> Skill.init(bot) == skill
+
+      assert [task] = Scheduler.Task.load
+      expected_task_name = "#{bot.id}/#{skill.id}/0"
+      assert %Scheduler.Task{name: ^expected_task_name, ts: ^start, handler: BotManager} = task
+    end
+
+    test "send message and schedule the next occurrence", %{bot: bot, skill: skill, session_id: session_id, start: start} do
+      time_travel(start) do
+        skill |> Skill.wake_up(bot, "0")
+        assert_received {:send_message, ["Hello"], ^session_id}
+      end
+
+      assert [task] = Scheduler.Task.load
+      expected_task_name = "#{bot.id}/#{skill.id}/0"
+      expected_ts = Timex.shift(start, days: 2)
+      assert %Scheduler.Task{name: ^expected_task_name, ts: ^expected_ts, handler: BotManager} = task
     end
   end
 
