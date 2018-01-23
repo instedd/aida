@@ -37,6 +37,14 @@ defmodule Aida.JsonSchemaTest do
     "schedule": "2018-01-01T00:00:00Z",
     "message": #{@valid_localized_string}
   })
+  @valid_daily_recurrent_message ~s({
+    "recurrence": {
+      "type": "daily",
+      "start": "2018-01-01T00:00:00Z",
+      "every": 3
+    },
+    "message": #{@valid_localized_string}
+  })
   @valid_scheduled_messages ~s({
     "type": "scheduled_messages",
     "id": "2",
@@ -50,6 +58,13 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "schedule_type": "fixed_time",
     "messages": [#{@valid_fixed_time_message}]
+  })
+  @valid_scheduled_messages_recurrent ~s({
+    "type": "scheduled_messages",
+    "id": "2",
+    "name": "a",
+    "schedule_type": "recurrent",
+    "messages": [#{@valid_daily_recurrent_message}]
   })
   @valid_language_detector ~s({
     "type": "language_detector",
@@ -352,7 +367,13 @@ defmodule Aida.JsonSchemaTest do
   end
 
   test "scheduled_messages" do
-    ~w(scheduled_messages_since_last_incoming_message scheduled_messages_fixed_time)a |> Enum.each(fn type ->
+    subtypes = [
+      :scheduled_messages_since_last_incoming_message,
+      :scheduled_messages_fixed_time,
+      :scheduled_messages_recurrent
+    ]
+
+    subtypes |> Enum.each(fn type ->
       assert_enum("type", "foo", type)
       assert_valid_enum("type", "scheduled_messages", type)
       assert_required("type", type)
@@ -370,12 +391,16 @@ defmodule Aida.JsonSchemaTest do
 
     assert_valid_enum("schedule_type", "since_last_incoming_message", :scheduled_messages_since_last_incoming_message)
     assert_valid_enum("schedule_type", "fixed_time", :scheduled_messages_fixed_time)
+    assert_valid_enum("schedule_type", "recurrent", :scheduled_messages_recurrent)
 
     @valid_scheduled_messages
     |> assert_valid(:scheduled_messages)
 
     @valid_scheduled_messages_fixed_time
     |> assert_valid(:scheduled_messages)
+
+    @valid_scheduled_messages_recurrent
+    |> assert_valid(:scheduled_messages_recurrent)
   end
 
   test "delayed_message" do
@@ -386,6 +411,20 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_delayed_message
     |> assert_valid(:delayed_message)
+  end
+
+  test "recurrent_message" do
+    assert_required("recurrence", :recurrent_message)
+    assert_required("message", :recurrent_message)
+  end
+
+  test "recurrence_daily" do
+    assert_enum("type", "foo", :recurrence_daily)
+    assert_valid_enum("type", "daily", :recurrence_daily)
+    assert_required("start", :recurrence_daily)
+    assert_required("every", :recurrence_daily)
+    assert_integer("every", :recurrence_daily)
+    assert_min("every", 1, :recurrence_daily)
   end
 
   test "language_detector" do
