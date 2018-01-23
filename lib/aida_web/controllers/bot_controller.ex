@@ -3,7 +3,7 @@ defmodule AidaWeb.BotController do
 
   alias Aida.DB
   alias Aida.DB.Bot
-  alias Aida.JsonSchema
+  alias Aida.{JsonSchema, BotParser}
 
   action_fallback AidaWeb.FallbackController
 
@@ -54,7 +54,12 @@ defmodule AidaWeb.BotController do
     end
     case JsonSchema.validate(manifest, :manifest_v1) do
       [] ->
-        conn
+        case BotParser.parse("", manifest) do
+          {:ok, _} -> 
+            conn
+          {:error, err} -> 
+            conn |> put_status(422) |> json(%{error: err}) |> halt
+        end
       errors ->
         json_errors = errors |> JsonSchema.errors_to_json
         Sentry.capture_message("Error while validating manifest", [extra: %{json_errors: json_errors, manifest: manifest}])
