@@ -124,6 +124,25 @@
       ]
     },
     {
+      "type": "scheduled_messages",
+      "id": "reminders",
+      "name": "Reminders",
+      "schedule_type": "recurrent",
+      "messages": [
+        {
+          "recurrence": {
+            "type": "daily",
+            "start": "2018-01-01T10:00:00Z",
+            "every": 7
+          },
+          "message": {
+            "en": "Remember we're closed on Mondays",
+            "es": "Recuerde que no abrimos los lunes"
+          }
+        }
+      ]
+    },
+    {
       "type": "survey",
       "id": "food_preferences",
       "name": "Food Preferences",

@@ -10,7 +10,8 @@ defmodule Aida.BotParser do
     Skill.Survey,
     Variable,
     Channel.Facebook,
-    Channel.WebSocket
+    Channel.WebSocket,
+    Recurrence
   }
 
   @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
@@ -107,6 +108,7 @@ defmodule Aida.BotParser do
     schedule_type = case skill["schedule_type"] do
       "since_last_incoming_message" -> :since_last_incoming_message
       "fixed_time" -> :fixed_time
+      "recurrent" -> :recurrent
     end
 
     %ScheduledMessages{
@@ -145,6 +147,21 @@ defmodule Aida.BotParser do
     %ScheduledMessages.FixedTimeMessage{
       schedule: schedule,
       message: message["message"]
+    }
+  end
+
+  defp parse_scheduled_message(message, :recurrent) do
+    %ScheduledMessages.RecurrentMessage{
+      recurrence: parse_recurrence(message["recurrence"]),
+      message: message["message"]
+    }
+  end
+
+  defp parse_recurrence(%{"type" => "daily"} = recurrence) do
+    {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+    %Recurrence.Daily{
+      start: start,
+      every: recurrence["every"]
     }
   end
 
