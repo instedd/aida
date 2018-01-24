@@ -155,6 +155,13 @@ defmodule Aida.BotParserTest do
                 "en" => "Remember we're closed on Mondays",
                 "es" => "Recuerde que no abrimos los lunes"
               }
+            },
+            %RecurrentMessage{
+              recurrence: %Recurrence.Weekly{start: ~N[2018-01-01T11:00:00Z] |> DateTime.from_naive!("Etc/UTC"), every: 1, on: [:saturday, :sunday]},
+              message: %{
+                "en" => "Discover our weekend specialities",
+                "es" => "Descubra nuestras especialidades del fin de semana"
+              }
             }
           ]
         },

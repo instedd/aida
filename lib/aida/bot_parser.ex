@@ -165,6 +165,23 @@ defmodule Aida.BotParser do
     }
   end
 
+  defp parse_recurrence(%{"type" => "weekly"} = recurrence) do
+    {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+    %Recurrence.Weekly{
+      start: start,
+      every: recurrence["every"],
+      on: recurrence["on"] |> Enum.map(&parse_weekday/1)
+    }
+  end
+
+  defp parse_weekday("sunday"), do: :sunday
+  defp parse_weekday("monday"), do: :monday
+  defp parse_weekday("tuesday"), do: :tuesday
+  defp parse_weekday("wednesday"), do: :wednesday
+  defp parse_weekday("thursday"), do: :thursday
+  defp parse_weekday("friday"), do: :friday
+  defp parse_weekday("saturday"), do: :saturday
+
   defp parse_survey_question(question, choice_lists) do
     question_type = case question["type"] do
       "integer" -> :integer
