@@ -45,6 +45,15 @@ defmodule Aida.JsonSchemaTest do
     },
     "message": #{@valid_localized_string}
   })
+  @valid_weekly_recurrent_message ~s({
+    "recurrence": {
+      "type": "weekly",
+      "start": "2018-01-01T00:00:00Z",
+      "every": 2,
+      "on": ["monday", "friday"]
+    },
+    "message": #{@valid_localized_string}
+  })
   @valid_scheduled_messages ~s({
     "type": "scheduled_messages",
     "id": "2",
@@ -64,7 +73,7 @@ defmodule Aida.JsonSchemaTest do
     "id": "2",
     "name": "a",
     "schedule_type": "recurrent",
-    "messages": [#{@valid_daily_recurrent_message}]
+    "messages": [#{@valid_daily_recurrent_message}, #{@valid_weekly_recurrent_message}]
   })
   @valid_language_detector ~s({
     "type": "language_detector",
@@ -243,6 +252,12 @@ defmodule Aida.JsonSchemaTest do
         {_, [^thing | _]} -> true
         _ -> false
       end)
+    end)
+  end
+
+  defp reject_array_duplicates(thing, type) do
+    validate(~s({"#{thing}": [1, 1]}), type, fn(validation_result) ->
+      Enum.member?(validation_result, {"Expected items to be unique but they were not.", [thing]})
     end)
   end
 
@@ -425,6 +440,21 @@ defmodule Aida.JsonSchemaTest do
     assert_required("every", :recurrence_daily)
     assert_integer("every", :recurrence_daily)
     assert_min("every", 1, :recurrence_daily)
+  end
+
+  test "recurrence_weekly" do
+    assert_enum("type", "foo", :recurrence_weekly)
+    assert_valid_enum("type", "weekly", :recurrence_weekly)
+    assert_required("start", :recurrence_weekly)
+    assert_required("every", :recurrence_weekly)
+    assert_integer("every", :recurrence_weekly)
+    assert_min("every", 1, :recurrence_weekly)
+    assert_required("on", :recurrence_weekly)
+    assert_array("on", :recurrence_weekly)
+    reject_empty_array("on", :recurrence_weekly)
+    assert_valid_value("on", ~w[monday tuesday wednesday thursday friday saturday sunday], :recurrence_weekly)
+    assert_invalid_value("on", ~w[foo], :recurrence_weekly)
+    reject_array_duplicates("on", :recurrence_weekly)
   end
 
   test "language_detector" do
