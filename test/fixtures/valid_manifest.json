@@ -139,6 +139,18 @@
             "en": "Remember we're closed on Mondays",
             "es": "Recuerde que no abrimos los lunes"
           }
+        },
+        {
+          "recurrence": {
+            "type": "weekly",
+            "start": "2018-01-01T11:00:00Z",
+            "every": 1,
+            "on": ["saturday", "sunday"]
+          },
+          "message": {
+            "en": "Discover our weekend specialities",
+            "es": "Descubra nuestras especialidades del fin de semana"
+          }
         }
       ]
     },
