@@ -197,4 +197,24 @@ defmodule Aida.SchedulerTest do
 
     refute_received _
   end
+
+  test "schedule a task to a distant future", %{pid: pid} do
+    ts = within(years: 100)
+    Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
+
+    time_travel(ts) do
+      assert_receive {"test_task", ^ts}
+    end
+  end
+
+  test "schedule a task to a distant future before starting the scheduler", %{pid: pid} do
+    Scheduler.stop
+    ts = within(years: 100)
+    Scheduler.appoint("test_task/#{pid}", ts, TestHandler)
+    Scheduler.start_link
+
+    time_travel(ts) do
+      assert_receive {"test_task", ^ts}
+    end
+  end
 end

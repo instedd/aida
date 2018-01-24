@@ -5,6 +5,7 @@ defmodule Aida.Scheduler.Server do
 
   @config Application.get_env(:aida, Aida.Scheduler, [])
   @batch_size @config |> Keyword.get(:batch_size, 100)
+  @max_delay :timer.hours(1)
 
   defmodule State do
     @type t :: %__MODULE__{
@@ -52,7 +53,7 @@ defmodule Aida.Scheduler.Server do
   @spec dispatch() :: {State.t, timeout()}
   defp dispatch do
     case Task.load(@batch_size) do
-      [] -> {%State{next_ts: nil}, :infinity}
+      [] -> {%State{next_ts: nil}, next_delay(nil)}
       tasks -> dispatch(tasks)
     end
   end
@@ -64,8 +65,7 @@ defmodule Aida.Scheduler.Server do
     case DateTime.compare(task.ts, now) do
       :gt ->
         next_ts = DateTime.to_unix(task.ts, :milliseconds)
-        delay = next_ts - (now |> DateTime.to_unix(:milliseconds))
-        {%State{next_ts: next_ts}, delay}
+        {%State{next_ts: next_ts}, next_delay(next_ts)}
 
       _ ->
         run_task(task)
@@ -73,12 +73,15 @@ defmodule Aida.Scheduler.Server do
     end
   end
 
-  defp next_delay(%State{next_ts: nil}), do: :infinity
+  defp next_delay(%State{next_ts: next_ts}), do: next_delay(next_ts)
+  defp next_delay(nil), do: @max_delay
 
-  defp next_delay(%State{next_ts: next_ts}) do
+  defp next_delay(next_ts) do
     now = DateTime.utc_now
     delay = next_ts - (now |> DateTime.to_unix(:milliseconds))
-    max(delay, 0)
+    delay
+    |> max(0)
+    |> min(@max_delay)
   end
 
   defp run_task(%Task{name: name, ts: ts, handler: handler, } = task) do
