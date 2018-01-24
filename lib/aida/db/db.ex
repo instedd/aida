@@ -134,9 +134,9 @@ defmodule Aida.DB do
   @doc """
   Creates or updates the session data stored for the given session id
   """
-  def save_session(id, data) do
+  def save_session(id, uuid, data) do
     %Session{}
-      |> Session.changeset(%{id: id, data: data})
+      |> Session.changeset(%{id: id, data: data, uuid: uuid})
       |> Repo.insert(on_conflict: :replace_all, conflict_target: :id)
   end
 

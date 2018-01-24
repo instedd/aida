@@ -19,7 +19,8 @@ defmodule Aida.Session do
   def new(id \\ Ecto.UUID.generate) do
     %Session{
       id: id,
-      is_new?: true
+      is_new?: true,
+      values: %{"uuid" => Ecto.UUID.generate}
     }
   end
 
@@ -41,12 +42,17 @@ defmodule Aida.Session do
 
   @spec save(session :: t) :: :ok
   def save(session) do
-    SessionStore.save(session.id, session.values)
+    SessionStore.save(session.id, session |> Session.uuid, session.values)
   end
 
   @spec delete(id :: String.t) :: :ok
   def delete(id) do
     SessionStore.delete(id)
+  end
+
+  @spec uuid(session :: Session.t) :: value
+  def uuid(session) do
+    get(session, "uuid")
   end
 
   @spec get(session :: Session.t, key :: String.t) :: value
