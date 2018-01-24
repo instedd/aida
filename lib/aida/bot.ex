@@ -10,7 +10,8 @@ defmodule Aida.Bot do
     front_desk: FrontDesk.t,
     skills: [Skill.t],
     variables: [Variable.t],
-    channels: [Channel.t]
+    channels: [Channel.t],
+    public_keys: [String.t]
   }
 
   defstruct id: nil,
@@ -18,7 +19,8 @@ defmodule Aida.Bot do
             front_desk: %FrontDesk{},
             skills: [],
             variables: [],
-            channels: []
+            channels: [],
+            public_keys: []
 
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do

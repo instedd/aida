@@ -21,7 +21,8 @@ defmodule Aida.BotParser do
         front_desk: parse_front_desk(manifest["front_desk"]),
         skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
-        channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1)))
+        channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1))),
+        public_keys: manifest["public_keys"] || []
       }
       |> validate()
     rescue

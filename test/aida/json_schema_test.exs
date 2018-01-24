@@ -8,6 +8,8 @@ defmodule Aida.JsonSchemaTest do
     :ok
   end
 
+  @valid_base_64_key "ZWNjYzIwNGMtYmExNS00Y2M5LWI5YTMtMjJiOTg0ZDc5YThl"
+  @invalid_base_64_key ".."
   @valid_localized_string ~s({"en": "a"})
   @valid_message ~s({"message" : #{@valid_localized_string}})
   @valid_front_desk ~s({
@@ -122,7 +124,8 @@ defmodule Aida.JsonSchemaTest do
       #{@valid_survey}
     ],
     "variables" : [],
-    "channels" : [#{@valid_facebook_channel}, #{@valid_websocket_channel}]
+    "channels" : [#{@valid_facebook_channel}, #{@valid_websocket_channel}],
+    "public_keys": ["#{@valid_base_64_key}"]
   })
 
   defp validate(json_thing, type, fun) do
@@ -180,6 +183,26 @@ defmodule Aida.JsonSchemaTest do
     validate(~s({"#{thing}": []}), type, fn(validation_result) ->
       validation_result
       |> Enum.member?({"Expected a minimum of 1 items but got 0.", [thing]})
+    end)
+  end
+
+  defp assert_valid_value(thing, value, type) do
+    validate(~s({"#{thing}": #{Poison.encode!(value)}}), type, fn(validation_result) ->
+      validation_result
+      |> Enum.any?(fn
+        {_, [^thing | _]} -> false
+        _ -> true
+      end)
+    end)
+  end
+
+  defp assert_invalid_value(thing, value, type) do
+    validate(~s({"#{thing}": #{Poison.encode!(value)}}), type, fn(validation_result) ->
+      validation_result
+      |> Enum.any?(fn
+        {_, [^thing | _]} -> true
+        _ -> false
+      end)
     end)
   end
 
@@ -253,6 +276,11 @@ defmodule Aida.JsonSchemaTest do
     reject_empty_array("languages", :manifest_v1)
     assert_required("channels", :manifest_v1)
     assert_array("channels", :manifest_v1)
+    assert_array("public_keys", :manifest_v1)
+    assert_optional("public_keys", [@valid_base_64_key], :manifest_v1)
+    assert_valid_value("public_keys", [@valid_base_64_key], :manifest_v1)
+    assert_invalid_value("public_keys", [@invalid_base_64_key], :manifest_v1)
+    reject_empty_array("public_keys", :manifest_v1)
 
     @valid_manifest
     |> assert_valid(:manifest_v1)

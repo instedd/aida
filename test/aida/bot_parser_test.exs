@@ -326,6 +326,10 @@ defmodule Aida.BotParserTest do
           bot_id: @uuid,
           access_token: "qwertyuiopasdfghjklzxcvbnm"
         }
+      ],
+      public_keys: [
+        "YmIzNDYyOWEtODM0NS00NTNiLWFmODQtYWU2ZTcwMDJlNjg5",
+        "YTE3ZWMyM2EtMDRhMi00ODk2LTljMDYtYTUxZDUzMTVmMDAy"
       ]
     }
   end
