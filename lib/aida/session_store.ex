@@ -9,7 +9,7 @@ defmodule Aida.SessionStore do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  @spec find(id :: String.t) :: session_data | :not_found
+  @spec find(id :: String.t) :: {String.t, String.t, session_data} | :not_found
   def find(id) do
     case @table |> :ets.lookup(id) do
       [{id, uuid, data}] -> {id, uuid, data}

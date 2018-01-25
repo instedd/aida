@@ -16,7 +16,9 @@ defmodule Aida.Session do
             is_new?: false,
             values: %{}
 
-  @spec new({String.t, String.t, values}) :: t
+  @spec new(id :: String.t | {id :: String.t, uuid :: String.t, values}) :: t
+  @spec new(id :: String.t, uuid :: String.t) :: t
+
   def new({id, uuid, values}) do
     %Session{
       id: id,
@@ -25,7 +27,6 @@ defmodule Aida.Session do
     }
   end
 
-  @spec new(String.t, String.t) :: t
   def new(id \\ Ecto.UUID.generate, uuid \\ Ecto.UUID.generate) do
     %Session{
       id: id,
