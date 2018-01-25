@@ -101,6 +101,28 @@ defmodule Aida.Channel.FacebookConnTest do
       end
     end
 
+    test "doesn't send message when receiving a 'read' event" do
+      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"read" => %{"seq" => 0, "watermark" => "12345"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        build_conn(:post, "/callback/facebook", params)
+          |> Facebook.callback()
+
+        refute called FacebookApi.send_message(:_, :_, :_)
+      end
+    end
+
+    test "doesn't send message when receiving a 'delivery' event" do
+      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"delivery" => %{"mids" => ["mid.$cAAFhHf1znQRnXHiKMlhKzNB8Zr8v"], "seq" => 0, "watermark" => "12345"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        build_conn(:post, "/callback/facebook", params)
+          |> Facebook.callback()
+
+        refute called FacebookApi.send_message(:_, :_, :_)
+      end
+    end
+
     test "pull profile information" do
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 

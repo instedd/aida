@@ -137,7 +137,9 @@ defmodule Aida.Channel.Facebook do
                   _ ->
                     :ok
                 end
-              _ -> :ok
+              nil -> :ok
+              _ ->
+                handle_by_message_type(channel, session_id, sender_id, :unknown, "")
             end
 
           _ ->
@@ -150,7 +152,7 @@ defmodule Aida.Channel.Facebook do
       end
     end
 
-    @spec handle_by_message_type(Aida.Channel.t, String.t, String.t, :text | :image, String.t) :: :ok
+    @spec handle_by_message_type(Aida.Channel.t, String.t, String.t, :text | :image | :unknown, String.t) :: :ok
     defp handle_by_message_type(channel, session_id, sender_id, message_type, message_string) do
       MessagesPerDay.log_received_message(channel.bot_id)
 
@@ -164,6 +166,7 @@ defmodule Aida.Channel.Facebook do
         case message_type do
           :text -> Message.new(message_string, bot, session)
           :image -> Message.new_from_image(message_string, bot, session)
+          :unknown -> Message.new_unknown(bot, session)
         end
 
       reply = Bot.chat(bot, message)
