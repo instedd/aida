@@ -113,7 +113,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "unknown content should retry the question", %{bot: bot} do
-      session = Session.new(@session_id, %{"language" => "en", "survey/food_preferences" => %{"step" => 4}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 4}}})
 
       message = Message.new_unknown(bot, session)
       message = Bot.chat(bot, message)
