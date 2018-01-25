@@ -154,6 +154,7 @@ defmodule Aida.BotParser do
       type: question_type,
       choices: choice_lists[question["choices"]],
       name: question["name"],
+      encrypt: question["encrypt"] || false,
       relevant: parse_expr(question["relevant"]),
       message: question["message"],
       constraint_message: question["constraint_message"],
@@ -165,6 +166,7 @@ defmodule Aida.BotParser do
     %Survey.InputQuestion{
       type: question_type,
       name: question["name"],
+      encrypt: question["encrypt"] || false,
       relevant: parse_expr(question["relevant"]),
       message: question["message"],
       constraint: parse_expr(question["constraint"]),

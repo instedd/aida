@@ -149,6 +149,7 @@ defmodule Aida.BotParserTest do
             %SelectQuestion{
               name: "opt_in",
               type: :select_one,
+              encrypt: true,
               choices: [
                 %Choice{
                   name: "yes",
@@ -173,6 +174,7 @@ defmodule Aida.BotParserTest do
             %InputQuestion{
               name: "age",
               type: :integer,
+              encrypt: true,
               message: %{
                 "en" => "How old are you?",
                 "es" => "Qué edad tenés?"
@@ -181,6 +183,7 @@ defmodule Aida.BotParserTest do
             %InputQuestion{
               name: "wine_temp",
               type: :decimal,
+              encrypt: false,
               relevant: Aida.Expr.parse("${age} >= 18"),
               constraint: Aida.Expr.parse(". < 100"),
               constraint_message: %{
@@ -195,6 +198,7 @@ defmodule Aida.BotParserTest do
             %SelectQuestion{
               name: "wine_grapes",
               type: :select_many,
+              encrypt: false,
               relevant: Aida.Expr.parse("${age} >= 18"),
               choices: [
                 %Choice{
@@ -251,6 +255,7 @@ defmodule Aida.BotParserTest do
             %InputQuestion{
               name: "picture",
               type: :image,
+              encrypt: false,
               message: %{
                 "en" => "Can we see your home?",
                 "es" => "Podemos ver tu casa?"
@@ -259,6 +264,7 @@ defmodule Aida.BotParserTest do
             %InputQuestion{
               name: "request",
               type: :text,
+              encrypt: false,
               message: %{
                 "en" => "Any particular requests for your dinner?",
                 "es" => "Algún pedido especial para tu cena?"

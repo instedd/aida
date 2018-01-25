@@ -132,6 +132,7 @@
         {
           "type": "select_one",
           "choices": "yes_no",
+          "encrypt": true,
           "name": "opt_in",
           "message": {
             "en": "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
@@ -141,6 +142,7 @@
         {
           "type": "integer",
           "name": "age",
+          "encrypt": true,
           "message": {
             "en": "How old are you?",
             "es": "Qué edad tenés?"
