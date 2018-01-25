@@ -61,12 +61,12 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", params)
           |> Facebook.callback()
 
-        incoming_message_logs = MessageLog 
+        incoming_message_logs = MessageLog
                                 |> Repo.all()
                                 |> Enum.filter(&(&1.direction == "incoming"))
-        
+
         assert incoming_message_logs |> Enum.count == 1
-        
+
         incoming_message_log = incoming_message_logs |> hd
         session_id = (Aida.DB.Session |> Repo.one).id
 
@@ -83,10 +83,10 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", params)
           |> Facebook.callback()
 
-        outgoing_message_logs = MessageLog 
+        outgoing_message_logs = MessageLog
                                 |> Repo.all
                                 |> Enum.filter(&(&1.direction == "outgoing"))
-        
+
         session_id = (Aida.DB.Session |> Repo.one).id
         contents = outgoing_message_logs |> Enum.map(&(&1.content))
 

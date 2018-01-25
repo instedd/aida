@@ -7,6 +7,7 @@ defmodule Aida.ScheduledMessagesTest do
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
   @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
+  @session_uuid "d03edb47-bc88-4dc9-8717-057227a06af1"
 
   describe "scheduled messages with fixed time" do
     setup :generate_session_id_for_test_channel
@@ -95,7 +96,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "wake up after first delay", %{session_id: session_id, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session_id, session_uuid: @session_uuid, direction: "incoming", content: "Hi", content_type: "text"})
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
 
@@ -110,7 +111,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "wake up after second delay", %{session_id: session_id, bot: bot, skill: skill} do
-      MessageLog.create(%{bot_id: @bot_id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      MessageLog.create(%{bot_id: @bot_id, session_id: session_id, session_uuid: @session_uuid, direction: "incoming", content: "Hi", content_type: "text"})
       wake_up_ts = within(minutes: 1440)
 
       time_travel(wake_up_ts) do
@@ -122,7 +123,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "wake up too early", %{session_id: session_id, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session_id, session_uuid: @session_uuid, direction: "incoming", content: "Hi", content_type: "text"})
       wake_up_ts = within(minutes: 10)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 60)
 
@@ -137,7 +138,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "don't send if the skill is not relevant for the session", %{session_id: session_id, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session_id, session_uuid: @session_uuid, direction: "incoming", content: "Hi", content_type: "text"})
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
       skill = %{skill | relevant: Aida.Expr.parse("${age} > 18")}
@@ -153,7 +154,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "don't send if the language is not set", %{session: session, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session.id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session.id, session_uuid: @session_uuid, direction: "incoming", content: "Hi", content_type: "text"})
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
       session |> Session.put("language", nil) |> Session.save
@@ -191,7 +192,7 @@ defmodule Aida.ScheduledMessagesTest do
 
   defp create_session(%{session_id: session_id}) do
     SessionStore.start_link
-    session = Session.new(session_id, %{"language" => "en"})
+    session = Session.new({session_id, @session_uuid, %{"language" => "en"}})
     session |> Session.save
 
     [session: session]

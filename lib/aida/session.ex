@@ -12,41 +12,50 @@ defmodule Aida.Session do
 
 
   defstruct id: nil,
+            uuid: nil,
             is_new?: false,
             values: %{}
 
-  @spec new(id :: String.t) :: t
-  def new(id \\ Ecto.UUID.generate) do
-    %Session{
-      id: id,
-      is_new?: true
-    }
-  end
+  @spec new(id :: String.t | {id :: String.t, uuid :: String.t, values}) :: t
+  @spec new(id :: String.t, uuid :: String.t) :: t
 
-  @spec new(id :: String.t, values :: values) :: t
-  def new(id, values) do
+  def new({id, uuid, values}) do
     %Session{
       id: id,
+      uuid: uuid,
       values: values
     }
   end
 
-  @spec load(id :: String.t) :: t
+  def new(id \\ Ecto.UUID.generate, uuid \\ Ecto.UUID.generate) do
+    %Session{
+      id: id,
+      uuid: uuid,
+      is_new?: true
+    }
+  end
+
+  @spec load(String.t) :: t
   def load(id) do
     case SessionStore.find(id) do
       :not_found -> new(id)
-      data -> new(id, data)
+      session -> new(session)
     end
   end
 
   @spec save(session :: t) :: :ok
   def save(session) do
-    SessionStore.save(session.id, session.values)
+    SessionStore.save(session.id, session.uuid, session.values)
   end
 
   @spec delete(id :: String.t) :: :ok
   def delete(id) do
     SessionStore.delete(id)
+  end
+
+  @spec uuid(session :: Session.t) :: value
+  def uuid(%Session{uuid: uuid}) do
+    uuid
   end
 
   @spec get(session :: Session.t, key :: String.t) :: value

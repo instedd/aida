@@ -160,7 +160,9 @@ defmodule Aida.Channel.Facebook do
       session = Session.load(session_id)
         |> pull_profile(channel, sender_id)
 
-      MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, content: message_string, content_type: Atom.to_string(message_type), direction: "incoming"})
+      session_uuid = session |> Session.uuid
+
+      MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, session_uuid: session_uuid, content: message_string, content_type: Atom.to_string(message_type), direction: "incoming"})
 
       message =
         case message_type do
@@ -201,9 +203,10 @@ defmodule Aida.Channel.Facebook do
     def send_message(channel, messages, session_id) do
       recipient = session_id |> String.split("/") |> List.last
       api = FacebookApi.new(channel.access_token)
+      session_uuid = Session.load(session_id) |> Session.uuid
 
       Enum.each(messages, fn message ->
-        MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, content: message, content_type: "text", direction: "outgoing"})
+        MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, session_uuid: session_uuid, content: message, content_type: "text", direction: "outgoing"})
         MessagesPerDay.log_sent_message(channel.bot_id)
         api |> FacebookApi.send_message(recipient, message)
       end)

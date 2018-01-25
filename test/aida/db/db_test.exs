@@ -12,6 +12,8 @@ defmodule Aida.DBTest do
     @valid_attrs %{manifest: @manifest}
     @update_attrs %{manifest: @updated_manifest}
     @invalid_attrs %{manifest: nil}
+    @session_uuid_1 "27646aaa-d1bd-4fa3-836f-ef6479ccddb9"
+    @session_uuid_2 "2b41f4d8-6749-442e-a39b-315f7ca91f5b"
 
     def bot_fixture(attrs \\ %{}) do
       {:ok, bot} =
@@ -100,11 +102,12 @@ defmodule Aida.DBTest do
       assert %Ecto.Changeset{} = DB.change_bot(bot)
     end
 
-    test "save_session/2 stores session data" do
+    test "save_session/3 stores session data" do
       data = %{"foo" => 1, "bar" => 2}
-      {:ok, session} = DB.save_session("session_id", data)
+      {:ok, session} = DB.save_session("session_id", @session_uuid_1, data)
 
       assert session.id == "session_id"
+      assert session.uuid == @session_uuid_1
       assert session.data == data
     end
 
@@ -114,33 +117,35 @@ defmodule Aida.DBTest do
 
     test "get_session/1 returns the session with the given id" do
       data = %{"foo" => 1, "bar" => 2}
-      {:ok, _session} = DB.save_session("session_id", data)
+      {:ok, _session} = DB.save_session("session_id", @session_uuid_1, data)
 
       session = DB.get_session("session_id")
       assert session.id == "session_id"
+      assert session.uuid == @session_uuid_1
       assert session.data == data
     end
 
-    test "save_session/2 replaces existing session" do
-      {:ok, _session} = DB.save_session("session_id", %{"foo" => 1, "bar" => 2})
-      {:ok, _session} = DB.save_session("session_id", %{"foo" => 3, "bar" => 4})
+    test "save_session/3 replaces existing session" do
+      {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 1, "bar" => 2})
+      {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 3, "bar" => 4})
 
       session = DB.get_session("session_id")
       assert session.id == "session_id"
+      assert session.uuid == @session_uuid_1
       assert session.data == %{"foo" => 3, "bar" => 4}
     end
 
     test "get sessions by bot" do
-      {:ok, s1} = DB.save_session("bot1/x", %{})
-      {:ok, _s2} = DB.save_session("bot2/x", %{})
+      {:ok, s1} = DB.save_session("bot1/x", @session_uuid_1, %{})
+      {:ok, _s2} = DB.save_session("bot2/x", @session_uuid_2, %{})
 
       sessions = DB.sessions_by_bot("bot1")
       assert sessions == [s1]
     end
 
     test "delete_session/1 deletes a session" do
-      {:ok, _session} = DB.save_session("session_1", %{"foo" => 1, "bar" => 2})
-      {:ok, _session} = DB.save_session("session_2", %{"foo" => 1, "bar" => 2})
+      {:ok, _session} = DB.save_session("session_1", @session_uuid_1, %{"foo" => 1, "bar" => 2})
+      {:ok, _session} = DB.save_session("session_2", @session_uuid_2, %{"foo" => 1, "bar" => 2})
 
       assert :ok = DB.delete_session("session_1")
       assert DB.get_session("session_1") == nil

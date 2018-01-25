@@ -9,17 +9,17 @@ defmodule Aida.SessionStore do
     GenServer.start_link(__MODULE__, [], name: @server_ref)
   end
 
-  @spec find(id :: String.t) :: session_data | :not_found
+  @spec find(id :: String.t) :: {String.t, String.t, session_data} | :not_found
   def find(id) do
     case @table |> :ets.lookup(id) do
-      [{_id, data}] -> data
+      [{id, uuid, data}] -> {id, uuid, data}
       [] -> GenServer.call(@server_ref, {:find, id})
     end
   end
 
-  @spec save(id :: String.t, data :: session_data) :: :ok
-  def save(id, data) do
-    GenServer.call(@server_ref, {:save, id, data})
+  @spec save(id :: String.t, uuid :: String.t, data :: session_data) :: :ok
+  def save(id, uuid, data) do
+    GenServer.call(@server_ref, {:save, id, uuid, data})
   end
 
   @spec delete(id :: String.t) :: :ok
@@ -32,9 +32,9 @@ defmodule Aida.SessionStore do
     {:ok, nil}
   end
 
-  def handle_call({:save, id, data}, _from, state) do
-    @table |> :ets.insert({id, data})
-    DB.save_session(id, data)
+  def handle_call({:save, id, uuid, data}, _from, state) do
+    @table |> :ets.insert({id, uuid, data})
+    DB.save_session(id, uuid, data)
     {:reply, :ok, state}
   end
 
@@ -51,8 +51,8 @@ defmodule Aida.SessionStore do
         case DB.get_session(id) do
           nil -> :not_found
           db_session ->
-            @table |> :ets.insert({id, db_session.data})
-            db_session.data
+            @table |> :ets.insert({id, db_session.uuid, db_session.data})
+            {db_session.id, db_session.uuid, db_session.data}
         end
     end
 
