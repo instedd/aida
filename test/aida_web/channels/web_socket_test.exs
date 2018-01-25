@@ -42,7 +42,9 @@ defmodule AidaWeb.Channel.WebSocketTest do
       |> push("new_session")
       |> assert_reply(:ok, %{session: session_id})
 
-    assert %{} == SessionStore.find("#{@bot_id}/ws/#{session_id}")
+    session_id = "#{@bot_id}/ws/#{session_id}"
+
+    assert {^session_id, _uuid, %{}} = SessionStore.find(session_id)
   end
 
   test "start new session with data" do
@@ -53,7 +55,9 @@ defmodule AidaWeb.Channel.WebSocketTest do
       |> push("new_session", %{"data" => data})
       |> assert_reply(:ok, %{session: session_id})
 
-    assert data == SessionStore.find("#{@bot_id}/ws/#{session_id}")
+    session_id = "#{@bot_id}/ws/#{session_id}"
+
+    assert {^session_id, _uuid, ^data} = SessionStore.find(session_id)
   end
 
   test "push data to be merged in the session" do
@@ -69,6 +73,8 @@ defmodule AidaWeb.Channel.WebSocketTest do
     socket |> push("put_data", %{"session" => session_id, "data" => new_data})
       |> assert_reply(:ok, _)
 
-    assert data |> Map.merge(new_data) == SessionStore.find("#{@bot_id}/ws/#{session_id}")
+    session_id = "#{@bot_id}/ws/#{session_id}"
+    data = data |> Map.merge(new_data)
+    assert {^session_id, _uuid, ^data} = SessionStore.find(session_id)
   end
 end

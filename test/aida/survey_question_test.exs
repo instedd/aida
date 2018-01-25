@@ -92,8 +92,9 @@ defmodule Aida.SurveyQuestionTest do
   ]
 
   @bot %Bot{}
-  @session Session.new("1", %{"language" => "en"})
-  @session_with_food_type Session.new("1", %{"language" => "en", "food_type" => "pasta"})
+  @session_uuid "18723278-0665-454f-98a3-d85cec9a7acd"
+  @session Session.new({"1", @session_uuid, %{"language" => "en"}})
+  @session_with_food_type Session.new({"1", @session_uuid, %{"language" => "en", "food_type" => "pasta"}})
 
   describe "select_one" do
     test "valid_answer?" do

@@ -192,7 +192,7 @@ defmodule Aida.ScheduledMessagesTest do
 
   defp create_session(%{session_id: session_id}) do
     SessionStore.start_link
-    session = Session.new(session_id, %{"language" => "en", "uuid" => @session_uuid})
+    session = Session.new({session_id, @session_uuid, %{"language" => "en"}})
     session |> Session.save
 
     [session: session]

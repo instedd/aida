@@ -34,6 +34,8 @@ defmodule Aida.BotTest do
     "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
   ]
 
+  @session_uuid "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
+
   describe "single language bot" do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
@@ -213,7 +215,7 @@ defmodule Aida.BotTest do
     end
 
     test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
-      session = Session.new("sid", %{"language" => "jp"})
+      session = Session.new({"sid", @session_uuid, %{"language" => "jp"}})
       input = Message.new("Hi!", bot, session)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
@@ -232,7 +234,7 @@ defmodule Aida.BotTest do
     end
 
     test "introduction message includes only relevant skills", %{bot: bot} do
-      session = Session.new("sid", %{"language" => "en", "age" => 14})
+      session = Session.new({"sid", @session_uuid, %{"language" => "en", "age" => 14}})
       input = Message.new("Hi!", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -244,7 +246,7 @@ defmodule Aida.BotTest do
     end
 
     test "only relevant skills receive the message", %{bot: bot} do
-      session = Session.new("sid", %{"language" => "en", "age" => 14})
+      session = Session.new({"sid", @session_uuid, %{"language" => "en", "age" => 14}})
       input = Message.new("menu", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -256,7 +258,7 @@ defmodule Aida.BotTest do
     end
 
     test "relevance expressions containing undefined variables are considered false", %{bot: bot} do
-      session = Session.new("sid", %{"language" => "en"})
+      session = Session.new({"sid", @session_uuid, %{"language" => "en"}})
       input = Message.new("menu", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -291,11 +293,11 @@ defmodule Aida.BotTest do
     end
 
     test "lookup variabe evaluate overrides", %{bot: bot} do
-      session = Session.new("sid", %{"age" => 20})
+      session = Session.new({"sid", @session_uuid, %{"age" => 20}})
       value = bot |> Bot.lookup_var(session, "food_options")
       assert value["en"] == "barbecue and pasta and a exclusive selection of wines"
 
-      session = Session.new("sid", %{"age" => 15})
+      session = Session.new({"sid", @session_uuid, %{"age" => 15}})
       value = bot |> Bot.lookup_var(session, "food_options")
       assert value["en"] == "barbecue and pasta"
     end

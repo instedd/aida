@@ -16,24 +16,24 @@ defmodule Aida.SessionStoreTest do
   test "save and find session" do
     data = %{"foo" => 1, "bar" => 2}
     assert SessionStore.save("session_id", @uuid, data) == :ok
-    assert SessionStore.find("session_id") == data
+    assert SessionStore.find("session_id") == {"session_id", @uuid, data}
   end
 
   test "loads data from DB when the session is not loaded in memory" do
     data = %{"foo" => 1, "bar" => 2}
     assert {:ok, _session} = DB.save_session("session_id", @uuid, data)
-    assert SessionStore.find("session_id") == data
+    assert SessionStore.find("session_id") == {"session_id", @uuid, data}
   end
 
   test "data loaded from DB is cached in memory" do
     data = %{"foo" => 1, "bar" => 2}
     assert {:ok, _session} = DB.save_session("session_id", @uuid, data)
-    assert SessionStore.find("session_id") == data
+    assert SessionStore.find("session_id") == {"session_id", @uuid, data}
 
     # Delete all sessions from DB. Our data should be still in memory
     Aida.DB.Session |> Aida.Repo.delete_all
 
-    assert SessionStore.find("session_id") == data
+    assert SessionStore.find("session_id") == {"session_id", @uuid, data}
   end
 
   test "saved session data is persisted in DB" do

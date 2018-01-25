@@ -4,7 +4,7 @@ defmodule Aida.ChoiceTest do
   use ExUnit.Case
 
   @bot %Bot{}
-  @session Session.new("1", %{"language" => "en"})
+  @session Session.new({"1", "7373f115-e6af-4385-8289-a823b43f727d", %{"language" => "en"}})
 
   test "availability" do
     message = Message.new("ok", @bot, @session)

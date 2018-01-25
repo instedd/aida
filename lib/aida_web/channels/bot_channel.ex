@@ -19,7 +19,7 @@ defmodule AidaWeb.BotChannel do
       _ -> %{}
     end
 
-    Session.new(real_session_id(socket, session_id), data)
+    Session.new({real_session_id(socket, session_id), Ecto.UUID.generate, data})
       |> Session.save
 
     {:reply, {:ok, %{session: session_id}}, socket}
