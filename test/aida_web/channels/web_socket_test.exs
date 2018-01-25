@@ -77,4 +77,16 @@ defmodule AidaWeb.Channel.WebSocketTest do
     data = data |> Map.merge(new_data)
     assert {^session_id, _uuid, ^data} = SessionStore.find(session_id)
   end
+
+  test "bot answers a utb message" do
+    socket = socket()
+      |> subscribe_and_join!(BotChannel, "bot:#{@bot_id}", %{"access_token" => "qwertyuiopasdfghjklzxcvbnm"})
+
+    socket |> push("new_session")
+      |> assert_reply(:ok, %{session: session_id})
+
+    socket |> push("utb_msg", %{"session" => session_id, "text" => "hi"})
+
+    assert_push("btu_msg", %{session: ^session_id, text: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"}, 1000)
+  end
 end

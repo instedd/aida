@@ -44,7 +44,7 @@ defmodule AidaWeb.BotChannel do
       bot ->
         real_session_id = real_session_id(socket, session_id)
         session = Session.load(real_session_id)
-        MessageLog.create(%{bot_id: bot.id, session_id: real_session_id, content: text, content_type: "text", direction: "incoming"})
+        MessageLog.create(%{bot_id: bot.id, session_id: real_session_id, session_uuid: Session.uuid(session), content: text, content_type: "text", direction: "incoming"})
         reply = Bot.chat(bot, Message.new(text, bot, session))
         reply.session |> Session.save
 
