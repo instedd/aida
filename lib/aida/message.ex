@@ -1,11 +1,11 @@
 defmodule Aida.Message do
   alias Aida.{Session, Message, Bot}
-  alias Aida.Message.{TextContent, ImageContent}
+  alias Aida.Message.{TextContent, ImageContent, UnknownContent}
 
   @type t :: %__MODULE__{
     session: Session.t,
     bot: Bot.t,
-    content: TextContent.t | ImageContent.t,
+    content: TextContent.t | ImageContent.t | UnknownContent.t,
     reply: [String.t]
   }
 
@@ -29,6 +29,15 @@ defmodule Aida.Message do
       session: session,
       bot: bot,
       content: %ImageContent{source_url: source_url}
+    }
+  end
+
+  @spec new_unknown(bot :: Bot.t, session :: Session.t) :: t
+  def new_unknown(%Bot{} = bot, session \\ Session.new) do
+    %Message{
+      session: session,
+      bot: bot,
+      content: %UnknownContent{}
     }
   end
 

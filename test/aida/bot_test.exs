@@ -57,6 +57,12 @@ defmodule Aida.BotTest do
       assert output.reply == @english_not_understood
     end
 
+    test "replies with explanation when message has unknown content and is not the first message", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!", bot))
+      output = bot |> Bot.chat(Message.new_unknown(bot, response.session))
+      assert output.reply == @english_not_understood
+    end
+
     test "replies with clarification when message matches more than one skill and similar confidence", %{bot: bot} do
       response = bot |> Bot.chat(Message.new("Hi!", bot))
       output = bot |> Bot.chat(Message.new("food hours", bot, response.session))
