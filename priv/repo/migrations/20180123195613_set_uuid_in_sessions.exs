@@ -1,4 +1,4 @@
-defmodule Aida.Repo.Migrations.AddUuidToSessions do
+defmodule Aida.Repo.Migrations.SetUuidInSessions do
   use Ecto.Migration
 
   defmodule Session do
