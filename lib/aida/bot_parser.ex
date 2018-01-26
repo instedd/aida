@@ -174,6 +174,15 @@ defmodule Aida.BotParser do
     }
   end
 
+  defp parse_recurrence(%{"type" => "monthly"} = recurrence) do
+    {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+    %Recurrence.Monthly{
+      start: start,
+      every: recurrence["every"],
+      each: recurrence["each"]
+    }
+  end
+
   defp parse_weekday("sunday"), do: :sunday
   defp parse_weekday("monday"), do: :monday
   defp parse_weekday("tuesday"), do: :tuesday

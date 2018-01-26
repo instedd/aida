@@ -162,6 +162,13 @@ defmodule Aida.BotParserTest do
                 "en" => "Discover our weekend specialities",
                 "es" => "Descubra nuestras especialidades del fin de semana"
               }
+            },
+            %RecurrentMessage{
+              recurrence: %Recurrence.Monthly{start: ~N[2018-01-01T12:00:00Z] |> DateTime.from_naive!("Etc/UTC"), every: 2, each: 5},
+              message: %{
+                "en" => "We change the menu every two months. Say 'menu' to discover it!",
+                "es" => "Cambiamos el menú cada dos meses. Diga 'menu' para descrubrirlo!"
+              }
             }
           ]
         },
