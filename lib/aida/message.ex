@@ -126,6 +126,10 @@ defmodule Aida.Message do
     value |> Enum.join(", ")
   end
 
+  defp display_var(:not_found) do
+    ""
+  end
+
   defp display_var(value) do
     value |> to_string
   end
@@ -153,11 +157,12 @@ defmodule Aida.Message do
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       expr = text |> Kernel.binary_part(v_start, v_len)
-      expr_result = Aida.Expr.parse(expr) |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
+      expr_result =
+        Aida.Expr.parse(expr)
+        |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
+        |> display_var
+
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
-
-      expr_result = expr_result || ""
-
       text_before <> expr_result <> text_after
     end)
   end

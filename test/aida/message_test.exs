@@ -101,5 +101,11 @@ defmodule Aida.MessageTest do
         |> Message.respond("We have ${food}")
       assert message.reply == ["We have barbecue, pasta, salad"]
     end
+
+    test "ignore non existing vars in messages" do
+      message = Message.new("Hi!", @bot, Session.new)
+        |> Message.respond("We have ${food}")
+      assert message.reply == ["We have "]
+    end
   end
 end

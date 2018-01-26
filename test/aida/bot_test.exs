@@ -322,6 +322,33 @@ defmodule Aida.BotTest do
 
       assert value == "barbecue and pasta"
     end
+
+    test "ignore non existing vars in messages" do
+      bot = %Bot{
+        id: @uuid,
+        languages: ["en"],
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "" },
+            id: "id",
+            bot_id: @uuid,
+            name: "Distribution days",
+            keywords: %{
+              "en" => ["days"]
+            },
+            response: %{
+              "en" => "We will deliver ${foo}"
+            }
+          }
+        ]
+      }
+
+      output = bot |> Bot.chat(Message.new("days", bot))
+      assert output.reply == [
+        "We will deliver "
+      ]
+    end
   end
 
   describe "data_tables" do
@@ -332,7 +359,7 @@ defmodule Aida.BotTest do
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
-            clarification: %{ "en" => "", },
+            clarification: %{ "en" => "" },
             id: "id",
             bot_id: @uuid,
             name: "Distribution days",
@@ -397,7 +424,7 @@ defmodule Aida.BotTest do
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
-            clarification: %{ "en" => "", },
+            clarification: %{ "en" => "" },
             id: "id",
             bot_id: @uuid,
             name: "Distribution",
