@@ -17,11 +17,12 @@ defmodule AidaWeb.SessionController do
     render(conn, "logs.json", logs: logs)
   end
 
-  def send_message(conn, %{"session_id" => session_id, "message" => message}) do
+  def send_message(conn, %{"session_id" => session_uuid, "message" => message}) do
+    session_id = DB.get_session_by_uuid(session_uuid).id
+
     ChannelProvider.find_channel(session_id)
     |> Channel.send_message([message], session_id)
 
     conn |> send_resp(200, "")
   end
-
 end

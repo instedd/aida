@@ -147,6 +147,10 @@ defmodule Aida.DB do
     Session |> Repo.get(id)
   end
 
+  def get_session_by_uuid(uuid) do
+    Session |> Repo.get_by(uuid: uuid)
+  end
+
   @doc """
   Returns all the sessions for the given bot id. If there is none, it returns an empty array.
   """
