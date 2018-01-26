@@ -75,7 +75,12 @@ build_unary_op({Op, _}, Value) ->
   #{'__struct__' => 'Elixir.Aida.Expr.UnaryOp', op => Op, value => Value}.
 
 build_call({ident, Id}, Args) ->
-  Name = erlang:binary_to_atom(Id, utf8),
+  Name = case Id of
+    <<"true">> -> true;
+    <<"false">> -> false;
+    <<"selected">> -> selected;
+    _ -> Id
+  end,
   #{'__struct__' => 'Elixir.Aida.Expr.Call', name => Name, args => Args}.
 
 build_variable({ident, Id}) ->

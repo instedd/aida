@@ -57,6 +57,19 @@ defmodule Aida.Expr.EvalTest do
       assert eval("selected(${foo}, 1)", context) == true
       assert eval("selected(${foo}, 'bar')", context) == false
     end
+
+    test "custom function calls" do
+      context = %Context{functions: %{"lookup" => fn(_) -> true end}}
+      assert eval("lookup()", context) == true
+
+      lookup_fn = fn ("bar") -> [1, 2, 3] end
+      context = %Context{var_lookup: lookup_fn, functions: %{"foo" => fn([bar, n]) -> bar |> Enum.at(n) end}}
+      assert eval("foo(${bar}, 1)", context) == 2
+
+      assert_raise Aida.Expr.UnknownFunctionError, fn ->
+        eval("foo()", %Context{})
+      end
+    end
   end
 
   defp eval(code, context \\ %Context{}) do
