@@ -1,11 +1,13 @@
 defmodule Aida.Skill.DecisionTree do
   alias __MODULE__
+  alias Aida.{Message, Message.TextContent, Session}
   alias Aida.Skill.DecisionTree.{Question, Answer, Response}
 
   @type t :: %__MODULE__{
     id: String.t,
     bot_id: String.t,
     name: String.t,
+    keywords: %{},
     relevant: nil | Aida.Expr.t,
     tree: [Question.t | Answer.t]
   }
@@ -13,6 +15,7 @@ defmodule Aida.Skill.DecisionTree do
   defstruct id: "",
             bot_id: "",
             name: "",
+            keywords: %{},
             relevant: nil,
             tree: %{}
 
@@ -26,6 +29,14 @@ defmodule Aida.Skill.DecisionTree do
     defstruct id: "",
               question: %{},
               responses: []
+
+    def valid_answer?(question, message) do
+      response = question.responses |> Enum.find(&(Enum.member?(Map.values(&1.keywords), [Message.text_content(message)])))
+      case response do
+        nil -> false
+        _ -> true
+      end
+    end
   end
 
   defmodule Answer do
@@ -46,6 +57,14 @@ defmodule Aida.Skill.DecisionTree do
 
     defstruct keywords: %{},
               next: ""
+  end
+
+  def get_message(%Question{} = question) do
+    question.question
+  end
+
+  def get_message(%Answer{} = answer) do
+    answer.message
   end
 
 
@@ -87,6 +106,33 @@ defmodule Aida.Skill.DecisionTree do
     %Answer{id: answer["id"], message: answer["answer"]}
   end
 
+
+  def state_key(decision_tree), do: ".decision_tree/#{decision_tree.id}"
+  def answer_key(decision_tree, question), do: "#{state_key(decision_tree)}/#{question.id}"
+
+  def current_question(decision_tree, message) do
+    case message |> Message.get_session(state_key(decision_tree)) do
+      %{"question" => question} ->
+        decision_tree.tree[question]
+      _ -> nil
+    end
+  end
+
+  def confidence_for_keyword(%{keywords: keywords}, message) do
+    words_in_message = Message.words(message)
+
+    matches = words_in_message
+    |> Enum.filter(fn(word) ->
+      Enum.member?(keywords[Message.language(message)], word)
+    end)
+
+    word_count = Enum.count(words_in_message)
+    case word_count do
+      0 -> 0
+      _ ->Enum.count(matches)/word_count
+    end
+  end
+
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, bot) do
       skill
@@ -104,13 +150,39 @@ defmodule Aida.Skill.DecisionTree do
       message
     end
 
-    def put_response(survey, message) do
-      message
+    def put_response(decision_tree, message) do
+      question = DecisionTree.current_question(decision_tree, message)
+
+      [next_question, message] = case question do
+        nil ->
+          session = message.session
+          if session |> Session.get("language") do
+            message = message
+              |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => "root"})
+
+            [decision_tree.tree["root"], message]
+          end
+        _ -> [question, message]
+      end
+
+
+      message |> Message.respond(DecisionTree.get_message(next_question))
     end
 
-    def confidence(survey, message) do
-      0
+    def confidence(decision_tree, %{content: %TextContent{}} = message) do
+      case DecisionTree.current_question(decision_tree, message) do
+        nil ->
+          DecisionTree.confidence_for_keyword(decision_tree, message)
+        question ->
+          if question |> Question.valid_answer?(message) do
+            1
+          else
+            :threshold
+          end
+      end
     end
+
+    def confidence(_, _), do: 0
 
     def id(%{id: id}) do
       id

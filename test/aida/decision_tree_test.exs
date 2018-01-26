@@ -1,6 +1,8 @@
 defmodule Aida.DecisionTreeTest do
+  alias Aida.{Bot, SessionStore, BotParser, TestChannel, Session, Message, ChannelProvider}
   alias Aida.Skill.DecisionTree
   use Aida.DataCase
+  import Mock
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
   @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
@@ -77,4 +79,33 @@ defmodule Aida.DecisionTreeTest do
     end
 
   end
+
+  describe "runtime" do
+    setup do
+      SessionStore.start_link
+
+      manifest = File.read!("test/fixtures/valid_manifest.json")
+        |> Poison.decode!
+        |> Map.put("languages", ["en"])
+
+      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      %{bot: bot}
+    end
+
+    test "starts the DecisionTree", %{bot: bot} do
+      Session.new(@session_id, %{"language" => "en"})
+      |> Session.save
+
+      session = Session.load(@session_id)
+      message = Message.new("meal recommendation", bot, session)
+      message = Bot.chat(bot, message)
+
+      assert message.reply == ["Do you want to eat a main course or a dessert?"]
+
+      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "root"}
+    end
+
+
+  end
+
 end

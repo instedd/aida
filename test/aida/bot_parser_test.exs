@@ -271,6 +271,7 @@ defmodule Aida.BotParserTest do
         %DecisionTree{
           bot_id: "f905a698-310f-473f-b2d0-00d30ad58b0c",
           id: "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+          keywords: %{"en" => ["meal recommendation", "recommendation"], "es" => ["recomendación", "recomendacion"]},
           name: "Food menu",
           relevant: nil,
           tree: %{
