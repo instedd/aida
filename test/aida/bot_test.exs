@@ -312,6 +312,16 @@ defmodule Aida.BotTest do
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
+
+    test "lookup from eval", %{bot: bot} do
+      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"language" => "en"}}))
+        |> Message.expr_context(lookup_raises: true)
+
+      value = Aida.Expr.parse("${food_options}")
+        |> Aida.Expr.eval(expr_context)
+
+      assert value == "barbecue and pasta"
+    end
   end
 
   describe "data_tables" do

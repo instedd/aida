@@ -113,7 +113,7 @@ defmodule Aida.Message do
 
   def words(_), do: []
 
-  defp lookup_var(message, key) do
+  def lookup_var(message, key) do
     case message.bot |> Bot.lookup_var(message, key) do
       nil ->
         message.session |> Session.lookup_var(key)
@@ -160,7 +160,26 @@ defmodule Aida.Message do
   end
 
   def expr_context(message, options \\ []) do
-    context = Session.expr_context(message.session, options)
+    self = options[:self]
+    lookup_raises = options[:lookup_raises]
+    attr_lookup = options[:attr_lookup]
+
+    context = %Aida.Expr.Context{
+      self: self,
+      var_lookup:
+        fn (name) ->
+          case Message.lookup_var(message, name) do
+            :not_found ->
+              if lookup_raises do
+                raise Aida.Expr.UnknownVariableError.exception(name)
+              else
+                nil
+              end
+            value -> value
+          end
+        end,
+      attr_lookup: attr_lookup
+    }
 
     Bot.expr_context(message.bot, context, options)
   end
