@@ -54,6 +54,15 @@ defmodule Aida.JsonSchemaTest do
     },
     "message": #{@valid_localized_string}
   })
+  @valid_monthly_recurrent_message ~s({
+    "recurrence": {
+      "type": "monthly",
+      "start": "2018-01-01T00:00:00Z",
+      "every": 2,
+      "each": 5
+    },
+    "message": #{@valid_localized_string}
+  })
   @valid_scheduled_messages ~s({
     "type": "scheduled_messages",
     "id": "2",
@@ -73,7 +82,7 @@ defmodule Aida.JsonSchemaTest do
     "id": "2",
     "name": "a",
     "schedule_type": "recurrent",
-    "messages": [#{@valid_daily_recurrent_message}, #{@valid_weekly_recurrent_message}]
+    "messages": [#{@valid_daily_recurrent_message}, #{@valid_weekly_recurrent_message}, #{@valid_monthly_recurrent_message}]
   })
   @valid_language_detector ~s({
     "type": "language_detector",
@@ -455,6 +464,19 @@ defmodule Aida.JsonSchemaTest do
     assert_valid_value("on", ~w[monday tuesday wednesday thursday friday saturday sunday], :recurrence_weekly)
     assert_invalid_value("on", ~w[foo], :recurrence_weekly)
     reject_array_duplicates("on", :recurrence_weekly)
+  end
+
+  test "recurrence_monthly" do
+    assert_enum("type", "foo", :recurrence_monthly)
+    assert_valid_enum("type", "monthly", :recurrence_monthly)
+    assert_required("start", :recurrence_monthly)
+    assert_required("every", :recurrence_monthly)
+    assert_integer("every", :recurrence_monthly)
+    assert_min("every", 1, :recurrence_monthly)
+    assert_required("each", :recurrence_monthly)
+    assert_integer("each", :recurrence_monthly)
+    assert_min("each", 1, :recurrence_monthly)
+    assert_max("each", 31, :recurrence_monthly)
   end
 
   test "language_detector" do

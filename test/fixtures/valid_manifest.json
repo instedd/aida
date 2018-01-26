@@ -151,6 +151,18 @@
             "en": "Discover our weekend specialities",
             "es": "Descubra nuestras especialidades del fin de semana"
           }
+        },
+        {
+          "recurrence": {
+            "type": "monthly",
+            "start": "2018-01-01T12:00:00Z",
+            "every": 2,
+            "each": 5
+          },
+          "message": {
+            "en": "We change the menu every two months. Say 'menu' to discover it!",
+            "es": "Cambiamos el menú cada dos meses. Diga 'menu' para descrubrirlo!"
+          }
         }
       ]
     },

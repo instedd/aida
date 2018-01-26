@@ -219,7 +219,8 @@
       "properties": {
         "recurrence": {"oneOf": [
           {"$ref": "#/definitions/recurrence_daily"},
-          {"$ref": "#/definitions/recurrence_weekly"}
+          {"$ref": "#/definitions/recurrence_weekly"},
+          {"$ref": "#/definitions/recurrence_monthly"}
         ]},
         "message": {"$ref": "#/definitions/localized_string"}
       },
@@ -253,6 +254,18 @@
       },
       "additionalProperties": false,
       "required": ["type", "start", "every", "on"]
+    },
+
+    "recurrence_monthly": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["monthly"]},
+        "start": {"$ref": "#/definitions/timestamp"},
+        "every": {"type": "integer", "minimum": 1},
+        "each": {"type": "integer", "minimum": 1, "maximum": 31}
+      },
+      "additionalProperties": false,
+      "required": ["type", "start", "every", "each"]
     },
 
     "survey": {
