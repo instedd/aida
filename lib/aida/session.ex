@@ -53,11 +53,6 @@ defmodule Aida.Session do
     SessionStore.delete(id)
   end
 
-  @spec uuid(session :: Session.t) :: value
-  def uuid(%Session{uuid: uuid}) do
-    uuid
-  end
-
   @spec get(session :: Session.t, key :: String.t) :: value
   def get(%Session{values: values}, key) do
     Map.get(values, key)

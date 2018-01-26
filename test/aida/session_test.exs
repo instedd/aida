@@ -35,7 +35,7 @@ defmodule Aida.SessionTest do
       assert loaded_session == %Session{
         id: "session_id",
         is_new?: true,
-        uuid: Session.uuid(loaded_session),
+        uuid: loaded_session.uuid,
         values: %{}
       }
     end
