@@ -76,8 +76,23 @@ defmodule Aida.JsonSchemaTest do
     "message": #{@valid_localized_string},
     "choice_filter": "state = ${state}"
   })
+  @valid_encrypted_select_question ~s({
+    "type": "select_one",
+    "choices": "a",
+    "encrypt" : true,
+    "name": "a",
+    "relevant": "${q} = 0",
+    "message": #{@valid_localized_string},
+    "choice_filter": "state = ${state}"
+  })
   @valid_input_question ~s({
     "type": "integer",
+    "name": "a",
+    "message": #{@valid_localized_string}
+  })
+  @valid_encrypted_input_question ~s({
+    "type": "integer",
+    "encrypt": true,
     "name": "a",
     "message": #{@valid_localized_string}
   })
@@ -401,6 +416,11 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:input_question)
   end
 
+  test "encrypted input_question" do
+    @valid_encrypted_input_question
+    |> assert_valid(:input_question)
+  end
+
   test "select_question" do
     assert_required("type", :select_question)
     assert_enum("type", "foo", :select_question)
@@ -416,6 +436,11 @@ defmodule Aida.JsonSchemaTest do
     assert_optional("choice_filter", "${q} = q", :select_question)
 
     @valid_select_question
+    |> assert_valid(:select_question)
+  end
+
+  test "encrypted select_question" do
+    @valid_encrypted_select_question
     |> assert_valid(:select_question)
   end
 

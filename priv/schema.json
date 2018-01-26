@@ -196,6 +196,7 @@
       "properties": {
         "type": {"enum": ["select_one", "select_many"]},
         "name": {"$ref": "#/definitions/non_empty_string"},
+        "encrypt" : {"type": "boolean"},
         "choices": {"$ref": "#/definitions/non_empty_string"},
         "message": {"$ref": "#/definitions/localized_string"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
@@ -211,6 +212,7 @@
       "properties": {
         "type": {"enum": ["integer", "decimal", "text", "image"]},
         "name": {"$ref": "#/definitions/non_empty_string"},
+        "encrypt" : {"type": "boolean"},
         "message": {"$ref": "#/definitions/localized_string"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
         "constraint": {"$ref": "#/definitions/non_empty_string"},

@@ -670,4 +670,115 @@ defmodule Aida.BotParserTest do
     assert {:error, "Invalid expression: '${foo} < ...'"} == BotParser.parse(@uuid, manifest)
   end
 
+  test "parse manifest with encrypted questions in survey" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+      |> Map.put("skills", [
+        %{
+          "type" => "survey",
+          "id" => "food_preferences",
+          "name" => "Food Preferences",
+          "schedule" => "2117-12-10T01:40:13Z",
+          "questions" => [
+            %{
+              "type" => "select_one",
+              "choices" => "yes_no",
+              "name" => "opt_in",
+              "message" => %{
+                "en" => "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
+                "es" => "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+              }
+            },
+            %{
+              "type" => "integer",
+              "name" => "age",
+              "encrypt" => true,
+              "message" => %{
+                "en" => "How old are you?",
+                "es" => "Qué edad tenés?"
+              }
+            },
+            %{
+              "type" => "select_many",
+              "name" => "wine_grapes",
+              "encrypt" => true,
+              "relevant" => "${age} >= 18",
+              "choices" => "grapes",
+              "message" => %{
+                "en" => "What are your favorite wine grapes?",
+                "es" => "Que variedades de vino preferís?"
+              }
+            },
+            %{
+              "type" => "text",
+              "name" => "request",
+              "message" => %{
+                "en" => "Any particular requests for your dinner?",
+                "es" => "Algún pedido especial para tu cena?"
+              }
+            }
+          ],
+          "choice_lists" => [
+            %{
+              "name" => "yes_no",
+              "choices" => [
+                %{
+                  "name" => "yes",
+                  "labels" => %{
+                    "en" => ["Yes","Sure","Ok"],
+                    "es" => ["Si","OK","Dale"]
+                  }
+                },
+                %{
+                  "name" => "no",
+                  "labels" =>  %{
+                    "en" =>  ["No","Nope","Later"],
+                    "es" =>  ["No","Luego","Nop"]
+                  }
+                }
+              ]
+            },
+            %{
+              "name" => "grapes",
+              "choices" => [
+                %{
+                  "name" => "merlot",
+                  "labels" => %{
+                    "en" => ["merlot"],
+                    "es" => ["merlot"]
+                  },
+                  "attributes": %{
+                    "type" => "red"
+                  }
+                },
+                %{
+                  "name" => "syrah",
+                  "labels" => %{
+                    "en" => ["syrah"],
+                    "es" => ["syrah"]
+                  },
+                  "attributes" => %{
+                    "type" => "red"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ])
+    {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+    questions = (bot.skills |> hd).questions
+    find_by_name = fn(questions, name) -> Enum.filter(questions, &(&1.name == name)) |> hd end
+
+    assert find_by_name.(questions, "opt_in").encrypt != nil
+    refute find_by_name.(questions, "opt_in").encrypt
+
+    assert find_by_name.(questions, "request").encrypt != nil
+    refute find_by_name.(questions, "request").encrypt
+
+    assert find_by_name.(questions, "age").encrypt
+
+    assert find_by_name.(questions, "wine_grapes").encrypt
+  end
+
 end

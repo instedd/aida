@@ -4,6 +4,7 @@ defmodule Aida.Skill.Survey.InputQuestion do
   @type t :: %__MODULE__{
     type: :decimal | :integer | :text | :image,
     name: String.t,
+    encrypt: boolean(),
     relevant: nil | Expr.t,
     message: Aida.Bot.message,
     constraint: nil | Expr.t,
@@ -13,6 +14,7 @@ defmodule Aida.Skill.Survey.InputQuestion do
   defstruct type: "",
             name: "",
             relevant: nil,
+            encrypt: false,
             message: %{},
             constraint: nil,
             constraint_message: nil
