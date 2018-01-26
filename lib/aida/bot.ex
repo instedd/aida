@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, Channel}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, Channel, DataTable}
   alias __MODULE__
 
   @type message :: map
@@ -11,7 +11,8 @@ defmodule Aida.Bot do
     skills: [Skill.t],
     variables: [Variable.t],
     channels: [Channel.t],
-    public_keys: [String.t]
+    public_keys: [String.t],
+    data_tables: [DataTable.t]
   }
 
   defstruct id: nil,
@@ -20,7 +21,8 @@ defmodule Aida.Bot do
             skills: [],
             variables: [],
             channels: [],
-            public_keys: []
+            public_keys: [],
+            data_tables: []
 
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do
@@ -82,7 +84,7 @@ defmodule Aida.Bot do
 
   defp handle(message, bot) do
     skills_sorted = bot
-      |> relevant_skills(message.session)
+      |> relevant_skills(message)
       |> Enum.map(&evaluate_confidence(&1, bot, message))
       |> Enum.reject(&is_nil/1)
       |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
@@ -121,12 +123,12 @@ defmodule Aida.Bot do
     end
   end
 
-  def relevant_skills(bot, session) do
+  def relevant_skills(bot, message) do
     bot.skills
-      |> Enum.filter(&Skill.is_relevant?(&1, session))
+      |> Enum.filter(&Skill.is_relevant?(&1, message))
       |> Enum.filter(fn
         %Skill.LanguageDetector{} -> true
-        _ -> Aida.Session.get(session, "language") != nil
+        _ -> Aida.Session.get(message.session, "language") != nil
       end)
   end
 
@@ -147,13 +149,53 @@ defmodule Aida.Bot do
     front_desk |> FrontDesk.threshold
   end
 
-  def lookup_var(%Bot{variables: variables}, session, key) do
+  def lookup_var(%Bot{variables: variables}, message, key) do
     variable =
       variables
       |> Enum.find(fn var -> var.name == key end)
 
     if variable do
-      variable |> Variable.resolve_value(session)
+      variable |> Variable.resolve_value(message)
+    end
+  end
+
+  def expr_context(bot, context, _options) do
+    Aida.Expr.Context.add_function(context, "lookup", fn([key, table_name, value_column]) ->
+      lookup_in_data_table(bot, table_name, key, value_column)
+    end)
+  end
+
+  def lookup_in_data_table(%Bot{data_tables: data_tables}, table_name, key, value_column) do
+    with  {:ok, table} <- find_data_table(data_tables, table_name),
+          {:ok, column_index} <- find_table_column_index(table, value_column),
+          {:ok, row} <- find_table_row(table, key, 0)
+    do
+      row |> Enum.at(column_index)
+    else
+      error ->
+        Logger.warn(error)
+        nil
+    end
+  end
+
+  defp find_data_table(data_tables, table_name) do
+    case data_tables |> Enum.find(fn(table) -> table.name == table_name end) do
+      nil -> {:error, "Table not found"}
+      table -> {:ok, table}
+    end
+  end
+
+  defp find_table_column_index(table, value_column) do
+    case table.columns |> Enum.find_index(fn(column_name) -> column_name == value_column end) do
+      nil -> {:error, "Value column not found"}
+      index -> {:ok, index}
+    end
+  end
+
+  defp find_table_row(table, key, key_column_index) do
+    case table.data |> Enum.find(fn(row) -> row |> Enum.at(key_column_index) == key end) do
+      nil -> {:error, "Row not found"}
+      row -> {:ok, row}
     end
   end
 end

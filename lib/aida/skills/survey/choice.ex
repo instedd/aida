@@ -1,5 +1,5 @@
 defmodule Aida.Skill.Survey.Choice do
-  alias Aida.Session
+  alias Aida.Message
   alias __MODULE__
 
   @type t :: %__MODULE__{
@@ -21,8 +21,8 @@ defmodule Aida.Skill.Survey.Choice do
   def available?(_choice, nil, _message), do: true
   def available?(choice, filter, message) do
     attr_lookup = &attr_lookup(choice, &1)
-    context = message.session
-      |> Session.expr_context(attr_lookup: attr_lookup, lookup_raises: true, self: choice.name)
+    context = message
+      |> Message.expr_context(attr_lookup: attr_lookup, lookup_raises: true, self: choice.name)
 
     try do
       filter |> Aida.Expr.eval(context)

@@ -86,6 +86,10 @@ defmodule Aida.Expr.ParserTest do
       assert parse("selected(${var}, 2)") == call(:selected, [var("var"), literal(2)])
     end
 
+    test "custom function calls" do
+      assert parse("foo(${var}, 2)") == call("foo", [var("var"), literal(2)])
+    end
+
     test "self" do
       assert parse(".") == %Self{}
     end

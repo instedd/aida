@@ -20,6 +20,14 @@ defmodule Aida.Expr.UnknownVariableError do
   end
 end
 
+defmodule Aida.Expr.UnknownFunctionError do
+  defexception [:message]
+
+  def exception(function_name) do
+    %__MODULE__{message: "Could not find function named '#{function_name}'"}
+  end
+end
+
 defmodule Aida.Expr.UnknownAttributeError do
   defexception [:message]
 

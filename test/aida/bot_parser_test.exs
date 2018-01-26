@@ -3,6 +3,7 @@ defmodule Aida.BotParserTest do
   alias Aida.{
     Bot,
     BotParser,
+    DataTable,
     FrontDesk,
     Skill.KeywordResponder,
     Skill.LanguageDetector,
@@ -330,6 +331,17 @@ defmodule Aida.BotParserTest do
       public_keys: [
         "YmIzNDYyOWEtODM0NS00NTNiLWFmODQtYWU2ZTcwMDJlNjg5",
         "YTE3ZWMyM2EtMDRhMi00ODk2LTljMDYtYTUxZDUzMTVmMDAy"
+      ],
+      data_tables: [
+        %DataTable{
+          name: "Distribution_days",
+          columns: ["Location", "Day", "Distribution_place", "# of distribution posts"],
+          data: [
+            ["Kakuma 1", "Next Thursday", "In front of the square", 2],
+            ["Kakuma 2", "Next Friday", "In front of the church", 1],
+            ["Kakuma 3", "Next Saturday", "In front of the distribution centre", 3]
+          ]
+        }
       ]
     }
   end

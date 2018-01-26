@@ -8,7 +8,7 @@ defmodule Aida.JsonSchemaTest do
     :ok
   end
 
-  @valid_base_64_key "ZWNjYzIwNGMtYmExNS00Y2M5LWI5YTMtMjJiOTg0ZDc5YThl"
+  @valid_base_64_key ~s("ZWNjYzIwNGMtYmExNS00Y2M5LWI5YTMtMjJiOTg0ZDc5YThl")
   @invalid_base_64_key ".."
   @valid_localized_string ~s({"en": "a"})
   @valid_message ~s({"message" : #{@valid_localized_string}})
@@ -128,6 +128,15 @@ defmodule Aida.JsonSchemaTest do
     "type": "websocket",
     "access_token": "qwertyuiopasdfghjklzxcvbnm"
   })
+  @valid_data_table ~s({
+    "name": "t",
+    "columns": ["a", "b", "c", "d"],
+    "data": [
+      ["1", "", 11, ""],
+      ["2", 2.2, "", ""],
+      [3, "", "", ""]
+    ]
+  })
   @valid_manifest ~s({
     "version" : "1",
     "languages" : ["en"],
@@ -140,7 +149,8 @@ defmodule Aida.JsonSchemaTest do
     ],
     "variables" : [],
     "channels" : [#{@valid_facebook_channel}, #{@valid_websocket_channel}],
-    "public_keys": ["#{@valid_base_64_key}"]
+    "public_keys": [#{@valid_base_64_key}],
+    "data_tables": [#{@valid_data_table}]
   })
 
   defp validate(json_thing, type, fun) do
@@ -296,6 +306,7 @@ defmodule Aida.JsonSchemaTest do
     assert_valid_value("public_keys", [@valid_base_64_key], :manifest_v1)
     assert_invalid_value("public_keys", [@invalid_base_64_key], :manifest_v1)
     reject_empty_array("public_keys", :manifest_v1)
+    assert_optional("data_tables", [@valid_data_table], :manifest_v1)
 
     @valid_manifest
     |> assert_valid(:manifest_v1)
@@ -308,6 +319,18 @@ defmodule Aida.JsonSchemaTest do
 
     File.read!("test/fixtures/valid_manifest.json")
     |> assert_valid(:manifest_v1)
+  end
+
+  test "data_table" do
+    assert_required("name", :data_table)
+    assert_non_empty_string("name", :data_table)
+    assert_required("columns", :data_table)
+    reject_empty_array("columns", :data_table)
+    assert_required("data", :data_table)
+    reject_empty_array("data", :data_table)
+
+    @valid_data_table
+    |> assert_valid(:data_table)
   end
 
   test "keyword_responder" do

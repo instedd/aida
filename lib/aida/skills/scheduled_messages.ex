@@ -84,7 +84,7 @@ defmodule Aida.Skill.ScheduledMessages do
       session = Session.load(session_id)
       message = Message.new("", bot, session)
 
-      if Message.language(message) && Skill.is_relevant?(skill, session) do
+      if Message.language(message) && Skill.is_relevant?(skill, message) do
         message = Message.respond(message, content)
         channel = ChannelProvider.find_channel(session_id)
         channel |> Channel.send_message(message.reply, session_id)

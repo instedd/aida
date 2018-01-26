@@ -21,8 +21,9 @@ defmodule Aida.Skill.Survey do
 
   def start_survey(survey, bot, session_id) do
     session = Session.load(session_id)
+    message = Message.new("", bot, session)
 
-    if Skill.is_relevant?(survey, session) do
+    if Skill.is_relevant?(survey, message) do
       channel = ChannelProvider.find_channel(session_id)
 
       if session |> Session.get("language") do
@@ -80,7 +81,7 @@ defmodule Aida.Skill.Survey do
       if question.relevant == nil do
         step
       else
-        context = message.session |> Session.expr_context
+        context = message |> Message.expr_context
         relevant = question |> Question.relevant |> Aida.Expr.eval(context)
         if relevant == false do
           find_next_question(survey, message, step)

@@ -1,6 +1,7 @@
 defmodule Aida.BotParser do
   alias Aida.{
     Bot,
+    DataTable,
     FrontDesk,
     Skill,
     Skill.KeywordResponder,
@@ -22,7 +23,8 @@ defmodule Aida.BotParser do
         skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
         channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1))),
-        public_keys: manifest["public_keys"] || []
+        public_keys: manifest["public_keys"] || [],
+        data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1)
       }
       |> validate()
     rescue
@@ -45,6 +47,15 @@ defmodule Aida.BotParser do
       introduction: front_desk["introduction"]["message"],
       not_understood: front_desk["not_understood"]["message"],
       clarification: front_desk["clarification"]["message"]
+    }
+  end
+
+  @spec parse_data_table(data_table :: map) :: DataTable.t
+  defp parse_data_table(data_table) do
+    %DataTable{
+      name: data_table["name"],
+      columns: data_table["columns"],
+      data: data_table["data"]
     }
   end
 
