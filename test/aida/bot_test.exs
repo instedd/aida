@@ -387,5 +387,48 @@ defmodule Aida.BotTest do
         "We will deliver Next Thursday"
       ]
     end
+
+  end
+  describe "attributes" do
+    setup do
+      bot = %Bot{
+        id: @uuid,
+        languages: ["en"],
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "", },
+            id: "id",
+            bot_id: @uuid,
+            name: "Distribution",
+            keywords: %{
+              "en" => ["days"]
+            },
+            response: %{
+              "en" => "We will deliver {{ attribute }}"
+            }
+          }
+        ]
+      }
+
+      %{bot: bot}
+    end
+
+    test "ignore attributes by default", %{bot: bot} do
+      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"language" => "en"}}))
+        |> Message.expr_context(lookup_raises: true)
+
+      value = Aida.Expr.parse("food_options")
+        |> Aida.Expr.eval(expr_context)
+
+      assert value == nil
+    end
+
+    test "ignore attributes in messages", %{bot: bot} do
+      output = bot |> Bot.chat(Message.new("days", bot))
+      assert output.reply == [
+        "We will deliver "
+      ]
+    end
   end
 end

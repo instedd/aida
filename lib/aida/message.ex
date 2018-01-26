@@ -155,31 +155,30 @@ defmodule Aida.Message do
       expr = text |> Kernel.binary_part(v_start, v_len)
       expr_result = Aida.Expr.parse(expr) |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
+
+      expr_result = expr_result || ""
+
       text_before <> expr_result <> text_after
     end)
   end
 
   def expr_context(message, options \\ []) do
-    self = options[:self]
     lookup_raises = options[:lookup_raises]
-    attr_lookup = options[:attr_lookup]
-
-    context = %Aida.Expr.Context{
-      self: self,
-      var_lookup:
-        fn (name) ->
-          case Message.lookup_var(message, name) do
-            :not_found ->
-              if lookup_raises do
-                raise Aida.Expr.UnknownVariableError.exception(name)
-              else
-                nil
-              end
-            value -> value
+    var_lookup = fn (name) ->
+      case Message.lookup_var(message, name) do
+        :not_found ->
+          if lookup_raises do
+            raise Aida.Expr.UnknownVariableError.exception(name)
+          else
+            nil
           end
-        end,
-      attr_lookup: attr_lookup
-    }
+        value -> value
+      end
+    end
+
+    context = options
+      |> Keyword.merge([var_lookup: var_lookup])
+      |> Aida.Expr.Context.new
 
     Bot.expr_context(message.bot, context, options)
   end
