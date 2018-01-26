@@ -20,7 +20,8 @@ defmodule Aida.Bot do
             skills: [],
             variables: [],
             channels: [],
-            public_keys: []
+            public_keys: [],
+            data_tables: []
 
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do
