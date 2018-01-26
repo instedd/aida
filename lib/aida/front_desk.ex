@@ -37,7 +37,7 @@ defmodule Aida.FrontDesk do
     log_usage(bot.id, message.session.id)
 
     bot
-      |> Bot.relevant_skills(message.session)
+      |> Bot.relevant_skills(message)
       |> Enum.reduce(message, fn(skill, message) ->
         Skill.explain(skill, message)
       end)

@@ -28,24 +28,24 @@ defprotocol Aida.Skill do
   @spec relevant(skill :: t) :: Aida.Expr.t | nil
   def relevant(skill)
 
-  @spec is_relevant?(skill :: t, session :: Aida.Session.t) :: boolean
-  defdelegate is_relevant?(skill, session), to: Aida.Skill.Utils, as: :is_skill_relevant?
+  @spec is_relevant?(skill :: t, message :: Message.t) :: boolean
+  defdelegate is_relevant?(skill, message), to: Aida.Skill.Utils, as: :is_skill_relevant?
 end
 
 defmodule Aida.Skill.Utils do
-  alias Aida.{Skill, DB.SkillUsage, Session}
+  alias Aida.{Skill, DB.SkillUsage, Message}
 
   def respond(skill, message) do
     SkillUsage.log_skill_usage(skill.bot_id, Skill.id(skill), message.session.id)
     Skill.put_response(skill, message)
   end
 
-  def is_skill_relevant?(skill, session) do
+  def is_skill_relevant?(skill, message) do
     case skill |> Skill.relevant do
       nil -> true
       expr ->
         try do
-          Aida.Expr.eval(expr, session |> Session.expr_context(lookup_raises: true))
+          Aida.Expr.eval(expr, message |> Message.expr_context(lookup_raises: true))
         rescue
           Aida.Expr.UnknownVariableError -> false
         end

@@ -288,24 +288,63 @@ defmodule Aida.BotTest do
 
     test "lookup", %{bot: bot} do
       session = Session.new("sid")
-      value = bot |> Bot.lookup_var(session, "food_options")
+      message = Message.new("foo", bot, session)
+      value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
 
     test "lookup non existing variable returns nil", %{bot: bot} do
       session = Session.new("sid")
-      value = bot |> Bot.lookup_var(session, "foo")
+      message = Message.new("foo", bot, session)
+      value = bot |> Bot.lookup_var(message, "foo")
       assert value == nil
     end
 
     test "lookup variabe evaluate overrides", %{bot: bot} do
       session = Session.new({"sid", @session_uuid, %{"age" => 20}})
-      value = bot |> Bot.lookup_var(session, "food_options")
+      message = Message.new("foo", bot, session)
+      value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta and a exclusive selection of wines"
 
       session = Session.new({"sid", @session_uuid, %{"age" => 15}})
-      value = bot |> Bot.lookup_var(session, "food_options")
+      message = Message.new("foo", bot, session)
+      value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
+    end
+  end
+
+  describe "data_tables" do
+    setup do
+      manifest = File.read!("test/fixtures/valid_manifest.json")
+        |> Poison.decode!
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(bot.id, manifest)
+
+      %{bot: bot}
+    end
+
+    test "lookup", %{bot: bot} do
+      value = bot |> Bot.lookup_in_data_table("Distribution_days", "Kakuma 1", "Day")
+
+      assert value == "Next Thursday"
+    end
+
+    test "lookup from eval", %{bot: bot} do
+      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"key" => "Kakuma 2"}}))
+        |> Message.expr_context(lookup_raises: true)
+      value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Day')")
+        |> Aida.Expr.eval(expr_context)
+
+      assert value == "Next Friday"
+    end
+
+    test "invalid lookup returns nil", %{bot: bot} do
+      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"key" => "Kakuma 2"}}))
+        |> Message.expr_context(lookup_raises: true)
+      value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Distribution_place')")
+        |> Aida.Expr.eval(expr_context)
+
+      assert value == "In front of the church"
     end
   end
 end

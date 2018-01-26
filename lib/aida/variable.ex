@@ -1,5 +1,5 @@
 defmodule Aida.Variable do
-  alias Aida.{Bot, Variable.Override, Session}
+  alias Aida.{Bot, Variable.Override, Session, Message}
 
   @type t :: %__MODULE__{
     name: String.t,
@@ -21,12 +21,12 @@ defmodule Aida.Variable do
   end
 
   @spec resolve_value(t, Session.t) :: Bot.message
-  def resolve_value(variable, session) do
+  def resolve_value(variable, message) do
     override =
       variable.overrides
       |> Enum.find(fn override ->
         try do
-          override.relevant |> Aida.Expr.eval(session |> Session.expr_context(lookup_raises: true))
+          override.relevant |> Aida.Expr.eval(message |> Message.expr_context(lookup_raises: true))
         rescue
           Aida.Expr.UnknownVariableError -> false
         end

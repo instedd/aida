@@ -82,8 +82,9 @@ defmodule Aida.Message do
     respond(message, response[language(message)])
   end
   def respond(message, response) do
-    new_reply = interpolate_vars(message, response)
-    %{message | reply: message.reply ++ [new_reply]}
+    response = interpolate_expressions(message, response)
+    response = interpolate_vars(message, response)
+    %{message | reply: message.reply ++ [response]}
   end
 
   @spec get_session(message :: t, key :: String.t) :: Session.value
@@ -113,7 +114,7 @@ defmodule Aida.Message do
   def words(_), do: []
 
   defp lookup_var(message, key) do
-    case message.bot |> Bot.lookup_var(message.session, key) do
+    case message.bot |> Bot.lookup_var(message, key) do
       nil ->
         message.session |> Session.lookup_var(key)
       var ->
@@ -122,7 +123,7 @@ defmodule Aida.Message do
   end
 
   defp display_var(value) when is_list(value) do
-    value |> Enum.join(", ") 
+    value |> Enum.join(", ")
   end
 
   defp display_var(value) do
@@ -144,5 +145,23 @@ defmodule Aida.Message do
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
       text_before <> interpolate_vars(message, var_value, [var_name | resolved_vars]) <> text_after
     end)
+  end
+
+  @spec interpolate_expressions(message :: t, text :: String.t) :: String.t
+  def interpolate_expressions(message, text) do
+    Regex.scan(~r/\{\{(.*)\}\}/, text, return: :index)
+    |> List.foldr(text, fn (match, text) ->
+      [{p_start, p_len}, {v_start, v_len}] = match
+      expr = text |> Kernel.binary_part(v_start, v_len)
+      expr_result = Aida.Expr.eval(expr, message |> expr_context(lookup_raises: true))
+      <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
+      text_before <> expr_result <> text_after
+    end)
+  end
+
+  def expr_context(message, options \\ []) do
+    context = Session.expr_context(message.session, options)
+
+    Bot.expr_context(message.bot, context, options)
   end
 end

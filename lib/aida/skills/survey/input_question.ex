@@ -1,5 +1,5 @@
 defmodule Aida.Skill.Survey.InputQuestion do
-  alias Aida.{Session, Expr, Message, Message.ImageContent}
+  alias Aida.{Expr, Message, Message.ImageContent, Message}
 
   @type t :: %__MODULE__{
     type: :decimal | :integer | :text | :image,
@@ -59,7 +59,7 @@ defmodule Aida.Skill.Survey.InputQuestion do
     def accept_answer(question, message) do
       case parse_answer(question, Message.text_content(message)) do
         {:ok, value} ->
-          if validate_constraint(question, message.session, value) do
+          if validate_constraint(question, message, value) do
             {:ok, value}
           else
             :error
@@ -96,8 +96,8 @@ defmodule Aida.Skill.Survey.InputQuestion do
 
     def validate_constraint(%{constraint: nil}, _, _), do: true
 
-    def validate_constraint(%{constraint: constraint}, session, value) do
-      context = session |> Session.expr_context(self: value)
+    def validate_constraint(%{constraint: constraint}, message, value) do
+      context = message |> Message.expr_context(self: value)
       Expr.eval(constraint, context)
     end
 
