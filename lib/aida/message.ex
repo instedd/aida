@@ -153,7 +153,7 @@ defmodule Aida.Message do
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       expr = text |> Kernel.binary_part(v_start, v_len)
-      expr_result = Aida.Expr.eval(expr, message |> expr_context(lookup_raises: true))
+      expr_result = Aida.Expr.parse(expr) |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
       text_before <> expr_result <> text_after
     end)

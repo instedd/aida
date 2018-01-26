@@ -1,5 +1,5 @@
 defmodule Aida.Skill.Survey.Choice do
-  alias Aida.{Session, Message}
+  alias Aida.Message
   alias __MODULE__
 
   @type t :: %__MODULE__{

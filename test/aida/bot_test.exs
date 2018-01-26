@@ -1,6 +1,6 @@
 defmodule Aida.BotTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message, DB, Session}
+  alias Aida.{BotParser, Bot, Message, DB, Session, Skill.KeywordResponder, DataTable}
 
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
@@ -34,6 +34,7 @@ defmodule Aida.BotTest do
     "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
   ]
 
+  @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
   @session_uuid "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
 
   describe "single language bot" do
@@ -315,10 +316,36 @@ defmodule Aida.BotTest do
 
   describe "data_tables" do
     setup do
-      manifest = File.read!("test/fixtures/valid_manifest.json")
-        |> Poison.decode!
-      {:ok, bot} = DB.create_bot(%{manifest: manifest})
-      {:ok, bot} = BotParser.parse(bot.id, manifest)
+      bot = %Bot{
+        id: @uuid,
+        languages: ["en"],
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "", },
+            id: "id",
+            bot_id: @uuid,
+            name: "Distribution days",
+            keywords: %{
+              "en" => ["days"]
+            },
+            response: %{
+              "en" => "We will deliver {{ lookup('Kakuma 1', 'Distribution_days', 'Day')}}"
+            }
+          }
+        ],
+        data_tables: [
+          %DataTable{
+            name: "Distribution_days",
+            columns: ["Location", "Day", "Distribution_place", "# of distribution posts"],
+            data: [
+              ["Kakuma 1", "Next Thursday", "In front of the square", 2],
+              ["Kakuma 2", "Next Friday", "In front of the church", 1],
+              ["Kakuma 3", "Next Saturday", "In front of the distribution centre", 3]
+            ]
+          }
+        ]
+      }
 
       %{bot: bot}
     end
@@ -332,19 +359,23 @@ defmodule Aida.BotTest do
     test "lookup from eval", %{bot: bot} do
       expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"key" => "Kakuma 2"}}))
         |> Message.expr_context(lookup_raises: true)
+
       value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Day')")
         |> Aida.Expr.eval(expr_context)
 
       assert value == "Next Friday"
-    end
 
-    test "invalid lookup returns nil", %{bot: bot} do
-      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"key" => "Kakuma 2"}}))
-        |> Message.expr_context(lookup_raises: true)
       value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Distribution_place')")
         |> Aida.Expr.eval(expr_context)
 
       assert value == "In front of the church"
+    end
+
+    test "interpolate expression", %{bot: bot} do
+      output = bot |> Bot.chat(Message.new("days", bot))
+      assert output.reply == [
+        "We will deliver Next Thursday"
+      ]
     end
   end
 end
