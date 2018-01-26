@@ -14,6 +14,7 @@ defmodule Aida.BotParserTest do
     Skill.Survey.SelectQuestion,
     Skill.Survey.InputQuestion,
     Skill.Survey.Choice,
+    Skill.DecisionTree,
     Variable
   }
   alias Aida.Channel.{Facebook, WebSocket}
@@ -191,8 +192,8 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "At what temperature do your like red wine the best?",
                 "es" => "A qué temperatura preferís tomar el vino tinto?"
-                }
-              },
+              }
+            },
             %SelectQuestion{
               name: "wine_grapes",
               type: :select_many,
@@ -266,6 +267,99 @@ defmodule Aida.BotParserTest do
               }
             }
           ]
+        },
+        %DecisionTree{
+          bot_id: "f905a698-310f-473f-b2d0-00d30ad58b0c",
+          id: "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+          name: "Food menu",
+          relevant: nil,
+          tree: %{
+            "031d9a25-f457-4b21-b83b-13e00ece6cc0" =>
+              %Aida.Skill.DecisionTree.Answer{
+                id: "031d9a25-f457-4b21-b83b-13e00ece6cc0",
+                message: %{"en" => "Go with Risotto", "es" => "Clavate un risotto"}
+              },
+            "3d5d6819-ae31-45b6-b8f6-13d62b092730" =>
+              %Aida.Skill.DecisionTree.Answer{
+                id: "3d5d6819-ae31-45b6-b8f6-13d62b092730",
+                message: %{"en" => "Go with a carrot cake", "es" => "Come una torta de zanahoria"}
+              },
+            "42cc898f-42c3-4d39-84a3-651dbf7dfd5b" =>
+              %Aida.Skill.DecisionTree.Question{
+                id: "42cc898f-42c3-4d39-84a3-651dbf7dfd5b",
+                question: %{"en" => "Are you vegan?", "es" => "Sos vegano?"},
+                responses: [
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["yes"], "es" => ["si"]},
+                    next: "3d5d6819-ae31-45b6-b8f6-13d62b092730"
+                  },
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["no"], "es" => ["no"]},
+                    next: "5d79bf1c-4863-401f-8f08-89ffb3af33cf"
+                  }
+                ]
+              },
+            "5d79bf1c-4863-401f-8f08-89ffb3af33cf" =>
+              %Aida.Skill.DecisionTree.Question{
+                id: "5d79bf1c-4863-401f-8f08-89ffb3af33cf",
+                question: %{"en" => "Are you lactose intolerant?", "es" => "Sos intolerante a la lactosa?"},
+                responses: [
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["yes"], "es" => ["si"]},
+                    next: "f00f115f-4a0b-45e1-a123-ac1756616be7"
+                  },
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["no"], "es" => ["no"]},
+                    next: "75f04293-f561-462f-9e74-a0d011e1594a"
+                  }
+                ]
+              },
+            "75f04293-f561-462f-9e74-a0d011e1594a" =>
+              %Aida.Skill.DecisionTree.Answer{
+                id: "75f04293-f561-462f-9e74-a0d011e1594a",
+                message: %{"en" => "Go with an ice cream", "es" => "Comete un helado"}
+              },
+            "c038e08e-6095-4897-9184-eae929aba8c6" =>
+              %Aida.Skill.DecisionTree.Question{
+                id: "c038e08e-6095-4897-9184-eae929aba8c6",
+                question: %{"en" => "Are you a vegetarian?", "es" => "Sos vegetariano?"},
+                responses: [
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["yes"], "es" => ["si"]},
+                    next: "031d9a25-f457-4b21-b83b-13e00ece6cc0"
+                  },
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["no"], "es" => ["no"]},
+                    next: "e530d33b-3720-4431-836a-662b26851424"
+                  }
+                ]
+              },
+            "e530d33b-3720-4431-836a-662b26851424" =>
+              %Aida.Skill.DecisionTree.Answer{
+                id: "e530d33b-3720-4431-836a-662b26851424",
+                message: %{"en" => "Go with barbecue", "es" => "Comete un asado"}
+              },
+            "f00f115f-4a0b-45e1-a123-ac1756616be7" =>
+              %Aida.Skill.DecisionTree.Answer{
+                id: "f00f115f-4a0b-45e1-a123-ac1756616be7",
+                message: %{"en" => "Go with a chocolate mousse", "es" => "Comete una mousse de chocolate"}
+              },
+            "root" =>
+              %Aida.Skill.DecisionTree.Question{
+                id: "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
+                question: %{"en" => "Do you want to eat a main course or a dessert?", "es" => "Querés comer un primer plato o un postre?"},
+                responses: [
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["main course"], "es" => ["primer plato"]},
+                    next: "c038e08e-6095-4897-9184-eae929aba8c6"
+                  },
+                  %Aida.Skill.DecisionTree.Response{
+                    keywords: %{"en" => ["dessert"], "es" => ["postre"]},
+                    next: "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"
+                  }
+                ]
+              }
+          }
         }
       ],
       variables: [

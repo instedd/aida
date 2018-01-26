@@ -4,6 +4,7 @@ defmodule Aida.BotParser do
     DataTable,
     FrontDesk,
     Skill,
+    Skill.DecisionTree,
     Skill.KeywordResponder,
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
@@ -130,6 +131,16 @@ defmodule Aida.BotParser do
       schedule: schedule,
       relevant: parse_expr(skill["relevant"]),
       questions: skill["questions"] |> Enum.map(&(parse_survey_question(&1, choice_lists)))
+    }
+  end
+
+  defp parse_skill(%{"type" => "decision_tree"} = skill, bot_id) do
+    %DecisionTree{
+      id: skill["id"],
+      bot_id: bot_id,
+      name: skill["name"],
+      relevant: parse_expr(skill["relevant"]),
+      tree: DecisionTree.flatten(skill["tree"])
     }
   end
 

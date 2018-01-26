@@ -104,6 +104,75 @@ defmodule Aida.JsonSchemaTest do
     "questions": [#{@valid_input_question}],
     "choice_lists": []
   })
+
+  @valid_decision_tree ~s({
+    "type": "decision_tree",
+    "id": "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+    "name": "Food menu",
+    "explanation": #{@valid_localized_string},
+    "clarification": #{@valid_localized_string},
+    "keywords": #{@valid_localized_keywords},
+    "tree": {
+      "question": #{@valid_localized_string},
+      "responses": [
+        {
+          "keywords": #{@valid_localized_keywords},
+          "next": {
+            "question": #{@valid_localized_string},
+            "responses": [
+              {
+                "keywords":#{@valid_localized_keywords},
+                "next": {
+                  "answer": #{@valid_localized_string}
+                }
+              },
+              {
+                "keywords": #{@valid_localized_keywords},
+                "next": {
+                  "answer": #{@valid_localized_string}
+                }
+              }
+            ]
+          }
+        },
+        {
+          "keywords": #{@valid_localized_keywords},
+          "next": {
+            "question": #{@valid_localized_string},
+            "responses": [
+              {
+                "keywords": #{@valid_localized_keywords},
+                "next": {
+                  "answer": #{@valid_localized_string}
+                }
+              },
+              {
+                "keywords": #{@valid_localized_keywords},
+                "next": {
+                  "question": #{@valid_localized_string},
+                  "responses": [
+                    {
+                      "keywords": #{@valid_localized_keywords},
+                      "next": {
+                        "answer": #{@valid_localized_string}
+                      }
+                    },
+                    {
+                      "keywords": #{@valid_localized_keywords},
+                      "next": {
+                        "answer": #{@valid_localized_string}
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  })
+
   @valid_variable ~s({
     "name": "a",
     "values": {
@@ -418,6 +487,25 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_survey
     |> assert_valid(:survey)
+  end
+
+
+  test "decision_tree" do
+    assert_enum("type", "foo", :decision_tree)
+    assert_valid_enum("type", "decision_tree", :decision_tree)
+    assert_required("type", :decision_tree)
+    assert_required("name", :decision_tree)
+    assert_non_empty_string("name", :decision_tree)
+    assert_required("id", :decision_tree)
+    assert_non_empty_string("id", :decision_tree)
+    assert_required("tree", :decision_tree)
+    assert_required("explanation", :decision_tree)
+    assert_required("clarification", :decision_tree)
+    assert_required("keywords", :decision_tree)
+    assert_optional("relevant", "${age} > 18", :decision_tree)
+
+    @valid_decision_tree
+    |> assert_valid(:decision_tree)
   end
 
   test "input_question" do
