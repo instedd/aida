@@ -12,4 +12,11 @@ defmodule Aida.Crypto do
     box(data, recipient_pks)
     |> Box.to_json()
   end
+
+  @spec decrypt(map, Kcl.key(), nil | Kcl.key()) :: binary
+  def decrypt(json, recipient_sk, recipient_pk \\ nil) do
+    json
+    |> Box.from_json()
+    |> Box.decrypt(recipient_sk, recipient_pk)
+  end
 end
