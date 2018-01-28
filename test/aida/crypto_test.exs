@@ -42,6 +42,15 @@ defmodule Aida.CryptoTest do
       assert expected_box == box
     end
 
+    test "Decrypt from box" do
+      box = Crypto.Box.build("Hello", @server_pair, [@user1_pk, @user2_pk], @nonce_base)
+
+      assert "Hello" == box |> Crypto.Box.decrypt(@user1_sk, @user1_pk)
+      assert "Hello" == box |> Crypto.Box.decrypt(@user1_sk)
+      assert "Hello" == box |> Crypto.Box.decrypt(@user2_sk, @user2_pk)
+      assert "Hello" == box |> Crypto.Box.decrypt(@user2_sk)
+    end
+
     test "Generate random nonce" do
       box = Crypto.Box.build("Hello", @server_pair, [@user1_pk])
       recipient = box.recipients |> hd()
@@ -73,6 +82,13 @@ defmodule Aida.CryptoTest do
       assert expected_encoded_box == encoded_box
     end
 
+    test "Decode box" do
+      box = Crypto.Box.build("Hello", @server_pair, [@user1_pk, @user2_pk])
+      encoded_box = Crypto.Box.encode(box)
+
+      assert box == Crypto.Box.decode(encoded_box)
+    end
+
     test "Convert box to JSON" do
       box = Crypto.Box.build("Hello", @server_pair, [@user1_pk, @user2_pk], @nonce_base)
       encoded_box = box |> Crypto.Box.encode()
@@ -84,6 +100,13 @@ defmodule Aida.CryptoTest do
       }
 
       assert expected_json == box |> Crypto.Box.to_json()
+    end
+
+    test "Create box from JSON" do
+      box = Crypto.Box.build("Hello", @server_pair, [@user1_pk, @user2_pk])
+      json = Crypto.Box.to_json(box)
+
+      assert box == Crypto.Box.from_json(json)
     end
   end
 
@@ -110,6 +133,12 @@ defmodule Aida.CryptoTest do
         "data" => data
       } = json
       assert {:ok, _} = Base.decode64(data)
+    end
+
+    test "Decrypt from json" do
+      json = Crypto.encrypt("Hello", [@user1_pk, @user2_pk])
+      assert "Hello" == Crypto.decrypt(json, @user1_sk, @user1_pk)
+      assert "Hello" == Crypto.decrypt(json, @user1_sk)
     end
   end
 end
