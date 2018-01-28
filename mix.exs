@@ -52,7 +52,9 @@ defmodule Aida.Mixfile do
       {:cors_plug, "~> 1.4"},
       {:timex, "~> 3.0", override: true},
       {:sentry, "~> 6.0"},
-      {:ecto_atom, "~> 1.0.0"}
+      {:ecto_atom, "~> 1.0.0"},
+      {:kcl, "~> 1.0"},
+      {:msgpax, "~> 2.1"}
     ]
   end
 
