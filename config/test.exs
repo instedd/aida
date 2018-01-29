@@ -20,3 +20,6 @@ config :aida, Aida.Repo,
 
 config :aida, Aida.Scheduler,
   batch_size: 5
+
+config :aida, Aida.Crypto,
+  private_key: :crypto.strong_rand_bytes(32)

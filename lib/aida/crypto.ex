@@ -19,4 +19,25 @@ defmodule Aida.Crypto do
     |> Box.from_json()
     |> Box.decrypt(recipient_sk, recipient_pk)
   end
+
+  @spec server_encrypt(binary, Kcl.nonce()) :: binary
+  def server_encrypt(data, nonce) do
+    {private, public} = obtain_server_keypair()
+    shared_secret = Kcl.shared_secret(private, public)
+    Kcl.secretbox(data, nonce, shared_secret)
+  end
+
+  @spec server_decrypt(binary, Kcl.nonce()) :: binary
+  def server_decrypt(data, nonce) do
+    {private, public} = obtain_server_keypair()
+    shared_secret = Kcl.shared_secret(private, public)
+    Kcl.secretunbox(data, nonce, shared_secret)
+  end
+
+  @spec obtain_server_keypair() :: {Kcl.key(), Kcl.key()}
+  defp obtain_server_keypair() do
+    private = Application.get_env(:aida, __MODULE__)[:private_key]
+    public = Kcl.derive_public_key(private)
+    {private, public}
+  end
 end

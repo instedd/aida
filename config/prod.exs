@@ -67,3 +67,6 @@ config :aida, Aida.Repo,
   password: "postgres",
   database: "aida",
   pool_size: 15
+
+config :aida, Aida.Crypto,
+  private_key: Base.decode64!(System.get_env("PRIVATE_KEY"))

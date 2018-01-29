@@ -140,5 +140,25 @@ defmodule Aida.CryptoTest do
       assert "Hello" == Crypto.decrypt(json, @user1_sk, @user1_pk)
       assert "Hello" == Crypto.decrypt(json, @user1_sk)
     end
+
+    test "Encrypt with server keypair" do
+      nonce = :crypto.strong_rand_bytes(24)
+      private = Application.get_env(:aida, Aida.Crypto)[:private_key]
+      public = Kcl.derive_public_key(private)
+
+      encrypted = Crypto.server_encrypt("Hello", nonce)
+
+      assert "Hello" == Kcl.secretunbox(encrypted, nonce, Kcl.shared_secret(private, public))
+    end
+
+    test "Decrypt with server keypair" do
+      nonce = :crypto.strong_rand_bytes(24)
+      private = Application.get_env(:aida, Aida.Crypto)[:private_key]
+      public = Kcl.derive_public_key(private)
+
+      encrypted = Kcl.secretbox("Hello", nonce, Kcl.shared_secret(private, public))
+
+      assert "Hello" == Crypto.server_decrypt(encrypted, nonce)
+    end
   end
 end

@@ -17,6 +17,9 @@ config :aida, AidaWeb.Endpoint,
   pubsub: [name: Aida.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
+config :aida, Aida.Crypto,
+  private_key: Base.decode64!("6cLy4Wd7oyC3m/uJYiCYHVArl55jXCGWG2uTtqJmcx0=")
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
