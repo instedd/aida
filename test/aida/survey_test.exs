@@ -55,7 +55,7 @@ defmodule Aida.SurveyTest do
         assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], @session_id}
 
         session = Session.load(@session_id)
-        assert session |> Session.get("survey/food_preferences") == %{"step" => 0}
+        assert session |> Session.get(".survey/food_preferences") == %{"step" => 0}
       end
     end
 
@@ -92,28 +92,28 @@ defmodule Aida.SurveyTest do
     end
 
     test "accept user reply", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 0}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
 
       message = Message.new("Yes", bot, session)
       message = Bot.chat(bot, message)
 
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 1}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
       assert message.reply == ["How old are you?"]
       assert message |> Message.get_session("survey/food_preferences/opt_in") == "yes"
     end
 
     test "invalid reply should retry the question", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("bananas", bot, session)
       message = Bot.chat(bot, message)
 
       assert message.reply == ["Invalid temperature", "At what temperature do your like red wine the best?"]
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
     end
 
     test "unknown content should retry the question", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 4}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 4}}})
 
       message = Message.new_unknown(bot, session)
       message = Bot.chat(bot, message)
@@ -122,74 +122,74 @@ defmodule Aida.SurveyTest do
 
     test "bot should answer a keyword even if survey is active on highest threshold", %{bot: bot} do
       bot = %{bot | front_desk: %{bot.front_desk | threshold: 0.5}}
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("hours", bot, session)
       message = Bot.chat(bot, message)
 
       assert message.reply == ["We are open every day from 7pm to 11pm"]
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
     end
 
     test "accept user reply on select_many", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 3}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 3}}})
 
       message = Message.new("merlot, syrah", bot, session)
       message = Bot.chat(bot, message)
 
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
       assert message.reply == ["Can we see your home?"]
       assert message |> Message.get_session("survey/food_preferences/wine_grapes") == ["merlot", "syrah"]
     end
 
     test "clears the store to end the survey", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 5}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 5}}})
 
       message = Message.new("No, thanks!", bot, session)
       message = Bot.chat(bot, message)
 
-      assert message |> Message.get_session("survey/food_preferences") == nil
+      assert message |> Message.get_session(".survey/food_preferences") == nil
     end
 
     test "skip questions when the relevant attribute evaluates to false", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 1}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
 
       message = Message.new("15", bot, session)
       message = Bot.chat(bot, message)
 
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 4}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
       assert message.reply == ["Can we see your home?"]
     end
 
     test "do not skip questions when the relevant attribute evaluates to false", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 1}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
 
       message = Message.new("20", bot, session)
       message = Bot.chat(bot, message)
 
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
       assert message.reply == ["At what temperature do your like red wine the best?"]
     end
 
     test "validate input responses and continue if the value is valid", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("20", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == 20.0
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 3}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 3}
       assert message.reply == ["What are your favorite wine grapes?"]
     end
 
     test "validate input responses and return constraint message when the value is invalid", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", "survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("200", bot, session)
       message = Bot.chat(bot, message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == nil
-      assert message |> Message.get_session("survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
       assert message.reply == [
         "Invalid temperature",
         "At what temperature do your like red wine the best?"
