@@ -172,29 +172,29 @@ defmodule Aida.Bot do
     do
       row |> Enum.at(column_index)
     else
-      error ->
-        Logger.warn(error)
+      {:error, reason} ->
+        Logger.warn(reason)
         nil
     end
   end
 
   defp find_data_table(data_tables, table_name) do
     case data_tables |> Enum.find(fn(table) -> table.name == table_name end) do
-      nil -> {:error, "Table not found"}
+      nil -> {:error, "Table not found: #{table_name}"}
       table -> {:ok, table}
     end
   end
 
   defp find_table_column_index(table, value_column) do
     case table.columns |> Enum.find_index(fn(column_name) -> column_name == value_column end) do
-      nil -> {:error, "Value column not found"}
+      nil -> {:error, "Value column not found: #{value_column}"}
       index -> {:ok, index}
     end
   end
 
   defp find_table_row(table, key, key_column_index) do
     case table.data |> Enum.find(fn(row) -> row |> Enum.at(key_column_index) == key end) do
-      nil -> {:error, "Row not found"}
+      nil -> {:error, "Row not found with key: #{key}"}
       row -> {:ok, row}
     end
   end
