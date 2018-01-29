@@ -458,4 +458,18 @@ defmodule Aida.BotTest do
       ]
     end
   end
+
+  describe "encryption" do
+    setup do
+      {private, public} = Kcl.generate_key_pair()
+      bot = %Bot{public_keys: [public]}
+      [bot: bot, private: private]
+    end
+
+    test "encrypt a value", %{bot: bot, private: private} do
+      value = Bot.encrypt(bot, "Hello")
+      assert %{"type" => "encrypted"} = value
+      assert "Hello" == Aida.Crypto.decrypt(value, private)
+    end
+  end
 end

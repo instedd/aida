@@ -1,5 +1,5 @@
 defmodule Aida.MessageTest do
-  alias Aida.{Message, Session, Message.TextContent}
+  alias Aida.{Message, Session, Message.TextContent, Bot}
   use ExUnit.Case
 
   @bot_id "99fbbf35-d198-474b-9eac-6e27ed9342ed"
@@ -106,6 +106,25 @@ defmodule Aida.MessageTest do
       message = Message.new("Hi!", @bot, Session.new)
         |> Message.respond("We have ${food}")
       assert message.reply == ["We have "]
+    end
+  end
+
+  describe "encryption" do
+    setup do
+      {private, public} = Kcl.generate_key_pair()
+      bot = %Bot{public_keys: [public]}
+      [bot: bot, private: private]
+    end
+
+    test "encrypt the value in the session when requested", %{bot: bot, private: private} do
+      message =
+        Message.new("", bot)
+        |> Message.put_session("name", "John", encrypted: true)
+
+      stored_value = Message.get_session(message, "name")
+
+      assert %{"type" => "encrypted"} = stored_value
+      assert "John" == Aida.Crypto.decrypt(stored_value, private)
     end
   end
 end

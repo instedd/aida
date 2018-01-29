@@ -1,5 +1,5 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, Channel, DataTable}
+  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, Channel, DataTable, Crypto}
   alias __MODULE__
 
   @type message :: map
@@ -197,5 +197,9 @@ defmodule Aida.Bot do
       nil -> {:error, "Row not found"}
       row -> {:ok, row}
     end
+  end
+
+  def encrypt(%Bot{public_keys: public_keys}, data) do
+    Crypto.encrypt(data, public_keys)
   end
 end

@@ -93,7 +93,15 @@ defmodule Aida.Message do
   end
 
   @spec put_session(message :: t, key :: String.t, value :: Session.value) :: t
-  def put_session(%{session: session} = message, key, value) do
+  def put_session(%{session: session, bot: bot} = message, key, value, options \\ []) do
+    encrypted = Keyword.get(options, :encrypted, false)
+    value =
+      if encrypted do
+        Bot.encrypt(bot, value)
+      else
+        value
+      end
+
     %{message | session: Session.put(session, key, value)}
   end
 
