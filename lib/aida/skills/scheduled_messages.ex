@@ -1,5 +1,5 @@
 defmodule Aida.Skill.ScheduledMessages do
-  alias Aida.{Message, Channel, Session, Skill, BotManager, ChannelProvider, DB, DB.MessageLog}
+  alias Aida.{Message, Channel, Session, Skill, BotManager, ChannelProvider, DB, DB.MessageLog, Recurrence}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
@@ -20,6 +20,16 @@ defmodule Aida.Skill.ScheduledMessages do
     }
 
     defstruct schedule: DateTime.utc_now,
+              message: %{}
+  end
+
+  defmodule RecurrentMessage do
+    @type t :: %__MODULE__{
+      recurrence: Recurrence.t,
+      message: Aida.Bot.message
+    }
+
+    defstruct recurrence: nil,
               message: %{}
   end
 
@@ -78,6 +88,16 @@ defmodule Aida.Skill.ScheduledMessages do
       skill
     end
 
+    def init(%{schedule_type: :recurrent, messages: messages} = skill, bot) do
+      messages
+      |> Enum.with_index
+      |> Enum.each(fn {message, index} ->
+        next = message.recurrence |> Recurrence.next
+        BotManager.schedule_wake_up(bot, skill, index |> to_string, next)
+      end)
+      skill
+    end
+
     def init(skill, _bot), do: skill
 
     defp send_message(skill, bot, session_id, content) do
@@ -116,6 +136,18 @@ defmodule Aida.Skill.ScheduledMessages do
       |> Enum.each(fn session_id ->
         send_message(skill, bot, session_id, fixed_message.message)
       end)
+    end
+
+    def wake_up(%{schedule_type: :recurrent, messages: messages} = skill, bot, message_index) do
+      message_index = String.to_integer(message_index)
+      recurrent_message = messages |> Enum.at(message_index)
+      DB.session_ids_by_bot(bot.id)
+      |> Enum.each(fn session_id ->
+        send_message(skill, bot, session_id, recurrent_message.message)
+      end)
+
+      next = recurrent_message.recurrence |> Recurrence.next
+      BotManager.schedule_wake_up(bot, skill, message_index |> to_string, next)
     end
 
     def wake_up(_skill, _bot, _data) do

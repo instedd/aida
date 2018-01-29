@@ -93,7 +93,15 @@ defmodule Aida.Message do
   end
 
   @spec put_session(message :: t, key :: String.t, value :: Session.value) :: t
-  def put_session(%{session: session} = message, key, value) do
+  def put_session(%{session: session, bot: bot} = message, key, value, options \\ []) do
+    encrypted = Keyword.get(options, :encrypted, false)
+    value =
+      if encrypted do
+        Bot.encrypt(bot, value)
+      else
+        value
+      end
+
     %{message | session: Session.put(session, key, value)}
   end
 
@@ -113,7 +121,7 @@ defmodule Aida.Message do
 
   def words(_), do: []
 
-  defp lookup_var(message, key) do
+  def lookup_var(message, key) do
     case message.bot |> Bot.lookup_var(message, key) do
       nil ->
         message.session |> Session.lookup_var(key)
@@ -124,6 +132,10 @@ defmodule Aida.Message do
 
   defp display_var(value) when is_list(value) do
     value |> Enum.join(", ")
+  end
+
+  defp display_var(:not_found) do
+    ""
   end
 
   defp display_var(value) do
@@ -153,14 +165,33 @@ defmodule Aida.Message do
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       expr = text |> Kernel.binary_part(v_start, v_len)
-      expr_result = Aida.Expr.parse(expr) |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
+      expr_result =
+        Aida.Expr.parse(expr)
+        |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
+        |> display_var
+
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
       text_before <> expr_result <> text_after
     end)
   end
 
   def expr_context(message, options \\ []) do
-    context = Session.expr_context(message.session, options)
+    lookup_raises = options[:lookup_raises]
+    var_lookup = fn (name) ->
+      case Message.lookup_var(message, name) do
+        :not_found ->
+          if lookup_raises do
+            raise Aida.Expr.UnknownVariableError.exception(name)
+          else
+            nil
+          end
+        value -> value
+      end
+    end
+
+    context = options
+      |> Keyword.merge([var_lookup: var_lookup])
+      |> Aida.Expr.Context.new
 
     Bot.expr_context(message.bot, context, options)
   end

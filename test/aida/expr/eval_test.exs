@@ -46,6 +46,7 @@ defmodule Aida.Expr.EvalTest do
     test "attributes" do
       lookup_fn = fn ("foo") -> 42 end
       assert eval("foo", %Context{attr_lookup: lookup_fn}) == 42
+      assert eval("foo", Context.new) == nil
     end
 
     test "function calls" do

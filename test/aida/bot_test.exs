@@ -330,6 +330,43 @@ defmodule Aida.BotTest do
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
+
+    test "lookup from eval", %{bot: bot} do
+      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"language" => "en"}}))
+        |> Message.expr_context(lookup_raises: true)
+
+      value = Aida.Expr.parse("${food_options}")
+        |> Aida.Expr.eval(expr_context)
+
+      assert value == "barbecue and pasta"
+    end
+
+    test "ignore non existing vars in messages" do
+      bot = %Bot{
+        id: @uuid,
+        languages: ["en"],
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "" },
+            id: "id",
+            bot_id: @uuid,
+            name: "Distribution days",
+            keywords: %{
+              "en" => ["days"]
+            },
+            response: %{
+              "en" => "We will deliver ${foo}"
+            }
+          }
+        ]
+      }
+
+      output = bot |> Bot.chat(Message.new("days", bot))
+      assert output.reply == [
+        "We will deliver "
+      ]
+    end
   end
 
   describe "data_tables" do
@@ -340,7 +377,7 @@ defmodule Aida.BotTest do
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
-            clarification: %{ "en" => "", },
+            clarification: %{ "en" => "" },
             id: "id",
             bot_id: @uuid,
             name: "Distribution days",
@@ -394,6 +431,63 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "We will deliver Next Thursday"
       ]
+    end
+
+  end
+  describe "attributes" do
+    setup do
+      bot = %Bot{
+        id: @uuid,
+        languages: ["en"],
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "" },
+            id: "id",
+            bot_id: @uuid,
+            name: "Distribution",
+            keywords: %{
+              "en" => ["days"]
+            },
+            response: %{
+              "en" => "We will deliver {{ attribute }}"
+            }
+          }
+        ]
+      }
+
+      %{bot: bot}
+    end
+
+    test "ignore attributes by default", %{bot: bot} do
+      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"language" => "en"}}))
+        |> Message.expr_context(lookup_raises: true)
+
+      value = Aida.Expr.parse("food_options")
+        |> Aida.Expr.eval(expr_context)
+
+      assert value == nil
+    end
+
+    test "ignore attributes in messages", %{bot: bot} do
+      output = bot |> Bot.chat(Message.new("days", bot))
+      assert output.reply == [
+        "We will deliver "
+      ]
+    end
+  end
+
+  describe "encryption" do
+    setup do
+      {private, public} = Kcl.generate_key_pair()
+      bot = %Bot{public_keys: [public]}
+      [bot: bot, private: private]
+    end
+
+    test "encrypt a value", %{bot: bot, private: private} do
+      value = Bot.encrypt(bot, "Hello")
+      assert %{"type" => "encrypted"} = value
+      assert "Hello" == Aida.Crypto.decrypt(value, private)
     end
   end
 end

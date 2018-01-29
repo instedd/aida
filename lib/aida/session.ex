@@ -84,33 +84,10 @@ defmodule Aida.Session do
         match = values |> Enum.find(fn {k, _} -> k |> String.ends_with?("/#{key}") end)
         case match do
           {_, value} -> value
-          nil -> nil
+          nil -> :not_found
         end
 
       value -> value
     end
-  end
-
-  def expr_context(session, options \\ []) do
-    self = options[:self]
-    lookup_raises = options[:lookup_raises]
-    attr_lookup = options[:attr_lookup]
-
-    %Aida.Expr.Context{
-      self: self,
-      var_lookup:
-        fn (name) ->
-          case Session.lookup_var(session, name) do
-            nil ->
-              if lookup_raises do
-                raise Aida.Expr.UnknownVariableError.exception(name)
-              else
-                nil
-              end
-            value -> value
-          end
-        end,
-      attr_lookup: attr_lookup
-    }
   end
 end

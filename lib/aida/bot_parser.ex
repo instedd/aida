@@ -11,7 +11,8 @@ defmodule Aida.BotParser do
     Skill.Survey,
     Variable,
     Channel.Facebook,
-    Channel.WebSocket
+    Channel.WebSocket,
+    Recurrence
   }
 
   @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
@@ -24,7 +25,7 @@ defmodule Aida.BotParser do
         skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
         channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1))),
-        public_keys: manifest["public_keys"] || [],
+        public_keys: parse_public_keys(manifest["public_keys"]),
         data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1)
       }
       |> validate()
@@ -108,6 +109,7 @@ defmodule Aida.BotParser do
     schedule_type = case skill["schedule_type"] do
       "since_last_incoming_message" -> :since_last_incoming_message
       "fixed_time" -> :fixed_time
+      "recurrent" -> :recurrent
     end
 
     %ScheduledMessages{
@@ -161,6 +163,47 @@ defmodule Aida.BotParser do
       message: message["message"]
     }
   end
+
+  defp parse_scheduled_message(message, :recurrent) do
+    %ScheduledMessages.RecurrentMessage{
+      recurrence: parse_recurrence(message["recurrence"]),
+      message: message["message"]
+    }
+  end
+
+  defp parse_recurrence(%{"type" => "daily"} = recurrence) do
+    {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+    %Recurrence.Daily{
+      start: start,
+      every: recurrence["every"]
+    }
+  end
+
+  defp parse_recurrence(%{"type" => "weekly"} = recurrence) do
+    {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+    %Recurrence.Weekly{
+      start: start,
+      every: recurrence["every"],
+      on: recurrence["on"] |> Enum.map(&parse_weekday/1)
+    }
+  end
+
+  defp parse_recurrence(%{"type" => "monthly"} = recurrence) do
+    {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+    %Recurrence.Monthly{
+      start: start,
+      every: recurrence["every"],
+      each: recurrence["each"]
+    }
+  end
+
+  defp parse_weekday("sunday"), do: :sunday
+  defp parse_weekday("monday"), do: :monday
+  defp parse_weekday("tuesday"), do: :tuesday
+  defp parse_weekday("wednesday"), do: :wednesday
+  defp parse_weekday("thursday"), do: :thursday
+  defp parse_weekday("friday"), do: :friday
+  defp parse_weekday("saturday"), do: :saturday
 
   defp parse_survey_question(question, choice_lists) do
     question_type = case question["type"] do
@@ -234,6 +277,13 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       access_token: channel["access_token"]
     }
+  end
+
+  def parse_public_keys(nil), do: []
+
+  def parse_public_keys(public_keys) do
+    public_keys
+    |> Enum.map(&Base.decode64!/1)
   end
 
   defp validate(bot) do

@@ -136,7 +136,8 @@
     "scheduled_messages": {
       "oneOf": [
         {"$ref": "#/definitions/scheduled_messages_since_last_incoming_message"},
-        {"$ref": "#/definitions/scheduled_messages_fixed_time"}
+        {"$ref": "#/definitions/scheduled_messages_fixed_time"},
+        {"$ref": "#/definitions/scheduled_messages_recurrent"}
       ]
     },
 
@@ -176,6 +177,24 @@
       "required": ["type", "id", "name", "schedule_type", "messages"]
     },
 
+    "scheduled_messages_recurrent": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["scheduled_messages"]},
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
+        "schedule_type": {"enum": ["recurrent"]},
+        "relevant": {"$ref": "#/definitions/non_empty_string"},
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/definitions/recurrent_message"}
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "id", "name", "schedule_type", "messages"]
+    },
+
     "delayed_message": {
       "type": "object",
       "properties": {
@@ -194,6 +213,60 @@
       },
       "additionalProperties": false,
       "required": ["schedule", "message"]
+    },
+
+    "recurrent_message": {
+      "type": "object",
+      "properties": {
+        "recurrence": {"oneOf": [
+          {"$ref": "#/definitions/recurrence_daily"},
+          {"$ref": "#/definitions/recurrence_weekly"},
+          {"$ref": "#/definitions/recurrence_monthly"}
+        ]},
+        "message": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["recurrence", "message"]
+    },
+
+    "recurrence_daily": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["daily"]},
+        "start": {"$ref": "#/definitions/timestamp"},
+        "every": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false,
+      "required": ["type", "start", "every"]
+    },
+
+    "recurrence_weekly": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["weekly"]},
+        "start": {"$ref": "#/definitions/timestamp"},
+        "every": {"type": "integer", "minimum": 1},
+        "on": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"enum": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "required": ["type", "start", "every", "on"]
+    },
+
+    "recurrence_monthly": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["monthly"]},
+        "start": {"$ref": "#/definitions/timestamp"},
+        "every": {"type": "integer", "minimum": 1},
+        "each": {"type": "integer", "minimum": 1, "maximum": 31}
+      },
+      "additionalProperties": false,
+      "required": ["type", "start", "every", "each"]
     },
 
     "survey": {

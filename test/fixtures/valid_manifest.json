@@ -124,6 +124,49 @@
       ]
     },
     {
+      "type": "scheduled_messages",
+      "id": "reminders",
+      "name": "Reminders",
+      "schedule_type": "recurrent",
+      "messages": [
+        {
+          "recurrence": {
+            "type": "daily",
+            "start": "2018-01-01T10:00:00Z",
+            "every": 7
+          },
+          "message": {
+            "en": "Remember we're closed on Mondays",
+            "es": "Recuerde que no abrimos los lunes"
+          }
+        },
+        {
+          "recurrence": {
+            "type": "weekly",
+            "start": "2018-01-01T11:00:00Z",
+            "every": 1,
+            "on": ["saturday", "sunday"]
+          },
+          "message": {
+            "en": "Discover our weekend specialities",
+            "es": "Descubra nuestras especialidades del fin de semana"
+          }
+        },
+        {
+          "recurrence": {
+            "type": "monthly",
+            "start": "2018-01-01T12:00:00Z",
+            "every": 2,
+            "each": 5
+          },
+          "message": {
+            "en": "We change the menu every two months. Say 'menu' to discover it!",
+            "es": "Cambiamos el menú cada dos meses. Diga 'menu' para descrubrirlo!"
+          }
+        }
+      ]
+    },
+    {
       "type": "survey",
       "id": "food_preferences",
       "name": "Food Preferences",
@@ -457,8 +500,8 @@
     }
   ],
   "public_keys": [
-    "YmIzNDYyOWEtODM0NS00NTNiLWFmODQtYWU2ZTcwMDJlNjg5",
-    "YTE3ZWMyM2EtMDRhMi00ODk2LTljMDYtYTUxZDUzMTVmMDAy"
+    "wCDc+xyKyR35DBU9Ih21n/yMJ/WqvGcAY99v1kzNEWw=",
+    "xagVTmSwY8Z1nH0ZW7ABzRlFdbw8vZ8Dz2FKfFuglCI="
   ],
   "data_tables": [
     {

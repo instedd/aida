@@ -10,12 +10,14 @@ defmodule Aida.BotParserTest do
     Skill.ScheduledMessages,
     Skill.ScheduledMessages.DelayedMessage,
     Skill.ScheduledMessages.FixedTimeMessage,
+    Skill.ScheduledMessages.RecurrentMessage,
     Skill.Survey,
     Skill.Survey.SelectQuestion,
     Skill.Survey.InputQuestion,
     Skill.Survey.Choice,
     Skill.DecisionTree,
-    Variable
+    Variable,
+    Recurrence
   }
   alias Aida.Channel.{Facebook, WebSocket}
 
@@ -138,6 +140,35 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "Happy new year!",
                 "es" => "Feliz año nuevo!"
+              }
+            }
+          ]
+        },
+        %ScheduledMessages{
+          id: "reminders",
+          bot_id: @uuid,
+          name: "Reminders",
+          schedule_type: :recurrent,
+          messages: [
+            %RecurrentMessage{
+              recurrence: %Recurrence.Daily{start: ~N[2018-01-01T10:00:00Z] |> DateTime.from_naive!("Etc/UTC"), every: 7},
+              message: %{
+                "en" => "Remember we're closed on Mondays",
+                "es" => "Recuerde que no abrimos los lunes"
+              }
+            },
+            %RecurrentMessage{
+              recurrence: %Recurrence.Weekly{start: ~N[2018-01-01T11:00:00Z] |> DateTime.from_naive!("Etc/UTC"), every: 1, on: [:saturday, :sunday]},
+              message: %{
+                "en" => "Discover our weekend specialities",
+                "es" => "Descubra nuestras especialidades del fin de semana"
+              }
+            },
+            %RecurrentMessage{
+              recurrence: %Recurrence.Monthly{start: ~N[2018-01-01T12:00:00Z] |> DateTime.from_naive!("Etc/UTC"), every: 2, each: 5},
+              message: %{
+                "en" => "We change the menu every two months. Say 'menu' to discover it!",
+                "es" => "Cambiamos el menú cada dos meses. Diga 'menu' para descrubrirlo!"
               }
             }
           ]
@@ -432,8 +463,8 @@ defmodule Aida.BotParserTest do
         }
       ],
       public_keys: [
-        "YmIzNDYyOWEtODM0NS00NTNiLWFmODQtYWU2ZTcwMDJlNjg5",
-        "YTE3ZWMyM2EtMDRhMi00ODk2LTljMDYtYTUxZDUzMTVmMDAy"
+        <<192, 32, 220, 251, 28, 138, 201, 29, 249, 12, 21, 61, 34, 29, 181, 159, 252, 140, 39, 245, 170, 188, 103, 0, 99, 223, 111, 214, 76, 205, 17, 108>>,
+        <<197, 168, 21, 78, 100, 176, 99, 198, 117, 156, 125, 25, 91, 176, 1, 205, 25, 69, 117, 188, 60, 189, 159, 3, 207, 97, 74, 124, 91, 160, 148, 34>>
       ],
       data_tables: [
         %DataTable{

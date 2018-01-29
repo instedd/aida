@@ -1,6 +1,6 @@
 defmodule AidaWeb.SessionControllerTest do
   use AidaWeb.ConnCase
-  alias Aida.{BotParser, Session, SessionStore, DB, Repo, TestChannel, ChannelProvider}
+  alias Aida.{BotParser, Session, SessionStore, DB, Repo, TestChannel, ChannelProvider, DB.MessageLog, JsonSchema}
   alias Aida.DB.{MessageLog}
   alias Aida.JsonSchema
   import Mock
