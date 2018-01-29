@@ -51,4 +51,20 @@ defmodule Aida.Skill.Utils do
         end
     end
   end
+
+  def confidence_for_keywords(keywords, message) do
+    words_in_message = Message.words(message)
+
+    matches = words_in_message
+    |> Enum.filter(fn(word) ->
+      Enum.member?(keywords[Message.language(message)], word)
+    end)
+
+    word_count = Enum.count(words_in_message)
+    case word_count do
+      0 -> 0
+      _ ->Enum.count(matches)/word_count
+    end
+  end
+
 end

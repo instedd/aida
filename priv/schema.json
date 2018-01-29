@@ -101,6 +101,7 @@
         {"$ref": "#/definitions/keyword_responder"},
         {"$ref": "#/definitions/language_detector"},
         {"$ref": "#/definitions/scheduled_messages"},
+        {"$ref": "#/definitions/decision_tree"},
         {"$ref": "#/definitions/survey"}
       ]
     },
@@ -288,6 +289,45 @@
       },
       "additionalProperties": false,
       "required": ["type", "id", "name", "schedule", "questions", "choice_lists"]
+    },
+
+    "decision_tree": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["decision_tree"]},
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
+        "explanation": {"$ref": "#/definitions/localized_string"},
+        "clarification": {"$ref": "#/definitions/localized_string"},
+        "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "relevant": {"$ref": "#/definitions/non_empty_string"},
+        "tree": {"$ref": "#/definitions/tree_question"}
+      },
+      "additionalProperties": false,
+      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "tree" ]
+    },
+
+    "tree_question":{
+      "question": {"$ref": "#/definitions/localized_string"},
+      "responses": {
+        "type": "array",
+        "minItems": 1,
+        "items": {"$ref": "#/definitions/tree_response"}
+      }
+    },
+
+    "tree_response":{
+      "keywords": {"$ref": "#/definitions/localized_keywords"},
+      "next": {
+          "oneOf": [
+          {"$ref": "#/definitions/tree_question"},
+          {"$ref": "#/definitions/answer"}
+        ]
+      }
+    },
+
+    "answer":  {
+      "$ref": "#/definitions/localized_string"
     },
 
     "question": {

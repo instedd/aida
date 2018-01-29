@@ -6,10 +6,26 @@ defmodule Aida.BotTest do
     "Hello, I'm a Restaurant bot",
     "I can do a number of things",
     "I can give you information about our menu",
-    "I can give you information about our opening hours"
+    "I can give you information about our opening hours",
+    "I can help you choose a meal that fits your dietary restrictions"
   ]
 
   @english_not_understood [
+    "Sorry, I didn't understand that",
+    "I can do a number of things",
+    "I can give you information about our menu",
+    "I can give you information about our opening hours",
+    "I can help you choose a meal that fits your dietary restrictions"
+  ]
+
+  @english_single_lang_restaurant_greet [
+    "Hello, I'm a Restaurant bot",
+    "I can do a number of things",
+    "I can give you information about our menu",
+    "I can give you information about our opening hours"
+  ]
+
+  @english_single_lang_not_understood [
     "Sorry, I didn't understand that",
     "I can do a number of things",
     "I can give you information about our menu",
@@ -20,14 +36,16 @@ defmodule Aida.BotTest do
     "Perdón, no entendí lo que dijiste",
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
-    "Te puedo dar información sobre nuestro horario"
+    "Te puedo dar información sobre nuestro horario",
+    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
   ]
 
   @spanish_restaurant_greet [
     "Hola, soy un bot de Restaurant",
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
-    "Te puedo dar información sobre nuestro horario"
+    "Te puedo dar información sobre nuestro horario",
+    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
   ]
 
   @language_selection_speech [
@@ -51,19 +69,19 @@ defmodule Aida.BotTest do
     test "replies with greeting on the first message", %{bot: bot} do
       input = Message.new("Hi!", bot)
       output = bot |> Bot.chat(input)
-      assert output.reply == @english_restaurant_greet
+      assert output.reply == @english_single_lang_restaurant_greet
     end
 
     test "replies with explanation when message not understood and is not the first message", %{bot: bot} do
       response = bot |> Bot.chat(Message.new("Hi!", bot))
       output = bot |> Bot.chat(Message.new("foobar", bot, response.session))
-      assert output.reply == @english_not_understood
+      assert output.reply == @english_single_lang_not_understood
     end
 
     test "replies with explanation when message has unknown content and is not the first message", %{bot: bot} do
       response = bot |> Bot.chat(Message.new("Hi!", bot))
       output = bot |> Bot.chat(Message.new_unknown(bot, response.session))
-      assert output.reply == @english_not_understood
+      assert output.reply == @english_single_lang_not_understood
     end
 
     test "replies with clarification when message matches more than one skill and similar confidence", %{bot: bot} do
