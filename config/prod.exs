@@ -68,5 +68,8 @@ config :aida, Aida.Repo,
   database: "aida",
   pool_size: 15
 
-config :aida, Aida.Crypto,
-  private_key: Base.decode64!(System.get_env("PRIVATE_KEY"))
+private_key = System.get_env("PRIVATE_KEY")
+if private_key do
+  config :aida, Aida.Crypto,
+    private_key: Base.decode64!(private_key)
+end
