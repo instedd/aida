@@ -360,8 +360,8 @@ defmodule Aida.BotParserTest do
         }
       ],
       public_keys: [
-        "YmIzNDYyOWEtODM0NS00NTNiLWFmODQtYWU2ZTcwMDJlNjg5",
-        "YTE3ZWMyM2EtMDRhMi00ODk2LTljMDYtYTUxZDUzMTVmMDAy"
+        <<192, 32, 220, 251, 28, 138, 201, 29, 249, 12, 21, 61, 34, 29, 181, 159, 252, 140, 39, 245, 170, 188, 103, 0, 99, 223, 111, 214, 76, 205, 17, 108>>,
+        <<197, 168, 21, 78, 100, 176, 99, 198, 117, 156, 125, 25, 91, 176, 1, 205, 25, 69, 117, 188, 60, 189, 159, 3, 207, 97, 74, 124, 91, 160, 148, 34>>
       ],
       data_tables: [
         %DataTable{

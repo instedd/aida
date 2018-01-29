@@ -24,7 +24,7 @@ defmodule Aida.BotParser do
         skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
         channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1))),
-        public_keys: manifest["public_keys"] || [],
+        public_keys: parse_public_keys(manifest["public_keys"]),
         data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1)
       }
       |> validate()
@@ -263,6 +263,13 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       access_token: channel["access_token"]
     }
+  end
+
+  def parse_public_keys(nil), do: []
+
+  def parse_public_keys(public_keys) do
+    public_keys
+    |> Enum.map(&Base.decode64!/1)
   end
 
   defp validate(bot) do
