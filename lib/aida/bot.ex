@@ -11,7 +11,7 @@ defmodule Aida.Bot do
     skills: [Skill.t],
     variables: [Variable.t],
     channels: [Channel.t],
-    public_keys: [String.t],
+    public_keys: [binary],
     data_tables: [DataTable.t]
   }
 
