@@ -51,7 +51,8 @@ defmodule Aida.Skill.DecisionTree do
     end
 
     defp find_response(question, message) do
-      question.responses |> Enum.find(&(Enum.any?(Map.values(&1.keywords), fn(x) -> Enum.member?(x, String.downcase(Message.text_content(message))) end)))
+      downcase = String.downcase(Message.text_content(message))
+      question.responses |> Enum.find(&Response.matches_string(&1, downcase))
     end
   end
 
@@ -73,6 +74,12 @@ defmodule Aida.Skill.DecisionTree do
 
     defstruct keywords: %{},
               next: ""
+
+    def matches_string(response, string)do
+      Enum.any?(Map.values(response.keywords), fn(x) ->
+        Enum.member?(x, string)
+      end)
+    end
   end
 
   def get_message(%Question{} = question) do
@@ -161,14 +168,14 @@ defmodule Aida.Skill.DecisionTree do
     def put_response(decision_tree, message) do
       question = DecisionTree.current_question(decision_tree, message)
 
-      [next_question, message] = case question do
+      {next_question, message} = case question do
         nil ->
           session = message.session
           if session |> Session.get("language") do
             message = message
               |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => "root"})
 
-            [decision_tree.tree["root"], message]
+            {decision_tree.tree["root"], message}
           end
         _ ->
           next_question = decision_tree.tree[Question.next_question_id(question, message)]
@@ -180,7 +187,7 @@ defmodule Aida.Skill.DecisionTree do
             nil ->
               message
           end
-          [next_question || question, message]
+          {next_question || question, message}
       end
 
       message |> Message.respond(DecisionTree.get_message(next_question))
