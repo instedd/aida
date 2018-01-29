@@ -1,11 +1,9 @@
 defmodule Aida.DecisionTreeTest do
-  alias Aida.{Bot, SessionStore, BotParser, TestChannel, Session, Message, ChannelProvider}
+  alias Aida.{Bot, SessionStore, BotParser, Session, Message}
   alias Aida.Skill.DecisionTree
   use Aida.DataCase
-  import Mock
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
-  @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
   @session_id "#{@bot_id}/facebook/1234567890/0987654321"
 
   @basic_answer %{"answer" =>
@@ -17,7 +15,7 @@ defmodule Aida.DecisionTreeTest do
       "question" => %{"en" => "Do you want to eat a main course or a dessert?",
         "es" => "Querés comer un primer plato o un postre?"},
       "responses" => [
-        %{"keywords" => %{"en" => ["main course"],
+        %{"keywords" => %{"en" => ["main course", "Main"],
            "es" => ["primer plato"]},
          "next" =>
            %{"id" => "c038e08e-6095-4897-9184-eae929aba8c6",
@@ -63,11 +61,23 @@ defmodule Aida.DecisionTreeTest do
       assert question.question == %{"en" => "Do you want to eat a main course or a dessert?", "es" => "Querés comer un primer plato o un postre?"}
       assert Enum.count(question.responses) == 2
 
-      main_course = question.responses |> Enum.find(&(Enum.member?(Map.values(&1.keywords), ["main course"])))
+      main_course = question.responses |> Enum.find(&(Enum.any?(Map.values(&1.keywords), fn(x) -> Enum.member?(x, "main course") end)))
       dessert = question.responses |> Enum.find(&(Enum.member?(Map.values(&1.keywords), ["dessert"])))
 
       assert main_course.next == "c038e08e-6095-4897-9184-eae929aba8c6"
       assert dessert.next == "75f04293-f561-462f-9e74-a0d011e1594a"
+    end
+
+    test "parse question stores responses in downcase" do
+      question = DecisionTree.parse_question(@basic_tree)
+
+      assert question.id == "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
+      assert question.question == %{"en" => "Do you want to eat a main course or a dessert?", "es" => "Querés comer un primer plato o un postre?"}
+      assert Enum.count(question.responses) == 2
+
+      main_course = question.responses |> Enum.find(&(Enum.any?(Map.values(&1.keywords), fn(x) -> Enum.member?(x, "main") end)))
+
+      assert main_course.keywords["en"] == ["main course", "main"]
     end
 
     test "parse answer" do
@@ -92,12 +102,11 @@ defmodule Aida.DecisionTreeTest do
       %{bot: bot}
     end
 
-    test "starts the DecisionTree", %{bot: bot} do
+    test "starts the DecisionTree when the kewyord matches", %{bot: bot} do
       Session.new(@session_id, %{"language" => "en"})
       |> Session.save
 
-      session = Session.load(@session_id)
-      message = Message.new("meal recommendation", bot, session)
+      message = Message.new("meal recommendation", bot, Session.load(@session_id))
       message = Bot.chat(bot, message)
 
       assert message.reply == ["Do you want to eat a main course or a dessert?"]
@@ -105,7 +114,58 @@ defmodule Aida.DecisionTreeTest do
       assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "root"}
     end
 
+    test "accepts an answer for the root question and performs the next", %{bot: bot} do
+      Session.new(@session_id, %{"language" => "en"})
+      |> Session.save
+
+      message = Message.new("dessert", bot, Session.load(@session_id))
+      message = message
+        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "root"})
+      message = Bot.chat(bot, message)
+
+      assert message.reply == ["Are you vegan?"]
+      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"}
+    end
+
+    test "accepts an answer for the root question when there are different ways of selecting a branch (array) and performs the next", %{bot: bot} do
+      Session.new(@session_id, %{"language" => "en"})
+      |> Session.save
+
+      message = Message.new("Main", bot, Session.load(@session_id))
+      message = message
+        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "root"})
+      message = Bot.chat(bot, message)
+
+      assert message.reply == ["Are you a vegetarian?"]
+      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "c038e08e-6095-4897-9184-eae929aba8c6"}
+    end
+
+    test "when there is an invalid answer performs the last question again", %{bot: bot} do
+      Session.new(@session_id, %{"language" => "en"})
+      |> Session.save
+
+      message = Message.new("i want dessert", bot, Session.load(@session_id))
+      message = message
+        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"})
+      message = Bot.chat(bot, message)
+
+      assert message.reply == ["Are you vegan?"]
+      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"}
+    end
+
+    test "when it reaches an answer replies with it and resets the session", %{bot: bot} do
+      Session.new(@session_id, %{"language" => "en"})
+      |> Session.save
+
+      message = Message.new("yes", bot, Session.load(@session_id))
+      message = message
+        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"})
+      message = Bot.chat(bot, message)
+
+      assert message.reply == ["Go with a carrot cake"]
+      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+    end
+
 
   end
-
 end

@@ -139,6 +139,8 @@ defmodule Aida.BotParser do
       id: skill["id"],
       bot_id: bot_id,
       name: skill["name"],
+      explanation: skill["explanation"],
+      clarification: skill["clarification"],
       keywords: skill["keywords"],
       relevant: parse_expr(skill["relevant"]),
       tree: DecisionTree.flatten(skill["tree"])
