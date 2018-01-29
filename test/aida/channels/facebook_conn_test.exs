@@ -158,7 +158,7 @@ defmodule Aida.Channel.FacebookConnTest do
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
 
-        {:ok, pull_ts, 0} = Session.get(session, "facebook_profile_ts") |> DateTime.from_iso8601
+        {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601
         assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
       end
     end
@@ -167,7 +167,7 @@ defmodule Aida.Channel.FacebookConnTest do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
-          |> Session.put("facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
+          |> Session.put(".facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
           |> Session.save
 
         build_conn(:post, "/callback/facebook", @incoming_message)
@@ -185,7 +185,7 @@ defmodule Aida.Channel.FacebookConnTest do
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
           |> Session.put("first_name", "---")
-          |> Session.put("facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
+          |> Session.put(".facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
           |> Session.save
 
         build_conn(:post, "/callback/facebook", @incoming_message)
@@ -213,7 +213,7 @@ defmodule Aida.Channel.FacebookConnTest do
         assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private)
         assert "male" == Session.get(session, "gender")
 
-        {:ok, pull_ts, 0} = Session.get(session, "facebook_profile_ts") |> DateTime.from_iso8601
+        {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601
         assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
       end
     end
