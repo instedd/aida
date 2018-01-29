@@ -1,7 +1,7 @@
 defmodule Aida.SurveyQuestionTest do
   alias Aida.Skill.Survey.{Question, InputQuestion, SelectQuestion, Choice}
   alias Aida.{Session, Message, Bot, Message.ImageContent}
-  use ExUnit.Case
+  use Aida.DataCase
   import Mock
 
   @yes_no [
@@ -374,6 +374,21 @@ defmodule Aida.SurveyQuestionTest do
 
         message = Message.new(url, @bot, @session)
         assert Question.accept_answer(question, message) == :error
+      end
+    end
+
+    test "stores correct content type for image" do
+      url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
+
+      response = %HTTPoison.Response{
+        body: "an_image",
+        headers: [{"Content-Type", "image/png"}]
+      }
+
+      with_mock HTTPoison, [get!: fn(_) -> response end] do
+        image_content = %ImageContent{source_url: url, image_id: nil}
+        ImageContent.pull_and_store_image(image_content, "e75ecc4a-b8b6-421f-a40d-6c72a13d910c", @session_uuid)
+        assert (Aida.DB.Image |> Aida.Repo.all |> hd).binary_type == "image/png"
       end
     end
   end
