@@ -1,6 +1,6 @@
 defmodule Aida.Skill.DecisionTree do
   alias __MODULE__
-  alias Aida.{Message, Message.TextContent, Session}
+  alias Aida.{Bot, Message, Message.TextContent, Session, Skill.Utils}
   alias Aida.Skill.DecisionTree.{Question, Answer, Response}
 
   @type t :: %__MODULE__{
@@ -141,21 +141,6 @@ defmodule Aida.Skill.DecisionTree do
     end
   end
 
-  def confidence_for_keyword(%{keywords: keywords}, message) do
-    words_in_message = Message.words(message)
-
-    matches = words_in_message
-    |> Enum.filter(fn(word) ->
-      Enum.member?(keywords[Message.language(message)], word)
-    end)
-
-    word_count = Enum.count(words_in_message)
-    case word_count do
-      0 -> 0
-      _ ->Enum.count(matches)/word_count
-    end
-  end
-
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, _bot) do
       skill
@@ -204,7 +189,7 @@ defmodule Aida.Skill.DecisionTree do
     def confidence(decision_tree, %{content: %TextContent{}} = message) do
       case DecisionTree.current_question(decision_tree, message) do
         nil ->
-          DecisionTree.confidence_for_keyword(decision_tree, message)
+          Utils.confidence_for_keywords(decision_tree.keywords, message)
         question ->
           if question |> Question.valid_answer?(message) do
             1
