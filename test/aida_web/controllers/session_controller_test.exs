@@ -68,6 +68,68 @@ defmodule AidaWeb.SessionControllerTest do
       assert Ecto.DateTime.cast!((response |> hd)["last_message"]) == Ecto.DateTime.cast!("2018-01-08T16:30:00")
     end
 
+    test "considers only incoming messages to calculate first and last messages", %{conn: conn, bot: bot} do
+      session_id = "#{bot.id}/facebook/1234567890/1234"
+      {session_id, @uuid, %{"foo" => 1, "bar" => 2}}
+        |> Session.new
+        |> Session.save
+
+      first_message_attrs = %{
+        bot_id: bot.id,
+        session_id: session_id,
+        session_uuid: @uuid,
+        direction: "incoming",
+        content: "Hi!",
+        content_type: "text",
+        inserted_at: "2018-01-08T16:00:00",
+        updated_at: "2018-01-08T16:00:00"
+      }
+
+      second_message_attrs = %{
+        bot_id: bot.id,
+        session_id: session_id,
+        session_uuid: @uuid,
+        direction: "outgoing",
+        content: "Hello, I can give you information about the menu",
+        content_type: "text",
+        inserted_at: "2018-01-08T16:01:00",
+        updated_at: "2018-01-08T16:01:00"
+      }
+
+      third_message_attrs = %{
+        bot_id: bot.id,
+        session_id: session_id,
+        session_uuid: @uuid,
+        direction: "incoming",
+        content: "menu",
+        content_type: "text",
+        inserted_at: "2018-01-08T16:02:00",
+        updated_at: "2018-01-08T16:02:00"
+      }
+
+      fourth_message_attrs = %{
+        bot_id: bot.id,
+        session_id: session_id,
+        session_uuid: @uuid,
+        direction: "outgoing",
+        content: "we have barbecue and pasta and a exclusive selection of wines",
+        content_type: "text",
+        inserted_at: "2018-01-08T16:03:00",
+        updated_at: "2018-01-08T16:03:00"
+      }
+
+      create_message_log(first_message_attrs)
+      create_message_log(second_message_attrs)
+      create_message_log(third_message_attrs)
+      create_message_log(fourth_message_attrs)
+
+      conn = get conn, bot_session_path(conn, :index, bot.id)
+
+      response = json_response(conn, 200)["data"]
+      assert Ecto.DateTime.cast!((response |> hd)["first_message"]) == Ecto.DateTime.cast!("2018-01-08T16:00:00")
+      assert Ecto.DateTime.cast!((response |> hd)["last_message"]) == Ecto.DateTime.cast!("2018-01-08T16:02:00")
+    end
+
     test "retrieves empty message dates when session has no messages", %{conn: conn, bot: bot} do
       session_id = "#{bot.id}/facebook/1234567890/1234"
       {session_id, @uuid, %{"foo" => 1, "bar" => 2}}

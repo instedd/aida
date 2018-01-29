@@ -20,6 +20,7 @@ defmodule Aida.DB.Session do
     Session
       |> join(:inner, [s], m in MessageLog, m.session_id == s.id)
       |> where([s], like(s.id, ^"#{bot_id}/%"))
+      |> where([_, m], m.direction == "incoming")
       |> group_by([s, m], s.id)
       |> select([s, m], %{id: s.uuid, first_message: min(m.inserted_at), last_message: max(m.inserted_at)})
       |> Repo.all()
