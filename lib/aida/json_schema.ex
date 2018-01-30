@@ -3,7 +3,8 @@ defmodule Aida.JsonSchema do
   A service which validates objects according to types defined in `schema.json`.
   """
   use GenServer
-  alias Aida.Logger
+  require Logger
+
   defmodule State do
     defstruct [:schema_path, :schema_mtime, :schema]
   end

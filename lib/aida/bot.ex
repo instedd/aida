@@ -7,13 +7,13 @@ defmodule Aida.Bot do
     DB.MessageLog,
     DB.MessagesPerDay,
     FrontDesk,
-    Logger,
     Message,
     Skill,
     Variable
   }
 
   alias __MODULE__
+  require Logger
 
   @type message :: map
 

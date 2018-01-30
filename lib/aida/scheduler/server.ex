@@ -1,7 +1,7 @@
 defmodule Aida.Scheduler.Server do
   use GenServer
   alias Aida.Scheduler.Task
-  alias Aida.Logger
+  require Logger
 
   @config Application.get_env(:aida, Aida.Scheduler, [])
   @batch_size @config |> Keyword.get(:batch_size, 100)

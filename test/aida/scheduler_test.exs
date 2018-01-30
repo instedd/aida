@@ -2,6 +2,7 @@ defmodule Aida.SchedulerTest do
   alias Aida.Scheduler
   use Aida.DataCase
   use Aida.TimeMachine
+  use Aida.LogHelper
 
   defmodule TestHandler do
     @behaviour Aida.Scheduler.Handler
@@ -191,8 +192,10 @@ defmodule Aida.SchedulerTest do
     ts2 = within(days: 2)
     Scheduler.appoint("test_task_2/#{pid}", ts2, TestHandler)
 
-    time_travel(ts2) do
-      assert_receive {"test_task_2", ^ts2}
+    without_logging do
+      time_travel(ts2) do
+        assert_receive {"test_task_2", ^ts2}
+      end
     end
 
     refute_received _

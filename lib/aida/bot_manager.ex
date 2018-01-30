@@ -1,6 +1,7 @@
 defmodule Aida.BotManager do
   use GenServer
-  alias Aida.{DB, Channel, Bot, Skill, BotParser, Logger, Scheduler}
+  alias Aida.{DB, Channel, Bot, Skill, BotParser, Scheduler}
+  require Logger
   @server_ref {:global, __MODULE__}
   @table :bots
   @behaviour Aida.Scheduler.Handler
