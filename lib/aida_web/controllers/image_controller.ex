@@ -2,7 +2,6 @@ defmodule AidaWeb.ImageController do
   use AidaWeb, :controller
 
   alias Aida.DB
-  action_fallback AidaWeb.FallbackController
 
   def image(conn, %{"uuid" => uuid}) do
     case DB.get_image(uuid) do
