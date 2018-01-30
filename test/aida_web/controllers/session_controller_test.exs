@@ -213,6 +213,21 @@ defmodule AidaWeb.SessionControllerTest do
         }
       ]
     end
+
+    test "do not include variables starting with dot", %{conn: conn, bot: bot} do
+      data = %{"foo" => 1, "bar" => 2, ".internal" => %{"state" => 1}}
+      {"#{bot.id}/facebook/1234567890/1234", @uuid, data}
+        |> Session.new
+        |> Session.save
+
+      conn = get conn, bot_session_path(conn, :session_data, bot.id)
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id" => @uuid,
+          "data" => Map.delete(data, ".internal")
+        }
+      ]
+    end
   end
 
   describe "log" do

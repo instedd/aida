@@ -9,7 +9,7 @@ defmodule AidaWeb.SessionView do
   def render("session.json", %{session: session}) do
     %{
       id: session.uuid,
-      data: session.data
+      data: session.data |> hide_internal_data()
     }
   end
 
@@ -40,4 +40,12 @@ defmodule AidaWeb.SessionView do
     }
   end
 
+  defp hide_internal_data(data) do
+    internal_keys =
+      data
+      |> Map.keys()
+      |> Enum.filter(&String.starts_with?(&1, "."))
+
+    data |> Map.drop(internal_keys)
+  end
 end
