@@ -1,17 +1,19 @@
 defmodule Aida.Message do
   alias Aida.{Session, Message, Bot}
-  alias Aida.Message.{TextContent, ImageContent, UnknownContent}
+  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content}
 
   @type t :: %__MODULE__{
     session: Session.t,
     bot: Bot.t,
     content: TextContent.t | ImageContent.t | UnknownContent.t,
+    sensitive: boolean,
     reply: [String.t]
   }
 
   defstruct session: %Session{},
             bot: %Bot{},
             content: %TextContent{},
+            sensitive: false,
             reply: []
 
   @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
@@ -97,7 +99,7 @@ defmodule Aida.Message do
     encrypted = Keyword.get(options, :encrypted, false)
     value =
       if encrypted do
-        Bot.encrypt(bot, value)
+        Bot.encrypt(bot, value |> Poison.encode!)
       else
         value
       end
@@ -194,5 +196,17 @@ defmodule Aida.Message do
       |> Aida.Expr.Context.new
 
     Bot.expr_context(message.bot, context, options)
+  end
+
+  def type(%Message{content: content}) do
+    content |> Content.type()
+  end
+
+  def raw(%Message{content: content}) do
+    content |> Content.raw()
+  end
+
+  def mark_sensitive(message) do
+    %{message | sensitive: true}
   end
 end

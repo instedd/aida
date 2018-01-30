@@ -4,7 +4,6 @@ defmodule Aida.Channel.FacebookConnTest do
   import Mock
 
   alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, SessionStore, Session}
-  alias Aida.DB.{MessageLog}
   alias Aida.Channel.Facebook
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
@@ -75,59 +74,12 @@ defmodule Aida.Channel.FacebookConnTest do
       end
     end
 
-    test "logs incoming facebook message" do
-      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
-
-      with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        build_conn(:post, "/callback/facebook", params)
-          |> Facebook.callback()
-
-        incoming_message_logs = MessageLog
-                                |> Repo.all()
-                                |> Enum.filter(&(&1.direction == "incoming"))
-
-        assert incoming_message_logs |> Enum.count == 1
-
-        incoming_message_log = incoming_message_logs |> hd
-        session_id = (Aida.DB.Session |> Repo.one).id
-
-        assert incoming_message_log.session_id == session_id
-        assert incoming_message_log.bot_id == @uuid
-        assert incoming_message_log.content == "Test message"
-      end
-    end
-
-    test "logs outgoing facebook messages" do
-      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
-
-      with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        build_conn(:post, "/callback/facebook", params)
-          |> Facebook.callback()
-
-        outgoing_message_logs = MessageLog
-                                |> Repo.all
-                                |> Enum.filter(&(&1.direction == "outgoing"))
-
-        session_id = (Aida.DB.Session |> Repo.one).id
-        contents = outgoing_message_logs |> Enum.map(&(&1.content))
-
-        assert outgoing_message_logs |> Enum.count == 4
-        assert outgoing_message_logs |> Enum.all?(&(&1.session_id == session_id))
-        assert outgoing_message_logs |> Enum.all?(&(&1.bot_id == @uuid))
-
-        assert contents |> Enum.member?("Hello, I'm a Restaurant bot")
-        assert contents |> Enum.member?("I can do a number of things")
-        assert contents |> Enum.member?("I can give you information about our menu")
-        assert contents |> Enum.member?("I can give you information about our opening hours")
-      end
-    end
-
     test "doesn't send message when receiving a 'read' event" do
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"read" => %{"seq" => 0, "watermark" => "12345"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         build_conn(:post, "/callback/facebook", params)
-          |> Facebook.callback()
+        |> Facebook.callback()
 
         refute called FacebookApi.send_message(:_, :_, :_)
       end
@@ -138,7 +90,7 @@ defmodule Aida.Channel.FacebookConnTest do
 
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         build_conn(:post, "/callback/facebook", params)
-          |> Facebook.callback()
+        |> Facebook.callback()
 
         refute called FacebookApi.send_message(:_, :_, :_)
       end
@@ -210,7 +162,7 @@ defmodule Aida.Channel.FacebookConnTest do
 
         session = Session.load("#{bot.id}/facebook/1234567890/#{recipient_id}")
         assert "John" == Session.get(session, "first_name")
-        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private)
+        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
         assert "male" == Session.get(session, "gender")
 
         {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601

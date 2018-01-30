@@ -5,7 +5,6 @@ defmodule Aida.Channel.Facebook do
   alias Aida.Bot
   alias Aida.Message
   alias Aida.Session
-  alias Aida.DB.{MessagesPerDay, MessageLog}
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
@@ -156,12 +155,8 @@ defmodule Aida.Channel.Facebook do
 
     @spec handle_by_message_type(Aida.Channel.t, String.t, String.t, :text | :image | :unknown, String.t) :: :ok
     defp handle_by_message_type(channel, session_id, sender_id, message_type, message_string) do
-      MessagesPerDay.log_received_message(channel.bot_id)
-
       bot = BotManager.find(channel.bot_id)
       session = Session.load(session_id)
-
-      MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, session_uuid: session.uuid, content: message_string, content_type: Atom.to_string(message_type), direction: "incoming"})
 
       message =
         case message_type do
@@ -217,11 +212,8 @@ defmodule Aida.Channel.Facebook do
         |> List.last
         |> Session.decrypt_id(channel.bot_id)
       api = FacebookApi.new(channel.access_token)
-      session_uuid = Session.load(session_id).uuid
 
       Enum.each(messages, fn message ->
-        MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, session_uuid: session_uuid, content: message, content_type: "text", direction: "outgoing"})
-        MessagesPerDay.log_sent_message(channel.bot_id)
         api |> FacebookApi.send_message(recipient, message)
       end)
     end

@@ -927,5 +927,4 @@ defmodule Aida.BotParserTest do
 
     assert find_by_name.(questions, "wine_grapes").encrypt
   end
-
 end

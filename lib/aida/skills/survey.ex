@@ -1,7 +1,7 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
   alias __MODULE__.{Question, SelectQuestion, InputQuestion}
-  alias Aida.{BotManager, Session, Message, Channel, Skill.Survey.Question, ChannelProvider, DB, Skill}
+  alias Aida.{Bot, BotManager, Session, Message, Skill.Survey.Question, DB, Skill}
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -24,7 +24,6 @@ defmodule Aida.Skill.Survey do
     message = Message.new("", bot, session)
 
     if Skill.is_relevant?(survey, message) do
-      channel = ChannelProvider.find_channel(session_id)
 
       if session |> Session.get("language") do
         session = session
@@ -32,7 +31,7 @@ defmodule Aida.Skill.Survey do
 
         message = answer(survey, Message.new("", bot, session))
 
-        channel |> Channel.send_message(message.reply, session_id)
+        Bot.send_message(message)
 
         Session.save(message.session)
       end
@@ -117,6 +116,13 @@ defmodule Aida.Skill.Survey do
 
     def put_response(survey, message) do
       question = Survey.current_question(survey, message)
+
+      message = if question.encrypt do
+        message |> Message.mark_sensitive
+      else
+        message
+      end
+
       message = case Question.accept_answer(question, message) do
         :error ->
           if question.constraint_message do
@@ -124,8 +130,15 @@ defmodule Aida.Skill.Survey do
           else
             message
           end
+
         {:ok, answer} ->
-          message = Message.put_session(message, Survey.answer_key(survey, question), answer)
+            message =
+              Message.put_session(
+                message,
+                Survey.answer_key(survey, question),
+                answer,
+                encrypted: question.encrypt
+              )
           Survey.move_to_next_question(survey, message)
       end
 

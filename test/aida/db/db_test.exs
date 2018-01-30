@@ -220,26 +220,35 @@ defmodule Aida.DBTest do
         last_usage: today,
         skill_id: skill_id, user_generated: true})
 
-
       assert Enum.count(DB.list_skill_usages()) == 8
 
-      skill_usages_today = DB.skill_usages_per_user_bot_and_period(bot_id, "today", today)
-      assert Enum.count(skill_usages_today) == 1
+      skill_usages_today =
+        DB.skill_usages_per_user_bot_and_period(bot_id, "today", today)
 
+      assert Enum.count(skill_usages_today) == 1
       assert skill_usages_today == [%{count: 2, skill_id: "language_detector"}]
 
+      skill_usages_this_week =
+        DB.skill_usages_per_user_bot_and_period(bot_id, "this_week", today)
+        |> Enum.sort(&(&1.skill_id < &2.skill_id))
 
-      skill_usages_this_week = DB.skill_usages_per_user_bot_and_period(bot_id, "this_week", today)
       assert Enum.count(skill_usages_this_week) == 3
+      assert skill_usages_this_week == [
+        %{count: 2, skill_id: "keyword_1"},
+        %{count: 1, skill_id: "keyword_2"},
+        %{count: 3, skill_id: "language_detector"}
+      ]
 
-      assert skill_usages_this_week == [%{count: 2, skill_id: "keyword_1"}, %{count: 1, skill_id: "keyword_2"}, %{count: 3, skill_id: "language_detector"}]
+      skill_usages_this_month =
+        DB.skill_usages_per_user_bot_and_period(bot_id, "this_month", today)
+        |> Enum.sort(&(&1.skill_id < &2.skill_id))
 
-
-      skill_usages_this_month = DB.skill_usages_per_user_bot_and_period(bot_id, "this_month", today)
       assert Enum.count(skill_usages_this_month) == 3
-
-      assert skill_usages_this_month == [%{count: 2, skill_id: "keyword_1"}, %{count: 2, skill_id: "keyword_2"}, %{count: 3, skill_id: "language_detector"}]
-
+      assert skill_usages_this_month == [
+        %{count: 2, skill_id: "keyword_1"},
+        %{count: 2, skill_id: "keyword_2"},
+        %{count: 3, skill_id: "language_detector"}
+      ]
     end
 
     test "active_users_per_bot_and_period/2 returns the active users for a bot" do

@@ -1,6 +1,19 @@
 defmodule Aida.BotTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message, DB, Session, Skill.KeywordResponder, DataTable}
+
+  alias Aida.{
+    BotParser,
+    Bot,
+    Crypto,
+    DataTable,
+    DB,
+    DB.MessageLog,
+    Message,
+    Session,
+    SessionStore,
+    Skill.KeywordResponder,
+    TestSkill
+  }
 
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
@@ -48,9 +61,9 @@ defmodule Aida.BotTest do
     "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
   ]
 
-  @language_selection_speech [
-    "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
-  ]
+  @language_selection_text "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
+
+  @language_selection_speech [ @language_selection_text ]
 
   @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
   @session_uuid "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
@@ -121,14 +134,7 @@ defmodule Aida.BotTest do
   end
 
   describe "multiple languages bot" do
-    setup do
-      manifest = File.read!("test/fixtures/valid_manifest.json")
-        |> Poison.decode!
-      {:ok, bot} = DB.create_bot(%{manifest: manifest})
-      {:ok, bot} = BotParser.parse(bot.id, manifest)
-
-      %{bot: bot}
-    end
+    setup :create_manifest_bot
 
     test "replies with language selection on the first message", %{bot: bot} do
       input = Message.new("Hi!", bot)
@@ -489,5 +495,113 @@ defmodule Aida.BotTest do
       assert %{"type" => "encrypted"} = value
       assert "Hello" == Aida.Crypto.decrypt(value, private)
     end
+  end
+
+  describe "logging" do
+    setup :create_manifest_bot
+    setup :generate_session_id_for_test_channel
+    setup :create_session
+
+    test "logs messages on chat", %{bot: bot, session: session} do
+      input = Message.new("Hi!", bot, session)
+
+      output = bot |> Bot.chat(input)
+      assert output.reply == @language_selection_speech
+
+      [incoming_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "incoming"))
+
+      assert incoming_message_log.session_id == session.id
+      assert incoming_message_log.bot_id == bot.id
+      assert incoming_message_log.content == "Hi!"
+
+      [outgoing_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "outgoing"))
+
+      assert outgoing_message_log.session_id == session.id
+      assert outgoing_message_log.bot_id == bot.id
+      assert outgoing_message_log.content == @language_selection_text
+    end
+
+    test "logs on send_message", %{bot: bot, session: session} do
+      message =
+        Message.new("", bot, session)
+        |> Message.respond("howdy!")
+
+      Bot.send_message(message)
+
+      [outgoing_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "outgoing"))
+
+      assert outgoing_message_log.session_id == session.id
+      assert outgoing_message_log.bot_id == bot.id
+      assert outgoing_message_log.content == "howdy!"
+    end
+
+    test "encrypt incoming message logs", %{bot: bot, session: session} do
+      {private, public} = Kcl.generate_key_pair()
+      bot = %{bot | skills: [ %TestSkill{encrypt: true} ], languages: ["en"], public_keys: [public]}
+
+      input =
+        Message.new("Hi!", bot, session)
+        |> Message.put_session("language", "en")
+
+      output = bot |> Bot.chat(input)
+      assert output.reply == ["This is a test"]
+
+      [incoming_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "incoming"))
+
+      assert incoming_message_log.content_type == "encrypted"
+      assert incoming_message_log.session_id == session.id
+      assert incoming_message_log.bot_id == bot.id
+      json = incoming_message_log.content |> Poison.decode!
+
+      assert Crypto.decrypt(json, private) |> Poison.decode! == %{"content_type" => "text", "content" => "Hi!"}
+
+      [outgoing_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "outgoing"))
+
+      assert outgoing_message_log.session_id == session.id
+      assert outgoing_message_log.bot_id == bot.id
+      assert outgoing_message_log.content == "This is a test"
+    end
+  end
+
+  defp create_manifest_bot(_context) do
+    manifest =
+      File.read!("test/fixtures/valid_manifest.json")
+      |> Poison.decode!()
+
+    {:ok, bot} = DB.create_bot(%{manifest: manifest})
+    {:ok, bot} = BotParser.parse(bot.id, manifest)
+
+    [bot: bot]
+  end
+
+  defp generate_session_id_for_test_channel(%{bot: bot}) do
+    pid = System.unique_integer([:positive])
+    Process.register(self(), "#{pid}" |> String.to_atom)
+    session_id = "#{bot.id}/test/#{pid}"
+
+    [session_id: session_id]
+  end
+
+  defp create_session(%{session_id: session_id}) do
+    SessionStore.start_link
+    session = Session.new({session_id, @session_uuid, %{}})
+    session |> Session.save
+
+    [session: session]
   end
 end
