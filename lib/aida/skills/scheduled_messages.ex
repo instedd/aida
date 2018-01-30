@@ -1,5 +1,5 @@
 defmodule Aida.Skill.ScheduledMessages do
-  alias Aida.{Message, Channel, Session, Skill, BotManager, ChannelProvider, DB, DB.MessageLog, Recurrence}
+  alias Aida.{Message, Session, Skill, BotManager, DB, DB.MessageLog, Recurrence, Bot}
   alias Aida.DB.SkillUsage
   alias __MODULE__
 
@@ -106,8 +106,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
       if Message.language(message) && Skill.is_relevant?(skill, message) do
         message = Message.respond(message, content)
-        channel = ChannelProvider.find_channel(session_id)
-        channel |> Channel.send_message(message.reply, session_id)
+        Bot.send_message(message)
 
         SkillUsage.log_skill_usage(bot.id, Skill.id(skill), session_id, false)
       end

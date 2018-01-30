@@ -1,6 +1,6 @@
 defmodule AidaWeb.BotChannel do
   use Phoenix.Channel
-  alias Aida.{Session, BotManager, Bot, Message, Channel.WebSocket, DB.MessageLog}
+  alias Aida.{Session, BotManager, Bot, Message, Channel.WebSocket}
 
   def join("bot:" <> bot_id, %{"access_token" => access_token}, socket) do
     case WebSocket.find_channel_for_bot(bot_id) do
@@ -44,7 +44,6 @@ defmodule AidaWeb.BotChannel do
       bot ->
         real_session_id = real_session_id(socket, session_id)
         session = Session.load(real_session_id)
-        MessageLog.create(%{bot_id: bot.id, session_id: real_session_id, session_uuid: session.uuid, content: text, content_type: "text", direction: "incoming"})
         reply = Bot.chat(bot, Message.new(text, bot, session))
         reply.session |> Session.save
 

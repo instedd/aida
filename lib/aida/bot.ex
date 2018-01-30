@@ -1,5 +1,18 @@
 defmodule Aida.Bot do
-  alias Aida.{FrontDesk, Variable, Message, Skill, Logger, Channel, DataTable, Crypto}
+  alias Aida.{
+    Channel,
+    ChannelProvider,
+    Crypto,
+    DataTable,
+    DB.MessageLog,
+    DB.MessagesPerDay,
+    FrontDesk,
+    Logger,
+    Message,
+    Skill,
+    Variable
+  }
+
   alias __MODULE__
 
   @type message :: map
@@ -42,12 +55,39 @@ defmodule Aida.Bot do
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
+    MessageLog.create(%{
+      bot_id: bot.id,
+      session_id: message.session.id,
+      session_uuid: message.session.uuid,
+      content: message |> Message.raw(),
+      content_type: Atom.to_string(message |> Message.type()),
+      direction: "incoming"
+    })
+
+    response =
+      message
+      |> reset_language_if_invalid(bot)
+      |> choose_language_for_single_language_bot(bot)
+      |> handle(bot)
+      |> greet_if_no_response_and_language_was_set(bot, message)
+      |> unset_session_new
+
+    MessagesPerDay.log_received_message(bot.id)
+
+    Enum.each(response.reply, fn reply ->
+      MessageLog.create(%{
+        bot_id: bot.id,
+        session_id: response.session.id,
+        session_uuid: response.session.uuid,
+        content: reply,
+        content_type: "text",
+        direction: "outgoing"
+      })
+    end)
+
+    MessagesPerDay.log_sent_message(message.bot.id)
+
     message
-    |> reset_language_if_invalid(bot)
-    |> choose_language_for_single_language_bot(bot)
-    |> handle(bot)
-    |> greet_if_no_response_and_language_was_set(bot, message)
-    |> unset_session_new
   end
 
   defp unset_session_new(message) do
@@ -166,9 +206,9 @@ defmodule Aida.Bot do
   end
 
   def lookup_in_data_table(%Bot{data_tables: data_tables}, table_name, key, value_column) do
-    with  {:ok, table} <- find_data_table(data_tables, table_name),
-          {:ok, column_index} <- find_table_column_index(table, value_column),
-          {:ok, row} <- find_table_row(table, key, 0)
+    with {:ok, table} <- find_data_table(data_tables, table_name),
+         {:ok, column_index} <- find_table_column_index(table, value_column),
+         {:ok, row} <- find_table_row(table, key, 0)
     do
       row |> Enum.at(column_index)
     else
@@ -201,5 +241,12 @@ defmodule Aida.Bot do
 
   def encrypt(%Bot{public_keys: public_keys}, data) do
     Crypto.encrypt(data, public_keys)
+  end
+
+  def send_message(%{session: session} = message) do
+    log_outgoing(message)
+
+    channel = ChannelProvider.find_channel(session.id)
+    channel |> Channel.send_message(message.reply, session.id)
   end
 end

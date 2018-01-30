@@ -1,6 +1,6 @@
 defmodule Aida.Message do
   alias Aida.{Session, Message, Bot}
-  alias Aida.Message.{TextContent, ImageContent, UnknownContent}
+  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content}
 
   @type t :: %__MODULE__{
     session: Session.t,
@@ -194,5 +194,13 @@ defmodule Aida.Message do
       |> Aida.Expr.Context.new
 
     Bot.expr_context(message.bot, context, options)
+  end
+
+  def type(%Message{content: content}) do
+    content |> Content.type()
+end
+
+  def raw(%Message{content: content}) do
+    content |> Content.raw()
   end
 end
