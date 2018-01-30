@@ -302,6 +302,7 @@ defmodule Aida.BotParserTest do
         %DecisionTree{
           bot_id: "f905a698-310f-473f-b2d0-00d30ad58b0c",
           id: "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+          root_id: "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
           keywords: %{"en" => ["meal recommendation", "recommendation"], "es" => ["recomendación", "recomendacion"]},
           clarification: %{
             "en" => "To get a meal recommendation write 'meal recommendation'",
@@ -384,7 +385,7 @@ defmodule Aida.BotParserTest do
                 id: "f00f115f-4a0b-45e1-a123-ac1756616be7",
                 message: %{"en" => "Go with a chocolate mousse", "es" => "Comete una mousse de chocolate"}
               },
-            "root" =>
+            "c5cc5c83-922b-428b-ad84-98a5c4da64e8" =>
               %Aida.Skill.DecisionTree.Question{
                 id: "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
                 question: %{"en" => "Do you want to eat a main course or a dessert?", "es" => "Querés comer un primer plato o un postre?"},

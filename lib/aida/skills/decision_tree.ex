@@ -11,6 +11,7 @@ defmodule Aida.Skill.DecisionTree do
     clarification: Bot.message,
     keywords: %{},
     relevant: nil | Aida.Expr.t,
+    root_id: String.t,
     tree: [Question.t | Answer.t]
   }
 
@@ -21,6 +22,7 @@ defmodule Aida.Skill.DecisionTree do
             clarification: %{},
             keywords: %{},
             relevant: nil,
+            root_id: "",
             tree: %{}
 
   defmodule Question do
@@ -92,7 +94,7 @@ defmodule Aida.Skill.DecisionTree do
 
 
   def flatten(tree) do
-    [{"root", parse_question(tree)} | internal_flatten(tree["responses"])]
+    [{tree["id"], parse_question(tree)} | internal_flatten(tree["responses"])]
       |> Enum.into(%{})
   end
 
@@ -173,9 +175,9 @@ defmodule Aida.Skill.DecisionTree do
           session = message.session
           if session |> Session.get("language") do
             message = message
-              |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => "root"})
+              |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => decision_tree.root_id})
 
-            {decision_tree.tree["root"], message}
+            {decision_tree.tree[decision_tree.root_id], message}
           end
         _ ->
           next_question = decision_tree.tree[Question.next_question_id(question, message)]

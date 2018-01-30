@@ -39,7 +39,6 @@ defmodule Aida.DecisionTreeTest do
     test "simple flatten" do
       flattened = DecisionTree.flatten(@basic_tree)
 
-      assert flattened["root"].id == "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
       assert Enum.count(flattened) == 5
       assert flattened[@basic_answer["id"]].id == @basic_answer["id"]
 
@@ -112,13 +111,13 @@ defmodule Aida.DecisionTreeTest do
 
       assert message.reply == ["Do you want to eat a main course or a dessert?"]
 
-      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "root"}
+      assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"}
     end
 
     test "accepts an answer for the root question and performs the next", %{bot: bot, session: session} do
       message = Message.new("dessert", bot, session)
       message = message
-        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "root"})
+        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"})
       message = Bot.chat(bot, message)
 
       assert message.reply == ["Are you vegan?"]
@@ -128,7 +127,7 @@ defmodule Aida.DecisionTreeTest do
     test "accepts an answer for the root question when there are different ways of selecting a branch (array) and performs the next", %{bot: bot, session: session} do
       message = Message.new("Main", bot, session)
       message = message
-        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "root"})
+        |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"})
       message = Bot.chat(bot, message)
 
       assert message.reply == ["Are you a vegetarian?"]
