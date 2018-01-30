@@ -160,7 +160,6 @@ defmodule Aida.Channel.Facebook do
 
       bot = BotManager.find(channel.bot_id)
       session = Session.load(session_id)
-        |> pull_profile(channel, sender_id)
 
       MessageLog.create(%{bot_id: channel.bot_id, session_id: session_id, session_uuid: session.uuid, content: message_string, content_type: Atom.to_string(message_type), direction: "incoming"})
 
@@ -170,6 +169,7 @@ defmodule Aida.Channel.Facebook do
           :image -> Message.new_from_image(message_string, bot, session)
           :unknown -> Message.new_unknown(bot, session)
         end
+        |> pull_profile(channel, sender_id)
 
       reply = Bot.chat(bot, message)
       reply.session |> Session.save
@@ -177,29 +177,38 @@ defmodule Aida.Channel.Facebook do
       send_message(channel, reply.reply, session_id)
     end
 
-    defp pull_profile(session, channel, sender_id) do
-      must_pull = session |> Session.get("facebook_profile_ts") |> must_pull_profile?
+    @spec pull_profile(Message.t(), Aida.Channel.t(), String.t()) :: Message.t()
+    defp pull_profile(
+           %{bot: %{id: bot_id, public_keys: public_keys}} = message,
+           channel,
+           sender_id
+         ) do
+      if must_pull_profile?(message) do
+        encrypted = Enum.count(public_keys) > 0
 
-      if must_pull do
-        api = FacebookApi.new(channel.access_token)
+        profile =
+          channel.access_token |> FacebookApi.new()
+          |> FacebookApi.get_profile(Session.decrypt_id(sender_id, bot_id))
 
-        decrypted_id = Session.decrypt_id(sender_id, channel.bot_id)
-
-        profile = api |> FacebookApi.get_profile(decrypted_id)
-        session
-          |> Session.put("first_name", profile["first_name"])
-          |> Session.put("last_name", profile["last_name"])
-          |> Session.put("gender", profile["gender"])
-          |> Session.put("facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
+        message
+        |> Message.put_session("first_name", profile["first_name"])
+        |> Message.put_session("last_name", profile["last_name"], encrypted: encrypted)
+        |> Message.put_session("gender", profile["gender"])
+        |> Message.put_session("facebook_profile_ts", DateTime.utc_now() |> DateTime.to_iso8601())
       else
-        session
+        message
       end
     end
 
+    defp must_pull_profile?(%Message{} = message) do
+      message |> Message.get_session("facebook_profile_ts") |> must_pull_profile?
+    end
+
     defp must_pull_profile?(nil), do: true
+
     defp must_pull_profile?(ts) do
       {:ok, ts, _} = DateTime.from_iso8601(ts)
-      DateTime.diff(DateTime.utc_now, ts, :second) > 86400
+      DateTime.diff(DateTime.utc_now(), ts, :second) > 86400
     end
 
     def send_message(channel, messages, session_id) do

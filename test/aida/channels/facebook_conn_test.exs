@@ -3,7 +3,7 @@ defmodule Aida.Channel.FacebookConnTest do
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, BotManager, BotParser, SessionStore, Session}
+  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, SessionStore, Session}
   alias Aida.DB.{MessageLog}
   alias Aida.Channel.Facebook
 
@@ -12,6 +12,29 @@ defmodule Aida.Channel.FacebookConnTest do
     send_message: &__MODULE__.send_message_mock/3,
     get_profile: &__MODULE__.get_profile_mock/2
   ]
+
+  @incoming_message %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "message" => %{
+              "mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5",
+              "seq" => 493,
+              "text" => "Test message"
+            },
+            "recipient" => %{"id" => "1234567890"},
+            "sender" => %{"id" => "1234"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
 
   setup do
     ChannelRegistry.start_link
@@ -39,10 +62,8 @@ defmodule Aida.Channel.FacebookConnTest do
     end
 
     test "incoming facebook message" do
-      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
-
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        conn = build_conn(:post, "/callback/facebook", params)
+        conn = build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
         assert response(conn, 200) == "ok"
@@ -124,10 +145,8 @@ defmodule Aida.Channel.FacebookConnTest do
     end
 
     test "pull profile information" do
-      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
-
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        conn = build_conn(:post, "/callback/facebook", params)
+        conn = build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
         assert response(conn, 200) == "ok"
@@ -145,15 +164,13 @@ defmodule Aida.Channel.FacebookConnTest do
     end
 
     test "profile is not pull if it was already pulled within the last 24hs" do
-      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
-
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
           |> Session.put("facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
           |> Session.save
 
-        build_conn(:post, "/callback/facebook", params)
+        build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
         session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
@@ -164,8 +181,6 @@ defmodule Aida.Channel.FacebookConnTest do
     end
 
     test "profile is pulled again when the last pull was more than a day ago" do
-      params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
-
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
@@ -173,7 +188,7 @@ defmodule Aida.Channel.FacebookConnTest do
           |> Session.put("facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
           |> Session.save
 
-        build_conn(:post, "/callback/facebook", params)
+        build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
         session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
@@ -182,6 +197,36 @@ defmodule Aida.Channel.FacebookConnTest do
         assert Session.get(session, "gender") == "male"
       end
     end
+  end
+
+  describe "encrypt" do
+    setup :create_encrypted_bot
+
+    test "encrypt pulled profile information if the bot has public keys", %{bot: bot, private: private} do
+      recipient_id = Session.encrypt_id("1234", bot.id)
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        build_conn(:post, "/callback/facebook", @incoming_message)
+        |> Facebook.callback()
+
+        session = Session.load("#{bot.id}/facebook/1234567890/#{recipient_id}")
+        assert "John" == Session.get(session, "first_name")
+        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private)
+        assert "male" == Session.get(session, "gender")
+
+        {:ok, pull_ts, 0} = Session.get(session, "facebook_profile_ts") |> DateTime.from_iso8601
+        assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
+      end
+    end
+  end
+
+  defp create_encrypted_bot(_context) do
+    manifest = File.read!("test/fixtures/valid_manifest_single_lang.json") |> Poison.decode!()
+    {private, public} = Kcl.generate_key_pair()
+    {:ok, bot} = BotParser.parse(@uuid, manifest)
+    bot = %{bot | public_keys: [public]}
+    BotManager.start(bot)
+
+    [bot: bot, private: private]
   end
 
   defp assert_message_sent(message) do
