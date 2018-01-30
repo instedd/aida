@@ -19,7 +19,8 @@ defmodule Aida.Session do
   @spec new(id :: String.t | {id :: String.t, uuid :: String.t, values}) :: t
   @spec new(id :: String.t, uuid :: String.t) :: t
 
-  def new({id, uuid, values}) do
+  def new({id, uuid, values})
+      when is_binary(id) and is_binary(uuid) and is_map(values) do
     %Session{
       id: id,
       uuid: uuid,
@@ -27,7 +28,8 @@ defmodule Aida.Session do
     }
   end
 
-  def new(id \\ Ecto.UUID.generate, uuid \\ Ecto.UUID.generate) do
+  def new(id \\ Ecto.UUID.generate, uuid \\ Ecto.UUID.generate)
+      when is_binary(id) and is_binary(uuid) do
     %Session{
       id: id,
       uuid: uuid,

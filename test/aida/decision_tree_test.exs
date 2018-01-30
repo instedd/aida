@@ -99,14 +99,15 @@ defmodule Aida.DecisionTreeTest do
         |> Map.put("languages", ["en"])
 
       {:ok, bot} = BotParser.parse(@bot_id, manifest)
-      %{bot: bot}
+
+      session = Session.new(@session_id)
+      Session.save(session)
+
+      %{bot: bot, session: session}
     end
 
-    test "starts the DecisionTree when the kewyord matches", %{bot: bot} do
-      Session.new(@session_id, %{"language" => "en"})
-      |> Session.save
-
-      message = Message.new("meal recommendation", bot, Session.load(@session_id))
+    test "starts the DecisionTree when the kewyord matches", %{bot: bot, session: session} do
+      message = Message.new("meal recommendation", bot, session)
       message = Bot.chat(bot, message)
 
       assert message.reply == ["Do you want to eat a main course or a dessert?"]
@@ -114,11 +115,8 @@ defmodule Aida.DecisionTreeTest do
       assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "root"}
     end
 
-    test "accepts an answer for the root question and performs the next", %{bot: bot} do
-      Session.new(@session_id, %{"language" => "en"})
-      |> Session.save
-
-      message = Message.new("dessert", bot, Session.load(@session_id))
+    test "accepts an answer for the root question and performs the next", %{bot: bot, session: session} do
+      message = Message.new("dessert", bot, session)
       message = message
         |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "root"})
       message = Bot.chat(bot, message)
@@ -127,11 +125,8 @@ defmodule Aida.DecisionTreeTest do
       assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"}
     end
 
-    test "accepts an answer for the root question when there are different ways of selecting a branch (array) and performs the next", %{bot: bot} do
-      Session.new(@session_id, %{"language" => "en"})
-      |> Session.save
-
-      message = Message.new("Main", bot, Session.load(@session_id))
+    test "accepts an answer for the root question when there are different ways of selecting a branch (array) and performs the next", %{bot: bot, session: session} do
+      message = Message.new("Main", bot, session)
       message = message
         |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "root"})
       message = Bot.chat(bot, message)
@@ -140,11 +135,8 @@ defmodule Aida.DecisionTreeTest do
       assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "c038e08e-6095-4897-9184-eae929aba8c6"}
     end
 
-    test "when there is an invalid answer performs the last question again", %{bot: bot} do
-      Session.new(@session_id, %{"language" => "en"})
-      |> Session.save
-
-      message = Message.new("i want dessert", bot, Session.load(@session_id))
+    test "when there is an invalid answer performs the last question again", %{bot: bot, session: session} do
+      message = Message.new("i want dessert", bot, session)
       message = message
         |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"})
       message = Bot.chat(bot, message)
@@ -153,11 +145,8 @@ defmodule Aida.DecisionTreeTest do
       assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"}
     end
 
-    test "when it reaches an answer replies with it and resets the session", %{bot: bot} do
-      Session.new(@session_id, %{"language" => "en"})
-      |> Session.save
-
-      message = Message.new("yes", bot, Session.load(@session_id))
+    test "when it reaches an answer replies with it and resets the session", %{bot: bot, session: session} do
+      message = Message.new("yes", bot, session)
       message = message
         |> Message.put_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f", %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"})
       message = Bot.chat(bot, message)
@@ -165,7 +154,5 @@ defmodule Aida.DecisionTreeTest do
       assert message.reply == ["Go with a carrot cake"]
       assert message.session |> Session.get(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
     end
-
-
   end
 end
