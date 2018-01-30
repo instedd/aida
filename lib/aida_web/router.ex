@@ -22,12 +22,12 @@ defmodule AidaWeb.Router do
       get "/stats/users_per_skill", SkillUsageController, :users_per_skill
     end
     get "/image/:uuid", ImageController, :image
-    get "/content/image/:uuid", ImageController, :image
     get "/version", VersionController, :version
   end
 
   scope "/", AidaWeb do
     get "/callback/:provider", CallbackController, :callback
     post "/callback/:provider", CallbackController, :callback
+    get "/content/image/:uuid", ImageController, :image
   end
 end
