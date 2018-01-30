@@ -375,7 +375,9 @@ defmodule Aida.DB do
 
   Returns `nil` if the Image does not exist.
   """
-  def get_image(id), do: Repo.get_by(Image, uuid: id)
+  def get_image(id) do
+    Repo.get_by(Image, uuid: id) || {:error, :not_found}
+  end
 
   @doc """
   Creates an image.

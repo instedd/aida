@@ -22,6 +22,7 @@ defmodule AidaWeb.Router do
       get "/stats/users_per_skill", SkillUsageController, :users_per_skill
     end
     get "/image/:uuid", ImageController, :image
+    get "/content/image/:uuid", ImageController, :image
     get "/version", VersionController, :version
   end
 
