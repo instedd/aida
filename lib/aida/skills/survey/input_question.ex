@@ -104,5 +104,7 @@ defmodule Aida.Skill.Survey.InputQuestion do
     end
 
     def relevant(%{relevant: relevant}), do: relevant
+
+    def encrypt?(%{encrypt: encrypt}), do: encrypt
   end
 end

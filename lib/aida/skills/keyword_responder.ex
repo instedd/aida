@@ -53,5 +53,7 @@ defmodule Aida.Skill.KeywordResponder do
     end
 
     def relevant(skill), do: skill.relevant
+
+    def uses_encryption?(_), do: false
   end
 end

@@ -22,5 +22,7 @@ defmodule Aida.TestSkill do
     def wake_up(_skill, _bot, _data), do: :ok
 
     def relevant(_skill), do: nil
+
+    def uses_encryption?(%{encrypt: encrypt}), do: encrypt
   end
 end

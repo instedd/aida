@@ -30,6 +30,9 @@ defprotocol Aida.Skill do
 
   @spec is_relevant?(skill :: t, message :: Message.t) :: boolean
   defdelegate is_relevant?(skill, message), to: Aida.Skill.Utils, as: :is_skill_relevant?
+
+  @spec uses_encryption?(skill :: t) :: boolean
+  def uses_encryption?(skill)
 end
 
 defmodule Aida.Skill.Utils do
@@ -66,5 +69,4 @@ defmodule Aida.Skill.Utils do
       _ ->Enum.count(matches)/word_count
     end
   end
-
 end

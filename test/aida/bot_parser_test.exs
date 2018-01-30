@@ -817,8 +817,37 @@ defmodule Aida.BotParserTest do
     assert {:error, "Invalid expression: '${foo} < ...'"} == BotParser.parse(@uuid, manifest)
   end
 
-  test "parse manifest with encrypted questions in survey" do
-    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+  describe "encryption" do
+    setup :encrypted_survey
+
+    test "parse manifest with encrypted questions in survey", %{manifest: manifest} do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      questions = (bot.skills |> hd).questions
+      find_by_name = fn(questions, name) -> Enum.filter(questions, &(&1.name == name)) |> hd end
+
+      assert find_by_name.(questions, "opt_in").encrypt != nil
+      refute find_by_name.(questions, "opt_in").encrypt
+
+      assert find_by_name.(questions, "request").encrypt != nil
+      refute find_by_name.(questions, "request").encrypt
+
+      assert find_by_name.(questions, "age").encrypt
+
+      assert find_by_name.(questions, "wine_grapes").encrypt
+    end
+
+    test "raise when parsing manifest with encrypted questions in survey and no public_keys", %{manifest: manifest} do
+
+      manifest = manifest |> Map.put("public_keys", [])
+
+      assert {:error, "Missing public_keys in manifest"} = BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  defp encrypted_survey(_context) do
+    manifest =
+      File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
       |> Map.put("skills", [
         %{
           "type" => "survey",
@@ -831,8 +860,10 @@ defmodule Aida.BotParserTest do
               "choices" => "yes_no",
               "name" => "opt_in",
               "message" => %{
-                "en" => "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
-                "es" => "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+                "en" =>
+                  "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
+                "es" =>
+                  "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
               }
             },
             %{
@@ -871,15 +902,15 @@ defmodule Aida.BotParserTest do
                 %{
                   "name" => "yes",
                   "labels" => %{
-                    "en" => ["Yes","Sure","Ok"],
-                    "es" => ["Si","OK","Dale"]
+                    "en" => ["Yes", "Sure", "Ok"],
+                    "es" => ["Si", "OK", "Dale"]
                   }
                 },
                 %{
                   "name" => "no",
-                  "labels" =>  %{
-                    "en" =>  ["No","Nope","Later"],
-                    "es" =>  ["No","Luego","Nop"]
+                  "labels" => %{
+                    "en" => ["No", "Nope", "Later"],
+                    "es" => ["No", "Luego", "Nop"]
                   }
                 }
               ]
@@ -893,7 +924,7 @@ defmodule Aida.BotParserTest do
                     "en" => ["merlot"],
                     "es" => ["merlot"]
                   },
-                  "attributes": %{
+                  attributes: %{
                     "type" => "red"
                   }
                 },
@@ -912,19 +943,7 @@ defmodule Aida.BotParserTest do
           ]
         }
       ])
-    {:ok, bot} = BotParser.parse(@uuid, manifest)
 
-    questions = (bot.skills |> hd).questions
-    find_by_name = fn(questions, name) -> Enum.filter(questions, &(&1.name == name)) |> hd end
-
-    assert find_by_name.(questions, "opt_in").encrypt != nil
-    refute find_by_name.(questions, "opt_in").encrypt
-
-    assert find_by_name.(questions, "request").encrypt != nil
-    refute find_by_name.(questions, "request").encrypt
-
-    assert find_by_name.(questions, "age").encrypt
-
-    assert find_by_name.(questions, "wine_grapes").encrypt
+    [manifest: manifest]
   end
 end

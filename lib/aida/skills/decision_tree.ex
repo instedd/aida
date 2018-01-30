@@ -215,5 +215,7 @@ defmodule Aida.Skill.DecisionTree do
     end
 
     def relevant(skill), do: skill.relevant
+
+    def uses_encryption?(_), do: false
   end
 end

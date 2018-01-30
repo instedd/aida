@@ -288,8 +288,8 @@ defmodule Aida.BotParser do
   end
 
   defp validate(bot) do
-    with :ok <- validate_skill_id_uniqueness(bot)
-    do
+    with :ok <- validate_skill_id_uniqueness(bot),
+         :ok <- validate_required_public_keys(bot) do
       {:ok, bot}
     else
       err -> err
@@ -306,5 +306,16 @@ defmodule Aida.BotParser do
       nil -> :ok
       {id, _} -> {:error, "Duplicated skill (#{id})"}
     end
+  end
+
+  def validate_required_public_keys(%{skills: skills, public_keys: []}) do
+    case skills |> Enum.any?(&Skill.uses_encryption?/1) do
+      true -> {:error, "Missing public_keys in manifest"}
+      _ -> :ok
+    end
+  end
+
+  def validate_required_public_keys(%{public_keys: _}) do
+    :ok
   end
 end

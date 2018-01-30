@@ -137,7 +137,7 @@ defmodule Aida.Skill.Survey do
                 message,
                 Survey.answer_key(survey, question),
                 answer,
-                encrypted: question.encrypt
+                encrypted: question |> Question.encrypt?
               )
           Survey.move_to_next_question(survey, message)
       end
@@ -162,5 +162,9 @@ defmodule Aida.Skill.Survey do
     end
 
     def relevant(skill), do: skill.relevant
+
+    def uses_encryption?(%{questions: questions}) do
+      questions |> Enum.any?(&Question.encrypt?/1)
+    end
   end
 end

@@ -79,5 +79,7 @@ defmodule Aida.Skill.LanguageDetector do
     end
 
     def relevant(_), do: nil
+
+    def uses_encryption?(_), do: false
   end
 end

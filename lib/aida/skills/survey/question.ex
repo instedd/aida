@@ -9,4 +9,7 @@ defprotocol Aida.Skill.Survey.Question do
 
   @spec relevant(question :: Question.t) :: Aida.Expr.t | nil
   def relevant(question)
+
+  @spec encrypt?(question :: Question.t) :: boolean
+  def encrypt?(question)
 end
