@@ -1,6 +1,6 @@
 defmodule Aida.Session do
   alias __MODULE__
-  alias Aida.SessionStore
+  alias Aida.{SessionStore, Crypto}
 
   @type value :: Poison.Parser.t
   @typep values :: %{required(String.t) => value}
@@ -43,6 +43,25 @@ defmodule Aida.Session do
       :not_found -> new(id)
       session -> new(session)
     end
+  end
+
+  @spec encrypt_id(id :: String.t, bot_id :: String.t) :: binary
+  def encrypt_id(id, bot_id) do
+    salt = salt_from_id(bot_id)
+    Aida.Crypto.server_encrypt(id, salt) |> Base.encode16
+  end
+
+  @spec decrypt_id(encrypted_id :: binary, bot_id :: String.t) :: String.t
+  def decrypt_id(encrypted_id, bot_id) do
+    salt = salt_from_id(bot_id)
+    encrypted_id
+      |> Base.decode16!
+      |> Aida.Crypto.server_decrypt(salt)
+  end
+
+  defp salt_from_id(bot_id) do
+    <<salt :: binary-size(24)>> <> _ = bot_id
+    salt
   end
 
   @spec save(session :: t) :: :ok

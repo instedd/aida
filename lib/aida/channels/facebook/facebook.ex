@@ -108,6 +108,8 @@ defmodule Aida.Channel.Facebook do
 
       try do
         text = message["message"]["text"]
+
+        sender_id = Session.encrypt_id(sender_id, channel.bot_id)
         recipient_id = message["recipient"]["id"]
         session_id = "#{channel.bot_id}/facebook/#{recipient_id}/#{sender_id}"
 
@@ -181,7 +183,9 @@ defmodule Aida.Channel.Facebook do
       if must_pull do
         api = FacebookApi.new(channel.access_token)
 
-        profile = api |> FacebookApi.get_profile(sender_id)
+        decrypted_id = Session.decrypt_id(sender_id, channel.bot_id)
+
+        profile = api |> FacebookApi.get_profile(decrypted_id)
         session
           |> Session.put("first_name", profile["first_name"])
           |> Session.put("last_name", profile["last_name"])
@@ -199,7 +203,10 @@ defmodule Aida.Channel.Facebook do
     end
 
     def send_message(channel, messages, session_id) do
-      recipient = session_id |> String.split("/") |> List.last
+      recipient = session_id
+        |> String.split("/")
+        |> List.last
+        |> Session.decrypt_id(channel.bot_id)
       api = FacebookApi.new(channel.access_token)
       session_uuid = Session.load(session_id).uuid
 

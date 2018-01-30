@@ -132,7 +132,9 @@ defmodule Aida.Channel.FacebookConnTest do
 
         assert response(conn, 200) == "ok"
 
-        session = Session.load("#{@uuid}/facebook/1234567890/1234")
+        recipient_id = Session.encrypt_id("1234", @uuid)
+
+        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
         assert Session.get(session, "first_name") == "John"
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
@@ -145,15 +147,16 @@ defmodule Aida.Channel.FacebookConnTest do
     test "profile is not pull if it was already pulled within the last 24hs" do
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 
+      recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load("#{@uuid}/facebook/1234567890/1234")
+        Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
           |> Session.put("facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
           |> Session.save
 
         build_conn(:post, "/callback/facebook", params)
           |> Facebook.callback()
 
-        session = Session.load("#{@uuid}/facebook/1234567890/1234")
+        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
         assert Session.get(session, "first_name") == nil
         assert Session.get(session, "last_name") == nil
         assert Session.get(session, "gender") == nil
@@ -163,8 +166,9 @@ defmodule Aida.Channel.FacebookConnTest do
     test "profile is pulled again when the last pull was more than a day ago" do
       params = %{"entry" => [%{"id" => "1234567890", "messaging" => [%{"message" => %{"mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5", "seq" => 493, "text" => "Test message"}, "recipient" => %{"id" => "1234567890"}, "sender" => %{"id" => "1234"}, "timestamp" => 1510697528863}], "time" => 1510697858540}], "object" => "page", "provider" => "facebook"}
 
+      recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load("#{@uuid}/facebook/1234567890/1234")
+        Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
           |> Session.put("first_name", "---")
           |> Session.put("facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
           |> Session.save
@@ -172,7 +176,7 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", params)
           |> Facebook.callback()
 
-        session = Session.load("#{@uuid}/facebook/1234567890/1234")
+        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
         assert Session.get(session, "first_name") == "John"
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
