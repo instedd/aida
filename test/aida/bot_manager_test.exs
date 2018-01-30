@@ -131,9 +131,11 @@ defmodule Aida.BotManagerTest do
       with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> raise "error" end] do
         BotManager.schedule_wake_up(bot, skill, within(hours: 1))
 
-        time_travel(within(hours: 1)) do
-          assert called Bot.wake_up(bot, "skill_id", nil)
-          assert GenServer.whereis({:global, BotManager})
+        without_logging do
+          time_travel(within(hours: 1)) do
+            assert called Bot.wake_up(bot, "skill_id", nil)
+            assert GenServer.whereis({:global, BotManager})
+          end
         end
       end
     end

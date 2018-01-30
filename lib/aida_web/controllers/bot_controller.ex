@@ -1,6 +1,6 @@
 defmodule AidaWeb.BotController do
   use AidaWeb, :controller
-
+  import Aida.ErrorHandler
   alias Aida.DB
   alias Aida.DB.Bot
   alias Aida.{JsonSchema, BotParser}
@@ -55,14 +55,15 @@ defmodule AidaWeb.BotController do
     case JsonSchema.validate(manifest, :manifest_v1) do
       [] ->
         case BotParser.parse("", manifest) do
-          {:ok, _} -> 
+          {:ok, _} ->
             conn
-          {:error, err} -> 
+          {:error, err} ->
+            capture_message("Error while parsing manifest: #{err}")
             conn |> put_status(422) |> json(%{error: err}) |> halt
         end
       errors ->
         json_errors = errors |> JsonSchema.errors_to_json
-        Sentry.capture_message("Error while validating manifest", [extra: %{json_errors: json_errors, manifest: manifest}])
+        capture_message("Error while validating manifest", json_errors: json_errors, manifest: manifest)
 
         conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
     end

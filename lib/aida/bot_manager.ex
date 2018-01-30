@@ -2,6 +2,7 @@ defmodule Aida.BotManager do
   use GenServer
   alias Aida.{DB, Channel, Bot, Skill, BotParser, Scheduler}
   require Logger
+  import Aida.ErrorHandler
   @server_ref {:global, __MODULE__}
   @table :bots
   @behaviour Aida.Scheduler.Handler
@@ -56,7 +57,7 @@ defmodule Aida.BotManager do
         Bot.wake_up(bot, skill_id, data)
       rescue
         error ->
-          Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: bot_id, skill_id: skill_id}])
+          capture_exception("Error waking up bot (bot: #{bot_id}, skill: #{skill_id})", error, bot_id: bot_id, skill_id: skill_id)
       end
     end
   end

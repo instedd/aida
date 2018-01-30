@@ -1,7 +1,7 @@
 defmodule Aida.Scheduler.Server do
   use GenServer
   alias Aida.Scheduler.Task
-  require Logger
+  import Aida.ErrorHandler
 
   @config Application.get_env(:aida, Aida.Scheduler, [])
   @batch_size @config |> Keyword.get(:batch_size, 100)
@@ -89,9 +89,7 @@ defmodule Aida.Scheduler.Server do
       handler.handle_scheduled_task(name, ts)
     rescue
       error ->
-        extra = %{task_name: name, task_ts: ts, task_handler: handler}
-        Sentry.capture_exception(error, stacktrace: System.stacktrace(), extra: extra, result: :none)
-        Logger.error("Error executing task: #{Exception.message(error)}")
+        capture_exception("Error executing task '#{name}'", error, task_name: name, task_ts: ts, task_handler: handler)
     end
     task |> Task.delete
   end
