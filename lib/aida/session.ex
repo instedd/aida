@@ -48,7 +48,7 @@ defmodule Aida.Session do
   @spec encrypt_id(id :: String.t, bot_id :: String.t) :: binary
   def encrypt_id(id, bot_id) do
     salt = salt_from_id(bot_id)
-    Aida.Crypto.server_encrypt(id, salt) |> Base.encode16
+    Crypto.server_encrypt(id, salt) |> Base.encode16
   end
 
   @spec decrypt_id(encrypted_id :: binary, bot_id :: String.t) :: String.t
@@ -56,7 +56,7 @@ defmodule Aida.Session do
     salt = salt_from_id(bot_id)
     encrypted_id
       |> Base.decode16!
-      |> Aida.Crypto.server_decrypt(salt)
+      |> Crypto.server_decrypt(salt)
   end
 
   defp salt_from_id(bot_id) do
