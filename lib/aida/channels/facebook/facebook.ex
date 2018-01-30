@@ -194,14 +194,14 @@ defmodule Aida.Channel.Facebook do
         |> Message.put_session("first_name", profile["first_name"])
         |> Message.put_session("last_name", profile["last_name"], encrypted: encrypted)
         |> Message.put_session("gender", profile["gender"])
-        |> Message.put_session("facebook_profile_ts", DateTime.utc_now() |> DateTime.to_iso8601())
+        |> Message.put_session(".facebook_profile_ts", DateTime.utc_now() |> DateTime.to_iso8601())
       else
         message
       end
     end
 
     defp must_pull_profile?(%Message{} = message) do
-      message |> Message.get_session("facebook_profile_ts") |> must_pull_profile?
+      message |> Message.get_session(".facebook_profile_ts") |> must_pull_profile?
     end
 
     defp must_pull_profile?(nil), do: true

@@ -47,8 +47,8 @@ defmodule Aida.Skill.Survey do
     end
   end
 
-  def state_key(survey), do: "survey/#{survey.id}"
-  def answer_key(survey, question), do: "#{state_key(survey)}/#{question.name}"
+  def state_key(survey), do: ".survey/#{survey.id}"
+  def answer_key(survey, question), do: "survey/#{survey.id}/#{question.name}"
 
   def current_question(survey, message) do
     case message |> Message.get_session(state_key(survey)) do
