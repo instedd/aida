@@ -55,30 +55,55 @@ defmodule Aida.Bot do
 
   @spec chat(bot :: t, message :: Message.t) :: Message.t
   def chat(%Bot{} = bot, %Message{} = message) do
+    message
+    |> reset_language_if_invalid(bot)
+    |> choose_language_for_single_language_bot(bot)
+    |> handle(bot)
+    |> greet_if_no_response_and_language_was_set(bot, message)
+    |> unset_session_new
+    |> log_incoming
+    |> log_outgoing
+  end
+
+  defp log_incoming(%{bot: %{public_keys: public_keys} = bot} = message) do
+    {content, content_type} =
+      if message.sensitive do
+        content =
+          %{
+            "content" => message |> Message.raw(),
+            "content_type" => message |> Message.type() |> Atom.to_string()
+          }
+          |> Poison.encode!()
+          |> Crypto.encrypt(public_keys)
+          |> Poison.encode!()
+
+        {content, "encrypted"}
+      else
+        {
+          message |> Message.raw(),
+          Atom.to_string(message |> Message.type())
+        }
+      end
+
     MessageLog.create(%{
       bot_id: bot.id,
       session_id: message.session.id,
       session_uuid: message.session.uuid,
-      content: message |> Message.raw(),
-      content_type: Atom.to_string(message |> Message.type()),
+      content: content,
+      content_type: content_type,
       direction: "incoming"
     })
 
-    response =
-      message
-      |> reset_language_if_invalid(bot)
-      |> choose_language_for_single_language_bot(bot)
-      |> handle(bot)
-      |> greet_if_no_response_and_language_was_set(bot, message)
-      |> unset_session_new
-
     MessagesPerDay.log_received_message(bot.id)
+    message
+  end
 
-    Enum.each(response.reply, fn reply ->
+  defp log_outgoing(message) do
+    Enum.each(message.reply, fn reply ->
       MessageLog.create(%{
-        bot_id: bot.id,
-        session_id: response.session.id,
-        session_uuid: response.session.uuid,
+        bot_id: message.bot.id,
+        session_id: message.session.id,
+        session_uuid: message.session.uuid,
         content: reply,
         content_type: "text",
         direction: "outgoing"

@@ -20,7 +20,6 @@ defmodule Aida.ChannelProvider do
   @callback callback(conn :: Plug.Conn.t) :: Plug.Conn.t
   @callback find_channel(session_id :: String.t) :: Aida.Channel.t
 
-
   def find_channel(session_id) do
     [_bot_id, provider | _] = session_id |> String.split("/")
     provider = case provider do

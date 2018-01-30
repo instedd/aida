@@ -1,5 +1,19 @@
 defmodule Aida.SurveyTest do
-  alias Aida.{Bot, BotManager, Skill, Skill.Survey, SessionStore, BotParser, TestChannel, Session, Message, ChannelProvider}
+  alias Aida.{
+    Bot,
+    BotManager,
+    Crypto,
+    Skill,
+    Skill.Survey,
+    Skill.Survey.InputQuestion,
+    SessionStore,
+    BotParser,
+    TestChannel,
+    Session,
+    Message,
+    ChannelProvider
+  }
+
   use Aida.DataCase
   import Mock
 
@@ -30,16 +44,7 @@ defmodule Aida.SurveyTest do
   end
 
   describe "wake_up" do
-    setup do
-      SessionStore.start_link
-
-      manifest = File.read!("test/fixtures/valid_manifest.json")
-        |> Poison.decode!
-        |> Map.put("languages", ["en"])
-
-      {:ok, bot} = BotParser.parse(@bot_id, manifest)
-      %{bot: bot}
-    end
+    setup :load_manifest_bot
 
     test "starts the survey", %{bot: bot} do
       channel = TestChannel.new()
@@ -195,5 +200,81 @@ defmodule Aida.SurveyTest do
         "At what temperature do your like red wine the best?"
       ]
     end
+  end
+
+  describe "encryption" do
+    setup :load_manifest_bot
+    setup :create_encrypted_survey
+    setup :create_encrypted_survey_bot
+
+    test "marks user reply as sensitive", %{survey: survey, bot: bot} do
+      session =
+        Session.new(
+          {@session_id, @session_uuid,
+           %{"language" => "en", ".survey/encrypted_question" => %{"step" => 0}}}
+        )
+
+      message = Skill.put_response(survey, Message.new("19", bot, session))
+
+      assert message.sensitive == true
+    end
+
+    test "stores user reply encrypted in session", %{bot: bot, private: private} do
+      session =
+        Session.new(
+          {@session_id, @session_uuid,
+           %{"language" => "en", ".survey/encrypted_question" => %{"step" => 0}}}
+        )
+
+      message = Message.new("19", bot, session)
+      message = Bot.chat(bot, message)
+
+      json = message |> Message.get_session("survey/encrypted_question/age")
+
+      assert Crypto.decrypt(json, private) == "19"
+    end
+  end
+
+  defp load_manifest_bot(_context) do
+    SessionStore.start_link()
+
+    manifest =
+      File.read!("test/fixtures/valid_manifest.json")
+      |> Poison.decode!()
+      |> Map.put("languages", ["en"])
+
+    {:ok, bot} = BotParser.parse(@bot_id, manifest)
+
+    [bot: bot]
+  end
+
+  defp create_encrypted_survey(_context) do
+    survey = %Survey{
+      id: "encrypted_question",
+      bot_id: @bot_id,
+      name: "Food Preferences",
+      schedule: ~N[2117-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
+      questions: [
+        %InputQuestion{
+          name: "age",
+          type: :integer,
+          encrypt: true,
+          message: %{
+            "en" => "How old are you?",
+            "es" => "Qué edad tenés?"
+          }
+        }
+      ]
+    }
+
+    [survey: survey]
+  end
+
+  defp create_encrypted_survey_bot(%{bot: bot, survey: survey}) do
+    {private, public} = Kcl.generate_key_pair()
+
+    bot = %{bot | skills: [ survey ], public_keys: [public]}
+
+    [bot: bot, private: private]
   end
 end

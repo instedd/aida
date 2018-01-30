@@ -124,7 +124,18 @@ defmodule Aida.MessageTest do
       stored_value = Message.get_session(message, "name")
 
       assert %{"type" => "encrypted"} = stored_value
-      assert "John" == Aida.Crypto.decrypt(stored_value, private)
+      assert "John" == Aida.Crypto.decrypt(stored_value, private) |> Poison.decode!
+    end
+
+    test "encrypt a numeric value in the session when requested", %{bot: bot, private: private} do
+      message =
+        Message.new("", bot)
+        |> Message.put_session("age", 20, encrypted: true)
+
+      stored_value = Message.get_session(message, "age")
+
+      assert %{"type" => "encrypted"} = stored_value
+      assert 20 == Aida.Crypto.decrypt(stored_value, private) |> Poison.decode!
     end
   end
 end

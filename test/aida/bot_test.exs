@@ -4,13 +4,15 @@ defmodule Aida.BotTest do
   alias Aida.{
     BotParser,
     Bot,
+    Crypto,
     DataTable,
     DB,
     DB.MessageLog,
     Message,
     Session,
     SessionStore,
-    Skill.KeywordResponder
+    Skill.KeywordResponder,
+    TestSkill
   }
 
   @english_restaurant_greet [
@@ -540,6 +542,39 @@ defmodule Aida.BotTest do
       assert outgoing_message_log.session_id == session.id
       assert outgoing_message_log.bot_id == bot.id
       assert outgoing_message_log.content == "howdy!"
+    end
+
+    test "encrypt incoming message logs", %{bot: bot, session: session} do
+      {private, public} = Kcl.generate_key_pair()
+      bot = %{bot | skills: [ %TestSkill{encrypt: true} ], languages: ["en"], public_keys: [public]}
+
+      input =
+        Message.new("Hi!", bot, session)
+        |> Message.put_session("language", "en")
+
+      output = bot |> Bot.chat(input)
+      assert output.reply == ["This is a test"]
+
+      [incoming_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "incoming"))
+
+      assert incoming_message_log.content_type == "encrypted"
+      assert incoming_message_log.session_id == session.id
+      assert incoming_message_log.bot_id == bot.id
+      json = incoming_message_log.content |> Poison.decode!
+
+      assert Crypto.decrypt(json, private) |> Poison.decode! == %{"content_type" => "text", "content" => "Hi!"}
+
+      [outgoing_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "outgoing"))
+
+      assert outgoing_message_log.session_id == session.id
+      assert outgoing_message_log.bot_id == bot.id
+      assert outgoing_message_log.content == "This is a test"
     end
   end
 

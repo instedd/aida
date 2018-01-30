@@ -162,7 +162,7 @@ defmodule Aida.Channel.FacebookConnTest do
 
         session = Session.load("#{bot.id}/facebook/1234567890/#{recipient_id}")
         assert "John" == Session.get(session, "first_name")
-        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private)
+        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
         assert "male" == Session.get(session, "gender")
 
         {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601

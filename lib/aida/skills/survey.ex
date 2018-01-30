@@ -116,6 +116,13 @@ defmodule Aida.Skill.Survey do
 
     def put_response(survey, message) do
       question = Survey.current_question(survey, message)
+
+      message = if question.encrypt do
+        message |> Message.mark_sensitive
+      else
+        message
+      end
+
       message = case Question.accept_answer(question, message) do
         :error ->
           if question.constraint_message do
@@ -123,8 +130,15 @@ defmodule Aida.Skill.Survey do
           else
             message
           end
+
         {:ok, answer} ->
-          message = Message.put_session(message, Survey.answer_key(survey, question), answer)
+            message =
+              Message.put_session(
+                message,
+                Survey.answer_key(survey, question),
+                answer,
+                encrypted: question.encrypt
+              )
           Survey.move_to_next_question(survey, message)
       end
 
