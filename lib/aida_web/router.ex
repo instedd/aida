@@ -28,5 +28,6 @@ defmodule AidaWeb.Router do
   scope "/", AidaWeb do
     get "/callback/:provider", CallbackController, :callback
     post "/callback/:provider", CallbackController, :callback
+    get "/content/image/:uuid", ImageController, :image
   end
 end
