@@ -41,19 +41,21 @@ defmodule Aida.Crypto.Box do
   @spec encode(t) :: String.t()
   def encode(box) do
     [
-      box.public_key,
-      box.nonce_base,
+      bin(box.public_key),
+      bin(box.nonce_base),
       box.recipients
       |> Enum.map(fn recipient ->
         [
-          recipient.public_key,
-          recipient.encrypted
+          bin(recipient.public_key),
+          bin(recipient.encrypted)
         ]
       end)
     ]
     |> Msgpax.pack!(iodata: false)
     |> Base.encode64()
   end
+
+  defp bin(data), do: Msgpax.Bin.new(data)
 
   @spec decode(String.t) :: t
   def decode(encoded_box) do

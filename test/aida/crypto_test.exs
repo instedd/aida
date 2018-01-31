@@ -69,11 +69,11 @@ defmodule Aida.CryptoTest do
 
       expected_encoded_box =
         [
-          @server_pk,
-          @nonce_base,
+          Msgpax.Bin.new(@server_pk),
+          Msgpax.Bin.new(@nonce_base),
           [
-            [@user1_pk, Kcl.box("Hello", @nonce_base <> "0000", @server_sk, @user1_pk) |> elem(0)],
-            [@user2_pk, Kcl.box("Hello", @nonce_base <> "0001", @server_sk, @user2_pk) |> elem(0)]
+            [Msgpax.Bin.new(@user1_pk), Msgpax.Bin.new(Kcl.box("Hello", @nonce_base <> "0000", @server_sk, @user1_pk) |> elem(0))],
+            [Msgpax.Bin.new(@user2_pk), Msgpax.Bin.new(Kcl.box("Hello", @nonce_base <> "0001", @server_sk, @user2_pk) |> elem(0))]
           ]
         ]
         |> Msgpax.pack!(iodata: false)
