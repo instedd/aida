@@ -1,6 +1,6 @@
 defmodule AidaWeb.BotControllerTest do
   use AidaWeb.ConnCase
-
+  use Aida.LogHelper
   alias Aida.DB
   alias Aida.DB.Bot
   alias Aida.JsonSchema
@@ -104,13 +104,17 @@ defmodule AidaWeb.BotControllerTest do
           }
         ])
 
-      conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
-      assert json_response(conn, 422)["error"] == "Invalid expression: '${4age} >= 18'"
+      without_logging do
+        conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
+        assert json_response(conn, 422)["error"] == "Invalid expression: '${4age} >= 18'"
+      end
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
-      conn = post conn, bot_path(conn, :create), bot: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
+      without_logging do
+        conn = post conn, bot_path(conn, :create), bot: @invalid_attrs
+        assert json_response(conn, 422)["errors"] != %{}
+      end
     end
 
     test "creates temporary bot", %{conn: conn} do
@@ -142,8 +146,10 @@ defmodule AidaWeb.BotControllerTest do
     end
 
     test "renders errors when data is invalid", %{conn: conn, bot: bot} do
-      conn = put conn, bot_path(conn, :update, bot), bot: @invalid_attrs
-      assert json_response(conn, 422)["errors"] != %{}
+      without_logging do
+        conn = put conn, bot_path(conn, :update, bot), bot: @invalid_attrs
+        assert json_response(conn, 422)["errors"] != %{}
+      end
     end
   end
 

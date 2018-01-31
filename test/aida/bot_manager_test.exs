@@ -1,6 +1,7 @@
 defmodule Aida.BotManagerTest do
   use Aida.DataCase
   use Aida.TimeMachine
+  use Aida.LogHelper
   alias Aida.{DB, Bot, BotManager, BotParser, TestChannel, ChannelRegistry, Scheduler}
   import Mock
 
@@ -130,9 +131,11 @@ defmodule Aida.BotManagerTest do
       with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> raise "error" end] do
         BotManager.schedule_wake_up(bot, skill, within(hours: 1))
 
-        time_travel(within(hours: 1)) do
-          assert called Bot.wake_up(bot, "skill_id", nil)
-          assert GenServer.whereis({:global, BotManager})
+        without_logging do
+          time_travel(within(hours: 1)) do
+            assert called Bot.wake_up(bot, "skill_id", nil)
+            assert GenServer.whereis({:global, BotManager})
+          end
         end
       end
     end
@@ -203,10 +206,12 @@ defmodule Aida.BotManagerTest do
     {:ok, invalid_bot} = DB.create_bot(%{manifest: invalid_manifest})
 
     ChannelRegistry.start_link
-    BotManager.start_link
 
-    assert BotManager.find(bot.id) == bot
+    without_logging do
+      BotManager.start_link
 
-    assert BotManager.find(invalid_bot.id) == :not_found
+      assert BotManager.find(bot.id) == bot
+      assert BotManager.find(invalid_bot.id) == :not_found
+    end
   end
 end

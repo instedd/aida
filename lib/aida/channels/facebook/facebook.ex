@@ -5,6 +5,7 @@ defmodule Aida.Channel.Facebook do
   alias Aida.Bot
   alias Aida.Message
   alias Aida.Session
+  import Aida.ErrorHandler
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
@@ -56,7 +57,7 @@ defmodule Aida.Channel.Facebook do
       end
     rescue
       error ->
-        Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{params: conn.params}])
+        capture_exception("Error processing Facebook callback", error, params: conn.params)
         conn |> Plug.Conn.send_resp(200, "ok")
     end
   end
@@ -148,7 +149,7 @@ defmodule Aida.Channel.Facebook do
         end
       rescue
         error ->
-          Sentry.capture_exception(error, [stacktrace: System.stacktrace(), extra: %{bot_id: channel.bot_id, message: message}])
+          capture_exception("Error processing Facebook message", error, bot_id: channel.bot_id, message: message)
           send_message(channel, ["Oops! Something went wrong"], sender_id)
       end
     end
