@@ -41,12 +41,17 @@ defmodule Aida.Expr.EvalTest do
     test "variables" do
       lookup_fn = fn ("foo") -> 42 end
       assert eval("${foo}", %Context{var_lookup: lookup_fn}) == 42
+      assert_raise Aida.Expr.UnknownVariableError, ~r/'foo'/, fn ->
+        eval("${foo}", Context.new)
+      end
     end
 
     test "attributes" do
       lookup_fn = fn ("foo") -> 42 end
       assert eval("foo", %Context{attr_lookup: lookup_fn}) == 42
-      assert eval("foo", Context.new) == nil
+      assert_raise Aida.Expr.UnknownAttributeError, ~r/'foo'/, fn ->
+        eval("foo", Context.new)
+      end
     end
 
     test "function calls" do

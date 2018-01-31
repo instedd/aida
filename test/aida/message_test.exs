@@ -109,6 +109,52 @@ defmodule Aida.MessageTest do
     end
   end
 
+  describe "expression interpolation" do
+    test "works with basic expression" do
+      message = Message.new("Hi!", @bot, Session.new())
+        |> Message.respond("1 + 1 = {{ 1 + 1 }}")
+      assert message.reply == ["1 + 1 = 2"]
+    end
+
+    test "works with session variables" do
+      session = Session.new({@session_id, @session_uuid, %{"foo" => 3}})
+      message = Message.new("Hi!", @bot, session)
+        |> Message.respond("value: {{ ${foo} + 1 }}")
+      assert message.reply == ["value: 4"]
+    end
+
+    test "works with bot variables" do
+      session = Session.new({@session_id, @session_uuid, %{"age" => 22, "language" => "en"}})
+      message = Message.new("Hi!", @bot, session)
+        |> Message.respond("Food options: {{ ${food_options} }}")
+      assert message.reply == ["Food options: barbecue and pasta and a exclusive selection of wines"]
+    end
+
+    test "interpolate error message when the variable does not exist" do
+      message = Message.new("Hi!", @bot, Session.new())
+        |> Message.respond("Value: {{ ${foo} + 1 }}")
+      assert message.reply == ["Value: [ERROR: Could not find variable named 'foo']"]
+    end
+
+    test "interpolate error message when the attribute does not exist" do
+      message = Message.new("Hi!", @bot, Session.new())
+        |> Message.respond("Value: {{ foo + 1 }}")
+      assert message.reply == ["Value: [ERROR: Could not find attribute named 'foo']"]
+    end
+
+    test "interpolate error message when the function does not exist" do
+      message = Message.new("Hi!", @bot, Session.new())
+        |> Message.respond("Value: {{ foo() }}")
+      assert message.reply == ["Value: [ERROR: Could not find function named 'foo']"]
+    end
+
+    test "interpolate error message when the expression is invalid" do
+      message = Message.new("Hi!", @bot, Session.new())
+        |> Message.respond("Value: {{ *** }}")
+      assert message.reply == ["Value: [ERROR: Invalid expression: '***']"]
+    end
+  end
+
   describe "encryption" do
     setup do
       {private, public} = Kcl.generate_key_pair()

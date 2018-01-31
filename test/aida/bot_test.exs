@@ -465,20 +465,10 @@ defmodule Aida.BotTest do
       %{bot: bot}
     end
 
-    test "ignore attributes by default", %{bot: bot} do
-      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"language" => "en"}}))
-        |> Message.expr_context(lookup_raises: true)
-
-      value = Aida.Expr.parse("food_options")
-        |> Aida.Expr.eval(expr_context)
-
-      assert value == nil
-    end
-
-    test "ignore attributes in messages", %{bot: bot} do
+    test "display errors in messages", %{bot: bot} do
       output = bot |> Bot.chat(Message.new("days", bot))
       assert output.reply == [
-        "We will deliver "
+        "We will deliver [ERROR: Could not find attribute named 'attribute']"
       ]
     end
   end

@@ -8,8 +8,8 @@ defmodule Aida.Expr.Context do
     __MODULE__
       |> struct(
         self: params[:self],
-        var_lookup: Keyword.get(params, :var_lookup, fn(_) -> nil end),
-        attr_lookup: Keyword.get(params, :attr_lookup, fn(_) -> nil end),
+        var_lookup: Keyword.get(params, :var_lookup, fn name -> raise Aida.Expr.UnknownVariableError.exception(name) end),
+        attr_lookup: Keyword.get(params, :attr_lookup, fn name -> raise Aida.Expr.UnknownAttributeError.exception(name) end),
         functions: Keyword.get(params, :functions, %{})
       )
   end

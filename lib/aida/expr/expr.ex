@@ -43,7 +43,7 @@ defmodule Aida.Expr.Parser do
     do
       ast
     else
-      _ -> raise Aida.Expr.ParseError.exception("Invalid expression: '#{code}'")
+      _ -> raise Aida.Expr.ParseError.exception("Invalid expression: '#{code |> String.trim}'")
     end
   end
 end

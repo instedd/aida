@@ -168,9 +168,13 @@ defmodule Aida.Message do
       [{p_start, p_len}, {v_start, v_len}] = match
       expr = text |> Kernel.binary_part(v_start, v_len)
       expr_result =
-        Aida.Expr.parse(expr)
-        |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
-        |> display_var
+        try do
+          Aida.Expr.parse(expr)
+          |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
+          |> display_var
+        rescue
+          error -> "[ERROR: #{Exception.message(error)}]"
+        end
 
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
       text_before <> expr_result <> text_after
@@ -179,7 +183,7 @@ defmodule Aida.Message do
 
   def expr_context(message, options \\ []) do
     lookup_raises = options[:lookup_raises]
-    var_lookup = fn (name) ->
+    var_lookup = fn name ->
       case Message.lookup_var(message, name) do
         :not_found ->
           if lookup_raises do
