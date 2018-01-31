@@ -55,7 +55,7 @@ defmodule Aida.Mixfile do
       {:ecto_atom, "~> 1.0.0"},
       {:kcl, "~> 1.0"},
       {:msgpax, "~> 2.1"},
-      {:paasaa, "~> 0.2.2"}
+      {:sigaws, "~> 0.7"}
     ]
   end
 

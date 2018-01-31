@@ -85,7 +85,7 @@ defmodule AidaWeb.Channel.WebSocketTest do
     socket |> push("new_session")
       |> assert_reply(:ok, %{session: session_id})
 
-    socket |> push("utb_msg", %{"session" => session_id, "text" => "hi"})
+    socket |> push("utb_msg", %{"session" => session_id, "text" => "Hi!"})
 
     assert_push("btu_msg", %{session: ^session_id, text: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"}, 1000)
   end
