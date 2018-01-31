@@ -226,42 +226,15 @@ defmodule Aida.Bot do
 
   def expr_context(bot, context, _options) do
     Aida.Expr.Context.add_function(context, "lookup", fn([key, table_name, value_column]) ->
-      lookup_in_data_table(bot, table_name, key, value_column)
+      case DataTable.lookup(bot.data_tables, key, table_name, value_column) do
+        {:error, reason} ->
+          Logger.warn(reason)
+          nil
+
+        value ->
+          value
+      end
     end)
-  end
-
-  def lookup_in_data_table(%Bot{data_tables: data_tables}, table_name, key, value_column) do
-    with {:ok, table} <- find_data_table(data_tables, table_name),
-         {:ok, column_index} <- find_table_column_index(table, value_column),
-         {:ok, row} <- find_table_row(table, key, 0)
-    do
-      row |> Enum.at(column_index)
-    else
-      {:error, reason} ->
-        Logger.warn(reason)
-        nil
-    end
-  end
-
-  defp find_data_table(data_tables, table_name) do
-    case data_tables |> Enum.find(fn(table) -> table.name == table_name end) do
-      nil -> {:error, "Table not found: #{table_name}"}
-      table -> {:ok, table}
-    end
-  end
-
-  defp find_table_column_index(table, value_column) do
-    case table.columns |> Enum.find_index(fn(column_name) -> column_name == value_column end) do
-      nil -> {:error, "Value column not found: #{value_column}"}
-      index -> {:ok, index}
-    end
-  end
-
-  defp find_table_row(table, key, key_column_index) do
-    case table.data |> Enum.find(fn(row) -> row |> Enum.at(key_column_index) == key end) do
-      nil -> {:error, "Row not found with key: #{key}"}
-      row -> {:ok, row}
-    end
   end
 
   def encrypt(%Bot{public_keys: public_keys}, data) do

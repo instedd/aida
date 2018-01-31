@@ -411,12 +411,6 @@ defmodule Aida.BotTest do
       %{bot: bot}
     end
 
-    test "lookup", %{bot: bot} do
-      value = bot |> Bot.lookup_in_data_table("Distribution_days", "Kakuma 1", "Day")
-
-      assert value == "Next Thursday"
-    end
-
     test "lookup from eval", %{bot: bot} do
       expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"key" => "Kakuma 2"}}))
         |> Message.expr_context(lookup_raises: true)
