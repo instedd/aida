@@ -6,10 +6,10 @@ defmodule Aida.Session do
   @typep values :: %{required(String.t) => value}
   @type t :: %__MODULE__{
     id: String.t,
+    uuid: String.t,
     is_new?: boolean,
     values: values
   }
-
 
   defstruct id: nil,
             uuid: nil,

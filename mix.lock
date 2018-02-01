@@ -36,6 +36,7 @@
   "ranch": {:hex, :ranch, "1.3.2", "e4965a144dc9fbe70e5c077c65e73c57165416a901bd02ea899cfd95aa890986", [], [], "hexpm"},
   "salsa20": {:hex, :salsa20, "1.0.1", "60f14205859aa120b3ca0be3802a05e0c7bdd02e10e61abf24ce8c52529e1650", [:mix], [], "hexpm"},
   "sentry": {:hex, :sentry, "6.0.5", "5f4e5818e39b2721bb92ee07c164d10c510af9b519dc587727008433e119ad7a", [], [{:hackney, "~> 1.8 or 1.6.5", [hex: :hackney, repo: "hexpm", optional: false]}, {:plug, "~> 1.0", [hex: :plug, repo: "hexpm", optional: true]}, {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", [hex: :poison, repo: "hexpm", optional: false]}, {:uuid, "~> 1.0", [hex: :uuid, repo: "hexpm", optional: false]}], "hexpm"},
+  "sigaws": {:hex, :sigaws, "0.7.2", "2b0bcd3979f2ae19337d0a6e52b4b1f37ac3d778201019240e641471a2d36685", [:mix], [], "hexpm"},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [], [], "hexpm"},
   "timex": {:hex, :timex, "3.1.24", "d198ae9783ac807721cca0c5535384ebdf99da4976be8cefb9665a9262a1e9e3", [], [{:combine, "~> 0.7", [hex: :combine, repo: "hexpm", optional: false]}, {:gettext, "~> 0.10", [hex: :gettext, repo: "hexpm", optional: false]}, {:tzdata, "~> 0.1.8 or ~> 0.5", [hex: :tzdata, repo: "hexpm", optional: false]}], "hexpm"},
   "timex_ecto": {:hex, :timex_ecto, "3.2.1", "461140751026e1ca03298fab628f78ab189e78784175f5e301eefa034ee530aa", [], [{:ecto, "~> 2.2", [hex: :ecto, repo: "hexpm", optional: false]}, {:timex, "~> 3.1", [hex: :timex, repo: "hexpm", optional: false]}], "hexpm"},

@@ -35,7 +35,8 @@
       "languages": {
         "en": ["english", "inglés"],
         "es": ["español", "spanish"]
-      }
+      },
+      "reply_to_unsupported_language": true
     },
     {
       "type": "keyword_responder",

@@ -240,9 +240,9 @@ defmodule Aida.BotTest do
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("eu quero falar português", bot, output.session)
+      input2 = Message.new("português", bot, output.session)
       output2 = bot |> Bot.chat(input2)
-      assert output2.reply == @language_selection_speech
+      assert output2.reply == ["Desculpe, eu não falo Português para agora"] ++ @language_selection_speech
     end
 
     test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
