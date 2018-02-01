@@ -346,6 +346,13 @@ defmodule Aida.JsonSchemaTest do
     end)
   end
 
+  defp assert_boolean(thing, type) do
+    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
+      validation_result
+      |> Enum.member?({"Type mismatch. Expected Boolean but got Object.", [thing]})
+    end)
+  end
+
   defp assert_array(thing, type) do
     validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
       validation_result
@@ -554,6 +561,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("type", :language_detector)
     assert_required("explanation", :language_detector)
     assert_required("languages", :language_detector)
+    assert_boolean("reply_to_unsupported_language", :language_detector)
 
     @valid_language_detector
     |> assert_valid(:language_detector)

@@ -56,7 +56,8 @@ defmodule Aida.BotParserTest do
           languages: %{
             "en" => ["english", "inglés"],
             "es" => ["español", "spanish"]
-          }
+          },
+          reply_to_unsupported_language: true
         },
         %KeywordResponder{
           explanation: %{
@@ -514,7 +515,8 @@ defmodule Aida.BotParserTest do
           languages: %{
             "en" => ["english", "inglés"],
             "es" => ["español", "spanish"]
-          }
+          },
+          reply_to_unsupported_language: false
         },
         %KeywordResponder{
           explanation: %{

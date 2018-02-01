@@ -20,25 +20,9 @@ defmodule Aida.LanguageDetectorTest do
 
   @uuid "2c20e05c-74e1-4b9b-923f-10b65a82dbd8"
 
-  describe "multiple languages bot" do
-    setup do
-      skill = %LanguageDetector{
-        explanation: @language_selection_explanation,
-        bot_id: @uuid,
-        languages: %{
-          "es" => ["español", "spanish"]
-        }
-      }
-
-      bot = %Bot{
-        id: @uuid,
-        languages: ["en", "es"],
-        front_desk: %FrontDesk{threshold: 0.3},
-        skills: [skill]
-      }
-
-      %{skill: skill, bot: bot}
-    end
+  describe "unsupported language response bot" do
+    setup :unsupported_language_response_skill
+    setup :bot
 
     test "sets the language when sending the correct keyword", %{skill: skill, bot: bot} do
       input = Message.new("spanish", bot)
@@ -93,7 +77,11 @@ defmodule Aida.LanguageDetectorTest do
           end do
           input = Message.new("hello", bot)
           output = skill |> Skill.put_response(input)
-          assert output.reply == [@generic_not_understood_message, @language_selection_explanation]
+
+          assert output.reply == [
+                   @generic_not_understood_message,
+                   @language_selection_explanation
+                 ]
         end
       end
     end
@@ -106,5 +94,60 @@ defmodule Aida.LanguageDetectorTest do
       output = skill |> Skill.put_response(input)
       assert output.reply == [@generic_not_understood_message, @language_selection_explanation]
     end
+  end
+
+  describe "simple language response bot" do
+    setup :simple_response_skill
+    setup :bot
+
+    test "responds with explanation and doesn't try to detect the language", %{
+      skill: skill,
+      bot: bot
+    } do
+      with_mock AwsComprehend,
+        detect_dominant_language: fn _ ->
+          assert false
+        end do
+        input = Message.new("qwertyui", bot)
+        output = skill |> Skill.put_response(input)
+        assert output.reply == [@language_selection_explanation]
+      end
+    end
+  end
+
+  defp simple_response_skill(_context) do
+    skill = %LanguageDetector{
+      explanation: @language_selection_explanation,
+      bot_id: @uuid,
+      languages: %{
+        "es" => ["español", "spanish"]
+      }
+    }
+
+    [skill: skill]
+  end
+
+  defp unsupported_language_response_skill(_context) do
+    skill = %LanguageDetector{
+      explanation: @language_selection_explanation,
+      bot_id: @uuid,
+      languages: %{
+        "es" => ["español", "spanish"]
+      },
+      reply_to_unsupported_language: true
+    }
+
+    [skill: skill]
+  end
+
+  defp bot(%{skill: skill}) do
+    bot = %Bot{
+      id: @uuid,
+      languages: ["en", "es"],
+      front_desk: %FrontDesk{threshold: 0.3},
+      skills: [skill]
+    }
+
+    [bot: bot]
   end
 end

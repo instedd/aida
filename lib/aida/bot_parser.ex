@@ -88,7 +88,8 @@ defmodule Aida.BotParser do
     %LanguageDetector{
       explanation: skill["explanation"],
       bot_id: bot_id,
-      languages: skill["languages"]
+      languages: skill["languages"],
+      reply_to_unsupported_language: skill["reply_to_unsupported_language"] == true
     }
   end
 

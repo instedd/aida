@@ -14,12 +14,14 @@ defmodule Aida.Skill.LanguageDetector do
   @type t :: %__MODULE__{
           explanation: String.t(),
           bot_id: String.t(),
-          languages: %{}
+          languages: %{},
+          reply_to_unsupported_language: boolean
         }
 
   defstruct explanation: "",
             bot_id: "",
-            languages: %{}
+            languages: %{},
+            reply_to_unsupported_language: false
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, _bot) do
@@ -55,7 +57,10 @@ defmodule Aida.Skill.LanguageDetector do
       end
     end
 
-    def try_to_detect_language_and_clarify(skill, message) do
+    def try_to_detect_language_and_clarify(
+          %{reply_to_unsupported_language: true} = skill,
+          message
+        ) do
       detected_language = detect_language(message)
 
       case is_a_supported_language?(skill, detected_language) do
@@ -63,6 +68,8 @@ defmodule Aida.Skill.LanguageDetector do
         _ -> unsupported_language(skill, message, detected_language)
       end
     end
+
+    def try_to_detect_language_and_clarify(skill, message), do: clarify(skill, message)
 
     def detect_language(message) do
       try do
@@ -88,6 +95,7 @@ defmodule Aida.Skill.LanguageDetector do
             session_uuid: message.session.uuid,
             bot_id: message.bot.id
           )
+
           :not_understood
       end
     end
