@@ -44,13 +44,17 @@ defmodule Aida.Skill.Utils do
   end
 
   def is_skill_relevant?(skill, message) do
-    case skill |> Skill.relevant do
-      nil -> true
+    case skill |> Skill.relevant() do
+      nil ->
+        true
+
       expr ->
         try do
           Aida.Expr.eval(expr, message |> Message.expr_context(lookup_raises: true))
         rescue
           Aida.Expr.UnknownVariableError -> false
+          Aida.Expr.UnknownAttributeError -> false
+          Aida.Expr.UnknownFunctionError -> false
         end
     end
   end

@@ -29,6 +29,7 @@ defmodule Aida.Skill.Survey.Choice do
     rescue
       Aida.Expr.UnknownVariableError -> false
       Aida.Expr.UnknownAttributeError -> false
+      Aida.Expr.UnknownFunctionError -> false
     end
   end
 

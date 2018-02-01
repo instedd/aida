@@ -1,7 +1,8 @@
 defmodule Aida.TestSkill do
   defstruct [
     encrypt: false,
-    response: "This is a test"
+    response: "This is a test",
+    relevant: nil
   ]
 
   defimpl Aida.Skill, for: __MODULE__ do
@@ -21,7 +22,7 @@ defmodule Aida.TestSkill do
 
     def wake_up(_skill, _bot, _data), do: :ok
 
-    def relevant(_skill), do: nil
+    def relevant(%{relevant: relevant}), do: relevant
 
     def uses_encryption?(%{encrypt: encrypt}), do: encrypt
   end
