@@ -153,6 +153,12 @@ defmodule Aida.MessageTest do
         |> Message.respond("Value: {{ *** }}")
       assert message.reply == ["Value: [ERROR: Invalid expression: '***']"]
     end
+
+    test "interpolate two expressions" do
+      message = Message.new("Hi!", @bot, Session.new())
+        |> Message.respond("foo: {{ 1 + 1 }}, bar: {{ 2 * 4 }}")
+      assert message.reply == ["foo: 2, bar: 8"]
+    end
   end
 
   describe "encryption" do
