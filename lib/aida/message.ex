@@ -163,7 +163,7 @@ defmodule Aida.Message do
 
   @spec interpolate_expressions(message :: t, text :: String.t) :: String.t
   def interpolate_expressions(message, text) do
-    Regex.scan(~r/\{\{(.*)\}\}/, text, return: :index)
+    Regex.scan(~r/\{\{(.*)\}\}/U, text, return: :index)
     |> List.foldr(text, fn (match, text) ->
       [{p_start, p_len}, {v_start, v_len}] = match
       expr = text |> Kernel.binary_part(v_start, v_len)
