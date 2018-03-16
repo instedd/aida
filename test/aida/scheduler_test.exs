@@ -13,6 +13,15 @@ defmodule Aida.SchedulerTest do
     end
   end
 
+  defmodule TestRescheduleHandler do
+    @behaviour Aida.Scheduler.Handler
+
+    def handle_scheduled_task(task_id, ts) do
+      Scheduler.appoint(task_id, Timex.shift(ts, hours: 1), __MODULE__)
+      TestHandler.handle_scheduled_task(task_id, ts)
+    end
+  end
+
   setup do
     Scheduler.start_link
     pid = System.unique_integer([:positive])
@@ -142,6 +151,20 @@ defmodule Aida.SchedulerTest do
     end
 
     assert [] = Scheduler.Task |> Aida.Repo.all
+  end
+
+  test "scheduled task is not deleted if the task reschedules it", %{pid: pid} do
+    ts1 = within(days: 1)
+    ts2 = Timex.shift(ts1, hours: 1)
+    Scheduler.appoint("test_task/#{pid}", ts1, TestRescheduleHandler)
+
+    time_travel(ts1) do
+      assert_receive {"test_task", ^ts1}
+    end
+
+    assert [task] = Scheduler.Task |> Aida.Repo.all()
+    task_id = "test_task/#{pid}"
+    assert %Scheduler.Task{name: ^task_id, ts: ^ts2, handler: TestRescheduleHandler} = task
   end
 
   test "reschedule task to a later timestamp", %{pid: pid} do
