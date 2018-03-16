@@ -41,9 +41,9 @@ defmodule FacebookApi do
       _ ->
         case Poison.decode(response.body) do
           {:ok, %{"error" => %{"message" => message, "code" => code}}} ->
-            throw FacebookApi.Error.exception(message, code, response)
+            raise FacebookApi.Error.exception(message, code, response)
           _ ->
-            throw FacebookApi.Error.exception("Unknown error", -1, response)
+            raise FacebookApi.Error.exception("Unknown error", -1, response)
         end
     end
   end
