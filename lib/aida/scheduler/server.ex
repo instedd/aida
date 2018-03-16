@@ -84,13 +84,13 @@ defmodule Aida.Scheduler.Server do
     |> min(@max_delay)
   end
 
-  defp run_task(%Task{name: name, ts: ts, handler: handler, } = task) do
+  defp run_task(%Task{name: name, ts: ts, handler: handler} = task) do
+    task |> Task.delete
     try do
       handler.handle_scheduled_task(name, ts)
     rescue
       error ->
         capture_exception("Error executing task '#{name}'", error, task_name: name, task_ts: ts, task_handler: handler)
     end
-    task |> Task.delete
   end
 end
