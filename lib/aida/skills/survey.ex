@@ -2,6 +2,7 @@ defmodule Aida.Skill.Survey do
   alias __MODULE__
   alias __MODULE__.{Question, SelectQuestion, InputQuestion}
   alias Aida.{Bot, BotManager, Session, Message, Skill.Survey.Question, DB, Skill}
+  import Aida.ErrorHandler
 
   @type t :: %__MODULE__{
     id: String.t(),
@@ -31,9 +32,15 @@ defmodule Aida.Skill.Survey do
 
         message = answer(survey, Message.new("", bot, session))
 
-        Bot.send_message(message)
-
-        Session.save(message.session)
+        try do
+          Bot.send_message(message)
+        rescue
+          error ->
+            capture_exception("Error starting survey", error, bot_id: bot.id, skill_id: survey.id, session_id: session_id)
+        else
+          _ ->
+          Session.save(message.session)
+        end
       end
     end
   end
