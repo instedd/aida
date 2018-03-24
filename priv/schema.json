@@ -78,13 +78,13 @@
       "type": "object",
       "properties": {
         "greeting": {"$ref": "#/definitions/message"},
-        "introduction": {"$ref": "#/definitions/message"},
+        "introduction": {"$ref": "#/definitions/message_or_empty"},
         "not_understood": {"$ref": "#/definitions/message"},
-        "clarification": {"$ref": "#/definitions/message"},
+        "clarification": {"$ref": "#/definitions/message_or_empty"},
         "threshold": { "maximum": 0.5, "minimum": 0 }
       },
       "additionalProperties": false,
-      "required": ["greeting", "introduction", "not_understood", "clarification", "threshold"]
+      "required": ["greeting", "not_understood", "threshold"]
     },
 
     "message": {
@@ -94,6 +94,14 @@
       },
       "additionalProperties": false,
       "required": ["message"]
+    },
+
+    "message_or_empty": {
+      "type": "object",
+      "properties": {
+        "message": {"$ref": "#/definitions/localized_string_or_empty"}
+      },
+      "additionalProperties": false
     },
 
     "skill": {
