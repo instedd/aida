@@ -28,9 +28,9 @@ defmodule Aida.JsonSchemaTest do
   })
   @valid_front_desk_with_empty_non_required_messages ~s({
     "greeting": #{@valid_message},
-    "introduction": #{@valid_message},
+    "introduction": #{@valid_message_or_empty},
     "not_understood": #{@valid_message},
-    "clarification": #{@valid_message},
+    "clarification": #{@valid_message_or_empty},
     "threshold": 0.1
   })
   @valid_localized_keywords ~s({"en": ["a"]})
