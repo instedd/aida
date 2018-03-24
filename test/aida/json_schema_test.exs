@@ -13,7 +13,7 @@ defmodule Aida.JsonSchemaTest do
   @valid_localized_string ~s({"en": "a"})
   @valid_localized_string_or_empty ~s({"en": ""})
   @valid_message ~s({"message" : #{@valid_localized_string}})
-  @valid_message_or_empty ~s({"message": #{@valid_localized_string_or_empty})
+  @valid_message_or_empty ~s({"message": #{@valid_localized_string_or_empty}})
   @valid_front_desk ~s({
     "greeting": #{@valid_message},
     "introduction": #{@valid_message},
