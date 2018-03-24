@@ -11,8 +11,22 @@ defmodule Aida.JsonSchemaTest do
   @valid_base_64_key ~s("ZWNjYzIwNGMtYmExNS00Y2M5LWI5YTMtMjJiOTg0ZDc5YThl")
   @invalid_base_64_key ".."
   @valid_localized_string ~s({"en": "a"})
+  @valid_localized_string_or_empty ~s({"en": ""})
   @valid_message ~s({"message" : #{@valid_localized_string}})
+  @valid_message_or_empty ~s({"message": #{@valid_localized_string_or_empty})
   @valid_front_desk ~s({
+    "greeting": #{@valid_message},
+    "introduction": #{@valid_message},
+    "not_understood": #{@valid_message},
+    "clarification": #{@valid_message},
+    "threshold": 0.1
+  })
+  @valid_front_desk_with_empty_non_required_fields ~s({
+    "greeting": #{@valid_message},
+    "not_understood": #{@valid_message},
+    "threshold": 0.1
+  })
+  @valid_front_desk_with_empty_non_required_messages ~s({
     "greeting": #{@valid_message},
     "introduction": #{@valid_message},
     "not_understood": #{@valid_message},
@@ -705,14 +719,18 @@ defmodule Aida.JsonSchemaTest do
 
   test "front_desk" do
     assert_required("greeting", :front_desk)
-    assert_required("introduction", :front_desk)
     assert_required("not_understood", :front_desk)
-    assert_required("clarification", :front_desk)
     assert_required("threshold", :front_desk)
     assert_max("threshold", 0.5, :front_desk)
     assert_min("threshold", 0, :front_desk)
 
     @valid_front_desk
+    |> assert_valid(:front_desk)
+
+    @valid_front_desk_with_empty_non_required_fields
+    |> assert_valid(:front_desk)
+
+    @valid_front_desk_with_empty_non_required_messages
     |> assert_valid(:front_desk)
   end
 
