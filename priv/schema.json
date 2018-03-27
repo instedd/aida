@@ -112,8 +112,8 @@
         "type": {"enum": ["keyword_responder"]},
         "id": {"$ref": "#/definitions/non_empty_string"},
         "name": {"$ref": "#/definitions/non_empty_string"},
-        "explanation": {"$ref": "#/definitions/localized_string"},
-        "clarification": {"$ref": "#/definitions/localized_string"},
+        "explanation": {"$ref": "#/definitions/localized_string_or_empty"},
+        "clarification": {"$ref": "#/definitions/localized_string_or_empty"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
         "response": {"$ref": "#/definitions/localized_string"},
         "relevant": {"$ref": "#/definitions/non_empty_string"}
@@ -298,8 +298,8 @@
         "type": {"enum": ["decision_tree"]},
         "id": {"$ref": "#/definitions/non_empty_string"},
         "name": {"$ref": "#/definitions/non_empty_string"},
-        "explanation": {"$ref": "#/definitions/localized_string"},
-        "clarification": {"$ref": "#/definitions/localized_string"},
+        "explanation": {"$ref": "#/definitions/localized_string_or_empty"},
+        "clarification": {"$ref": "#/definitions/localized_string_or_empty"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
         "tree": {"$ref": "#/definitions/tree_question"}

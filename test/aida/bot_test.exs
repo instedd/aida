@@ -2,12 +2,13 @@ defmodule Aida.BotTest do
   use Aida.DataCase
 
   alias Aida.{
-    BotParser,
     Bot,
+    BotParser,
     Crypto,
     DataTable,
     DB,
     DB.MessageLog,
+    FrontDesk,
     Message,
     Session,
     SessionStore,
@@ -559,6 +560,69 @@ defmodule Aida.BotTest do
       assert outgoing_message_log.session_id == session.id
       assert outgoing_message_log.bot_id == bot.id
       assert outgoing_message_log.content == "This is a test"
+    end
+  end
+
+  describe "empty clarification" do
+    setup do
+      bot = %Bot{
+        id: @uuid,
+        languages: ["en"],
+        front_desk: %FrontDesk{
+          threshold: 0.5,
+          greeting: %{ "en" => "Hello, I'm a Restaurant bot" },
+          introduction: %{ "en" => "I can do a number of things" },
+          not_understood: %{ "en" => "Sorry, I didn't understand that" },
+          clarification: %{ "en" => "I'm not sure exactly what you need." }
+        },
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "" },
+            id: "id",
+            bot_id: @uuid,
+            name: "Food",
+            keywords: %{
+              "en" => ["food"]
+            },
+            response: %{
+              "en" => "Steak"
+            }
+          },
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "" },
+            id: "id",
+            bot_id: @uuid,
+            name: "Hours",
+            keywords: %{
+              "en" => ["hours"]
+            },
+            response: %{
+              "en" => "Noon"
+            }
+          }
+        ]
+      }
+
+      %{bot: bot}
+    end
+
+    test "replies with no explanation message if the skills have empty explanation", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!", bot))
+      output = bot |> Bot.chat(Message.new("foobar", bot, response.session))
+      assert output.reply == [
+        "Sorry, I didn't understand that",
+        "I can do a number of things"
+      ]
+    end
+
+    test "replies with no clarification when message matches more than one skill and similar confidence but they have no clarification", %{bot: bot} do
+      response = bot |> Bot.chat(Message.new("Hi!", bot))
+      output = bot |> Bot.chat(Message.new("food hours", bot, response.session))
+      assert output.reply == [
+        "I'm not sure exactly what you need."
+      ]
     end
   end
 

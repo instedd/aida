@@ -86,6 +86,14 @@ defmodule Aida.Message do
   def respond(message, response) do
     response = interpolate_expressions(message, response)
     response = interpolate_vars(message, response)
+    add_reply(message, response)
+  end
+
+  defp add_reply(message, "") do
+    message
+  end
+
+  defp add_reply(message, response) do
     %{message | reply: message.reply ++ [response]}
   end
 
