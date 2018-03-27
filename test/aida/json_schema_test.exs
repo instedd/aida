@@ -11,6 +11,7 @@ defmodule Aida.JsonSchemaTest do
   @valid_base_64_key ~s("ZWNjYzIwNGMtYmExNS00Y2M5LWI5YTMtMjJiOTg0ZDc5YThl")
   @invalid_base_64_key ".."
   @valid_localized_string ~s({"en": "a"})
+  @valid_empty_localized_string ~s({"en": "a"})
   @valid_message ~s({"message" : #{@valid_localized_string}})
   @valid_front_desk ~s({
     "greeting": #{@valid_message},
@@ -24,8 +25,8 @@ defmodule Aida.JsonSchemaTest do
     "type": "keyword_responder",
     "id" : "1",
     "name" : "a",
-    "explanation": #{@valid_localized_string},
-    "clarification": #{@valid_localized_string},
+    "explanation": #{@valid_empty_localized_string},
+    "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
     "response": #{@valid_localized_string}
   })
@@ -142,8 +143,8 @@ defmodule Aida.JsonSchemaTest do
     "type": "decision_tree",
     "id": "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
     "name": "Food menu",
-    "explanation": #{@valid_localized_string},
-    "clarification": #{@valid_localized_string},
+    "explanation": #{@valid_empty_localized_string},
+    "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
     "tree": {
       "question": #{@valid_localized_string},
