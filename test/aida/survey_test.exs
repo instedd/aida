@@ -96,6 +96,20 @@ defmodule Aida.SurveyTest do
       end
     end
 
+    test "starts the survey when a keyword matches", %{bot: bot} do
+      channel = TestChannel.new()
+
+      bot = %{bot | channels: [channel]}
+
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en"}})
+
+      message = Message.new("survey", bot, session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 0}
+      assert message.reply == ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"]
+    end
+
     test "accept user reply", %{bot: bot} do
       session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
 

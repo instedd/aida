@@ -132,6 +132,7 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       name: skill["name"],
       schedule: schedule,
+      keywords: skill["keywords"],
       relevant: parse_expr(skill["relevant"]),
       questions: skill["questions"] |> Enum.map(&(parse_survey_question(&1, choice_lists)))
     }

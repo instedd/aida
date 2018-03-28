@@ -278,6 +278,7 @@
         "name": {"$ref": "#/definitions/non_empty_string"},
         "schedule": {"$ref": "#/definitions/timestamp"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
+        "keywords": {"$ref": "#/definitions/localized_keywords"},
         "questions": {
           "type": "array",
           "minItems": 1,

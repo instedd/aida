@@ -172,6 +172,10 @@
       "id": "food_preferences",
       "name": "Food Preferences",
       "schedule": "2117-12-10T01:40:13Z",
+      "keywords": {
+        "en": ["food preferences","food survey", "survey"],
+        "es": ["preferencias alimentarias","encuesta alimentaria"]
+      },
       "questions": [
         {
           "type": "select_one",

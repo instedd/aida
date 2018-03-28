@@ -134,6 +134,7 @@ defmodule Aida.JsonSchemaTest do
     "id": "2",
     "name": "a",
     "schedule": "2017-12-10T01:40:13.000-03:00",
+    "keywords": #{@valid_localized_keywords},
     "questions": [#{@valid_input_question}],
     "choice_lists": []
   })
