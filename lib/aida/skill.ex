@@ -59,18 +59,24 @@ defmodule Aida.Skill.Utils do
     end
   end
 
+  @spec confidence_for_keywords(map, Message.t) :: non_neg_integer
   def confidence_for_keywords(keywords, message) do
-    words_in_message = Message.words(message)
+    case keywords[Message.language(message)] do
+      nil ->
+        0
 
-    matches = words_in_message
-    |> Enum.filter(fn(word) ->
-      Enum.member?(keywords[Message.language(message)], word)
-    end)
+      keywords ->
+        words_in_message = Message.words(message)
+        matches =
+          words_in_message
+          |> Enum.filter(fn word -> Enum.member?(keywords, word) end)
 
-    word_count = Enum.count(words_in_message)
-    case word_count do
-      0 -> 0
-      _ ->Enum.count(matches)/word_count
-    end
+        word_count = Enum.count(words_in_message)
+
+        case word_count do
+          0 -> 0
+          _ -> Enum.count(matches) / word_count
+        end
+      end
   end
 end

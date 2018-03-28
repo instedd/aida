@@ -249,6 +249,28 @@ defmodule Aida.SurveyTest do
     end
   end
 
+  describe "confidence" do
+    test "return 0 if the survey is inactive and there are no keywords" do
+      skill = %Survey{}
+      message =
+        Message.new("hello", %Bot{})
+        |> Message.put_session("language", "en")
+
+      confidence = skill |> Skill.confidence(message)
+      assert confidence == 0
+    end
+
+    test "return 0 if the survey is inactive and there are no keywords for the language" do
+      skill = %Survey{keywords: %{}}
+      message =
+        Message.new("hello", %Bot{})
+        |> Message.put_session("language", "en")
+
+      confidence = skill |> Skill.confidence(message)
+      assert confidence == 0
+    end
+  end
+
   defp load_manifest_bot(_context) do
     SessionStore.start_link()
 

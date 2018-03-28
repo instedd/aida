@@ -10,7 +10,7 @@ defmodule Aida.Skill.Survey do
     name: String.t(),
     schedule: DateTime.t,
     relevant: nil | Aida.Expr.t,
-    keywords: %{},
+    keywords: nil | %{},
     questions: [SelectQuestion.t() | InputQuestion.t()]
   }
 
@@ -19,7 +19,7 @@ defmodule Aida.Skill.Survey do
             name: "",
             schedule: DateTime.utc_now,
             relevant: nil,
-            keywords: %{},
+            keywords: nil,
             questions: []
 
   def scheduled_start_survey(survey, bot, session_id) do
@@ -166,7 +166,11 @@ defmodule Aida.Skill.Survey do
     def confidence(survey, message) do
       case Survey.current_question(survey, message) do
         nil ->
-          Utils.confidence_for_keywords(survey.keywords, message)
+          if survey.keywords do
+            Utils.confidence_for_keywords(survey.keywords, message)
+          else
+            0
+          end
         question ->
           if question |> Question.valid_answer?(message) do
             1
