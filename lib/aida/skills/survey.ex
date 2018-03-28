@@ -1,7 +1,7 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
   alias __MODULE__.{Question, SelectQuestion, InputQuestion}
-  alias Aida.{Bot, BotManager, Session, Message, Skill.Survey.Question, DB, Skill}
+  alias Aida.{Bot, BotManager, Session, Message, Skill.Survey.Question, DB, Skill, Skill.Utils}
   import Aida.ErrorHandler
 
   @type t :: %__MODULE__{
@@ -10,6 +10,7 @@ defmodule Aida.Skill.Survey do
     name: String.t(),
     schedule: DateTime.t,
     relevant: nil | Aida.Expr.t,
+    keywords: %{},
     questions: [SelectQuestion.t() | InputQuestion.t()]
   }
 
@@ -18,31 +19,36 @@ defmodule Aida.Skill.Survey do
             name: "",
             schedule: DateTime.utc_now,
             relevant: nil,
+            keywords: %{},
             questions: []
 
-  def start_survey(survey, bot, session_id) do
+  def scheduled_start_survey(survey, bot, session_id) do
     session = Session.load(session_id)
     message = Message.new("", bot, session)
 
     if Skill.is_relevant?(survey, message) do
 
       if session |> Session.get("language") do
-        session = session
-          |> Session.put(state_key(survey), %{"step" => 0})
-
-        message = answer(survey, Message.new("", bot, session))
+        message = start_survey(survey, message)
 
         try do
           Bot.send_message(message)
         rescue
           error ->
-            capture_exception("Error starting survey", error, bot_id: bot.id, skill_id: survey.id, session_id: session_id)
+            capture_exception("Error starting survey", error, bot_id: bot.id, skill_id: survey.id, session_id: session.id)
         else
           _ ->
           Session.save(message.session)
         end
       end
     end
+  end
+
+  def start_survey(survey, message) do
+    message = message
+      |>  Message.put_session(state_key(survey), %{"step" => 0})
+
+    answer(survey, message)
   end
 
   def answer(survey, message) do
@@ -108,7 +114,7 @@ defmodule Aida.Skill.Survey do
 
     def wake_up(skill, %{id: bot_id} = bot, _data) do
       DB.session_ids_by_bot(bot_id)
-        |> Enum.each(&(Survey.start_survey(skill, bot, &1)))
+        |> Enum.each(&(Survey.scheduled_start_survey(skill, bot, &1)))
 
       :ok
     end
@@ -124,37 +130,43 @@ defmodule Aida.Skill.Survey do
     def put_response(survey, message) do
       question = Survey.current_question(survey, message)
 
-      message = if question.encrypt do
-        message |> Message.mark_sensitive
+      if question do
+
+        message = if question.encrypt do
+          message |> Message.mark_sensitive
+        else
+          message
+        end
+
+        message = case Question.accept_answer(question, message) do
+          :error ->
+            if question.constraint_message do
+              message |> Message.respond(question.constraint_message)
+            else
+              message
+            end
+
+          {:ok, answer} ->
+              message =
+                Message.put_session(
+                  message,
+                  Survey.answer_key(survey, question),
+                  answer,
+                  encrypted: question |> Question.encrypt?
+                )
+            Survey.move_to_next_question(survey, message)
+        end
+
+        Survey.answer(survey, message)
       else
-        message
+        Survey.start_survey(survey, message)
       end
-
-      message = case Question.accept_answer(question, message) do
-        :error ->
-          if question.constraint_message do
-            message |> Message.respond(question.constraint_message)
-          else
-            message
-          end
-
-        {:ok, answer} ->
-            message =
-              Message.put_session(
-                message,
-                Survey.answer_key(survey, question),
-                answer,
-                encrypted: question |> Question.encrypt?
-              )
-          Survey.move_to_next_question(survey, message)
-      end
-
-      Survey.answer(survey, message)
     end
 
     def confidence(survey, message) do
       case Survey.current_question(survey, message) do
-        nil -> 0
+        nil ->
+          Utils.confidence_for_keywords(survey.keywords, message)
         question ->
           if question |> Question.valid_answer?(message) do
             1

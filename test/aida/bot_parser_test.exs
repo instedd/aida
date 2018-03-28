@@ -179,6 +179,7 @@ defmodule Aida.BotParserTest do
           bot_id: @uuid,
           name: "Food Preferences",
           schedule: ~N[2117-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
+          keywords: %{"en" => ["food preferences", "food survey", "survey"], "es" => ["preferencias alimentarias", "encuesta alimentaria"]},
           questions: [
             %SelectQuestion{
               name: "opt_in",
@@ -597,6 +598,7 @@ defmodule Aida.BotParserTest do
           name: "Food Preferences",
           schedule: ~N[2117-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
           relevant: Aida.Expr.parse("${opt_in} != false()"),
+          keywords: nil,
           questions: [
             %SelectQuestion{
               name: "opt_in",
