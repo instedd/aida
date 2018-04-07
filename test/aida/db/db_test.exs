@@ -2,7 +2,7 @@ defmodule Aida.DBTest do
   use Aida.DataCase
 
   alias Aida.{DB, BotManager, ChannelRegistry}
-  alias Aida.DB.{Session, SkillUsage}
+  alias Aida.DB.{Session, SkillUsage, MessagesPerDay}
 
   describe "bots" do
     alias Aida.DB.Bot
@@ -98,7 +98,7 @@ defmodule Aida.DBTest do
       assert BotManager.find(bot.id) == :not_found
     end
 
-    test "deletes associated sessions when deletes bot" do
+    test "deletes associated sessions when deletes a bot" do
       ChannelRegistry.start_link
       BotManager.start_link
       bot = bot_fixture()
@@ -117,23 +117,42 @@ defmodule Aida.DBTest do
       assert (Session |> Repo.all |> Enum.count == 1)
     end
 
-    test "deletes associated skill usages when deletes bot" do
+    test "deletes associated skill usage entries when deletes a bot" do
       ChannelRegistry.start_link
       BotManager.start_link
-      bot = bot_fixture()
+      bot1 = bot_fixture()
       bot2 = bot_fixture()
       BotManager.flush()
 
-      DB.create_or_update_skill_usage(%{bot_id: bot.id, user_id: "session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
+      DB.create_or_update_skill_usage(%{bot_id: bot1.id, user_id: "session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
       DB.create_or_update_skill_usage(%{bot_id: bot2.id, user_id: "other_session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
 
       assert (SkillUsage |> Repo.all |> Enum.count == 2)
 
-      DB.delete_bot(bot)
+      DB.delete_bot(bot1)
       BotManager.flush()
 
       assert (SkillUsage |> Repo.all |> Enum.count == 1)
     end
+
+    test "deletes associated messages per day entries when deletes a bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+      bot1 = bot_fixture()
+      bot2 = bot_fixture()
+      BotManager.flush()
+
+      DB.create_or_update_messages_per_day_received(%{bot_id: bot1.id, day: Date.utc_today(), received_messages: 1})
+      DB.create_or_update_messages_per_day_received(%{bot_id: bot2.id, day: Date.utc_today(), received_messages: 1})
+
+      assert (MessagesPerDay |> Repo.all |> Enum.count == 2)
+
+      DB.delete_bot(bot1)
+      BotManager.flush()
+
+      assert (MessagesPerDay |> Repo.all |> Enum.count == 1)
+    end
+
 
     test "change_bot/1 returns a bot changeset" do
       bot = bot_fixture()
@@ -379,7 +398,8 @@ defmodule Aida.DBTest do
 
 
     test "create_or_update_messages_per_day_received/1 increments existing messages_per_day with the proper count" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, received_messages: 1}
@@ -406,7 +426,8 @@ defmodule Aida.DBTest do
 
 
     test "create_or_update_messages_per_day_sent/1 increments existing messages_per_day with the proper count" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
@@ -434,7 +455,8 @@ defmodule Aida.DBTest do
 
 
     test "get_bot_messages_per_day_for_period/3 returns the proper count for a bot in a certain period" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
