@@ -2,6 +2,7 @@ defmodule Aida.DBTest do
   use Aida.DataCase
 
   alias Aida.{DB, BotManager, ChannelRegistry}
+  alias Aida.DB.{Session}
 
   describe "bots" do
     alias Aida.DB.Bot
@@ -80,7 +81,7 @@ defmodule Aida.DBTest do
 
     test "delete_bot/1 deletes the bot" do
       bot = bot_fixture()
-      assert {:ok, %Bot{}} = DB.delete_bot(bot)
+      assert {:ok, %{bot: %Bot{}}} = DB.delete_bot(bot)
       assert_raise Ecto.NoResultsError, fn -> DB.get_bot!(bot.id) end
     end
 
@@ -92,9 +93,28 @@ defmodule Aida.DBTest do
       BotManager.flush()
       assert %Aida.Bot{} = BotManager.find(bot.id)
 
-      assert {:ok, %Bot{}} = DB.delete_bot(bot)
+      assert {:ok, %{bot: %Bot{}}} = DB.delete_bot(bot)
       BotManager.flush()
       assert BotManager.find(bot.id) == :not_found
+    end
+
+    test "deletes associated sessions when deletes bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+      bot = bot_fixture()
+      BotManager.flush()
+      bot_session_id = "#{bot.id}/facebook/1234567890/1234"
+      other_session_id = "other_session_id"
+
+      DB.save_session(bot_session_id, Ecto.UUID.generate, %{})
+      DB.save_session(other_session_id, Ecto.UUID.generate, %{})
+
+      assert (Session |> Repo.all |> Enum.count == 2)
+
+      DB.delete_bot(bot)
+      BotManager.flush()
+
+      assert (Session |> Repo.all |> Enum.count == 1)
     end
 
     test "change_bot/1 returns a bot changeset" do

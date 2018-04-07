@@ -8,6 +8,7 @@ defmodule Aida.DB do
   alias Aida.PubSub
 
   alias Aida.DB.{Bot, SkillUsage, Session, MessagesPerDay, Image}
+  alias Ecto.Multi
 
   @doc """
   Returns the list of bots.
@@ -108,14 +109,17 @@ defmodule Aida.DB do
 
   """
   def delete_bot(%Bot{} = bot) do
-    result = Repo.delete(bot)
+    multi = Multi.new
+      |> Multi.delete_all(:sessions, Session |> where([s], like(s.id, ^"#{bot.id}/%")))
+      |> Multi.delete(:bot, bot)
+      |> Repo.transaction
 
-    case result do
-      {:ok, bot} -> PubSub.broadcast(bot_deleted: bot.id)
-      _ -> :ignore
+    case multi do
+      {:ok, %{bot: bot}} -> PubSub.broadcast(bot_deleted: bot.id)
+      {:error, _, _, _} -> :ignore
     end
 
-    result
+    multi
   end
 
   @doc """

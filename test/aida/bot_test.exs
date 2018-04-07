@@ -69,6 +69,11 @@ defmodule Aida.BotTest do
   @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
   @session_uuid "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
 
+  setup do
+    SessionStore.start_link
+    :ok
+  end
+
   describe "single language bot" do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
@@ -248,6 +253,7 @@ defmodule Aida.BotTest do
 
     test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
       session = Session.new({"sid", @session_uuid, %{"language" => "jp"}})
+      Session.save(session)
       input = Message.new("Hi!", bot, session)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
@@ -267,6 +273,7 @@ defmodule Aida.BotTest do
 
     test "introduction message includes only relevant skills", %{bot: bot} do
       session = Session.new({"sid", @session_uuid, %{"language" => "en", "age" => 14}})
+      Session.save(session)
       input = Message.new("Hi!", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -279,6 +286,7 @@ defmodule Aida.BotTest do
 
     test "only relevant skills receive the message", %{bot: bot} do
       session = Session.new({"sid", @session_uuid, %{"language" => "en", "age" => 14}})
+      Session.save(session)
       input = Message.new("menu", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -291,6 +299,7 @@ defmodule Aida.BotTest do
 
     test "relevance expressions containing undefined variables are considered false", %{bot: bot} do
       session = Session.new({"sid", @session_uuid, %{"language" => "en"}})
+      Session.save(session)
       input = Message.new("menu", bot, session)
       output = bot |> Bot.chat(input)
 

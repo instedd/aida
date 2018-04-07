@@ -1,14 +1,21 @@
 defmodule AidaWeb.ImageControllerTest do
   use AidaWeb.ConnCase
-  alias Aida.DB
+  alias Aida.{DB, Session, SessionStore}
+
+  setup do
+    SessionStore.start_link
+    :ok
+  end
 
   test "gets image", %{conn: conn} do
+    session = Session.new
+
     image_attrs = %{
       binary: "an image",
       binary_type: "image/jpeg",
       source_url: "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw",
       bot_id: "e75ecc4a-b8b6-421f-a40d-6c72a13d910c",
-      session_id: "e75ecc4a-b8b6-421f-a40d-6c72a13d910c/facebook/388255354930539/1216983898405257"
+      session_id: session.id
     }
 
     DB.create_image(image_attrs)

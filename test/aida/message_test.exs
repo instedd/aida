@@ -1,11 +1,16 @@
 defmodule Aida.MessageTest do
-  alias Aida.{Message, Session, Message.TextContent, Bot}
-  use ExUnit.Case
+  alias Aida.{Message, SessionStore, Session, Message.TextContent, Bot}
+  use Aida.DataCase
 
   @bot_id "99fbbf35-d198-474b-9eac-6e27ed9342ed"
   @session_id "f4f81f17-e352-470f-9bfa-9ff163562bcf"
   @session_uuid "3348b2d6-0dc5-4187-b84a-dd50ae116067"
   @bot Aida.BotParser.parse!(@bot_id, File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!)
+
+  setup do
+    SessionStore.start_link
+    :ok
+  end
 
   test "create new incoming message with new session" do
     message = Message.new("Hi!", @bot)

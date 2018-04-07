@@ -4,6 +4,7 @@ defmodule Aida.LanguageDetectorTest do
 
   alias Aida.{
     Bot,
+    SessionStore,
     FrontDesk,
     Skill.LanguageDetector,
     Skill,
@@ -19,6 +20,11 @@ defmodule Aida.LanguageDetectorTest do
   @generic_not_understood_message "Sorry, I didn't understand that"
 
   @uuid "2c20e05c-74e1-4b9b-923f-10b65a82dbd8"
+
+  setup do
+    SessionStore.start_link
+    :ok
+  end
 
   describe "unsupported language response bot" do
     setup :unsupported_language_response_skill

@@ -1,6 +1,7 @@
 defmodule Aida.SessionStoreTest do
   use Aida.DataCase
-  alias Aida.{SessionStore, DB}
+  alias Aida.{SessionStore, DB, Repo}
+  alias Aida.DB.{MessageLog, Image}
 
   @uuid "eb566b7d-e88f-40cc-9ee5-70f7bdec8e45"
 
@@ -48,5 +49,32 @@ defmodule Aida.SessionStoreTest do
     assert SessionStore.save("session_id", @uuid, data) == :ok
     assert SessionStore.delete("session_id") == :ok
     assert SessionStore.find("session_id") == :not_found
+  end
+
+  test "delete message logs of that session when deleting session" do
+    data = %{"foo" => 1, "bar" => 2}
+    other_uuid = Ecto.UUID.generate
+    SessionStore.save("session_id", @uuid, data)
+    SessionStore.save("other_session_id", other_uuid, data)
+    MessageLog.create(%{bot_id: Ecto.UUID.generate, session_id: "session_id", session_uuid: @uuid, direction: "incoming", content_type: "text", content: "Hello"})
+    MessageLog.create(%{bot_id: Ecto.UUID.generate, session_id: "other_session_id", session_uuid: other_uuid, direction: "incoming", content_type: "text", content: "Hello"})
+
+    SessionStore.delete("session_id")
+    assert MessageLog |> Repo.all |> Enum.count == 1
+  end
+
+  test "delete images of that session when deleting session" do
+    data = %{"foo" => 1, "bar" => 2}
+    SessionStore.save("session_id", @uuid, data)
+    SessionStore.save("other_session_id", Ecto.UUID.generate, data)
+    bot_id = Ecto.UUID.generate
+
+    %Image{} |> Image.changeset(%{binary: <<0,1>>, binary_type: "image/jpeg", source_url: "foo", bot_id: bot_id, session_id: "session_id"})
+      |> Repo.insert
+    %Image{} |> Image.changeset(%{binary: <<0,1>>, binary_type: "image/jpeg", source_url: "foo", bot_id: bot_id, session_id: "other_session_id"})
+      |> Repo.insert
+
+    SessionStore.delete("session_id")
+    assert Image |> Repo.all |> Enum.count == 1
   end
 end

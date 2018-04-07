@@ -4,6 +4,11 @@ defmodule Aida.SessionTest do
 
   @uuid "cecaeffa-1fc4-49f1-925a-a5d17047504f"
 
+  setup do
+    SessionStore.start_link
+    :ok
+  end
+
   test "create new session" do
     session = Session.new("session_id", @uuid)
     assert session == %Session{
@@ -25,11 +30,6 @@ defmodule Aida.SessionTest do
   end
 
   describe "with session store" do
-    setup do
-      SessionStore.start_link
-      :ok
-    end
-
     test "return new session when it doesn't exist" do
       loaded_session = Session.load("session_id")
       assert loaded_session == %Session{

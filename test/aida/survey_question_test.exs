@@ -1,6 +1,6 @@
 defmodule Aida.SurveyQuestionTest do
   alias Aida.Skill.Survey.{Question, InputQuestion, SelectQuestion, Choice}
-  alias Aida.{Session, Message, Bot, Message.ImageContent}
+  alias Aida.{Session, SessionStore, Message, Bot, Message.ImageContent}
   use Aida.DataCase
   import Mock
 
@@ -95,6 +95,11 @@ defmodule Aida.SurveyQuestionTest do
   @session_uuid "18723278-0665-454f-98a3-d85cec9a7acd"
   @session Session.new({"1", @session_uuid, %{"language" => "en"}})
   @session_with_food_type Session.new({"1", @session_uuid, %{"language" => "en", "food_type" => "pasta"}})
+
+  setup do
+    SessionStore.start_link
+    :ok
+  end
 
   describe "select_one" do
     test "valid_answer?" do
@@ -396,6 +401,7 @@ defmodule Aida.SurveyQuestionTest do
 
     test "stores correct content type for image" do
       url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
+      session = Session.new
 
       response = %HTTPoison.Response{
         body: "an_image",
@@ -404,7 +410,7 @@ defmodule Aida.SurveyQuestionTest do
 
       with_mock HTTPoison, [get!: fn(_) -> response end] do
         image_content = %ImageContent{source_url: url, image_id: nil}
-        ImageContent.pull_and_store_image(image_content, "e75ecc4a-b8b6-421f-a40d-6c72a13d910c", @session_uuid)
+        ImageContent.pull_and_store_image(image_content, Ecto.UUID.generate, session.id)
         assert (Aida.DB.Image |> Aida.Repo.all |> hd).binary_type == "image/png"
       end
     end

@@ -1,11 +1,16 @@
 defmodule Aida.SkillUsageTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message}
+  alias Aida.{BotParser, Bot, SessionStore, Message}
   alias Aida.DB
 
   use ExUnit.Case
 
   @bot_id "486d6622-225a-42c6-864b-5457687adc30"
+
+  setup do
+    SessionStore.start_link
+    :ok
+  end
 
   describe "multiple languages bot" do
     setup do
