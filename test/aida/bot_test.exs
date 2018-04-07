@@ -66,7 +66,6 @@ defmodule Aida.BotTest do
 
   @language_selection_speech [ @language_selection_text ]
 
-  @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
   @session_uuid "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
 
   setup do
@@ -357,16 +356,16 @@ defmodule Aida.BotTest do
       assert value == "barbecue and pasta"
     end
 
-    test "ignore non existing vars in messages" do
+    test "ignore non existing vars in messages", %{bot: bot} do
       bot = %Bot{
-        id: @uuid,
+        id: bot.id,
         languages: ["en"],
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: bot.id,
             name: "Distribution days",
             keywords: %{
               "en" => ["days"]
@@ -387,15 +386,17 @@ defmodule Aida.BotTest do
 
   describe "data_tables" do
     setup do
+      {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
+
       bot = %Bot{
-        id: @uuid,
+        id: db_bot.id,
         languages: ["en"],
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Distribution days",
             keywords: %{
               "en" => ["days"]
@@ -442,19 +443,20 @@ defmodule Aida.BotTest do
         "We will deliver Next Thursday"
       ]
     end
-
   end
+
   describe "attributes" do
     setup do
+      {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
       bot = %Bot{
-        id: @uuid,
+        id: db_bot.id,
         languages: ["en"],
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Distribution",
             keywords: %{
               "en" => ["days"]
@@ -574,8 +576,10 @@ defmodule Aida.BotTest do
 
   describe "empty clarification" do
     setup do
+      {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
+
       bot = %Bot{
-        id: @uuid,
+        id: db_bot.id,
         languages: ["en"],
         front_desk: %FrontDesk{
           threshold: 0.5,
@@ -589,7 +593,7 @@ defmodule Aida.BotTest do
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Food",
             keywords: %{
               "en" => ["food"]
@@ -602,7 +606,7 @@ defmodule Aida.BotTest do
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Hours",
             keywords: %{
               "en" => ["hours"]
