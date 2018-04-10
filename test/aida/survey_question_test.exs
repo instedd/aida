@@ -65,7 +65,7 @@ defmodule Aida.SurveyQuestionTest do
     %Choice{
       name: "lasagne",
       labels: %{
-        "en" => ["lasagne"]
+        "en" => ["Lasagne"]
       },
       attributes: %{
         "food_type" => "pasta"
@@ -135,6 +135,23 @@ defmodule Aida.SurveyQuestionTest do
 
       message = Message.new("spaghetti", @bot, @session)
       assert Question.valid_answer?(question, message) == false
+    end
+
+    test "valid_answer? with choice filter is case insensitive and ignores trailing spaces" do
+      question = %SelectQuestion{
+        type: :select_one,
+        choices: @entrees,
+        name: "entree",
+        message: %{"en" => "What do you want for dinner?"},
+        choice_filter: Aida.Expr.parse("food_type = ${food_type}")
+      }
+
+      message = Message.new("Spaghetti ", @bot, @session_with_food_type)
+      assert Question.valid_answer?(question, message) == true
+
+      message = Message.new("LasagnE", @bot, @session_with_food_type)
+      assert Question.valid_answer?(question, message) == true
+
     end
 
     test "valid_answer? with choice filter but no attributes" do

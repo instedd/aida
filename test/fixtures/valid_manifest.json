@@ -51,8 +51,8 @@
         "es": "Para información sobre nuestro menu, escribe 'menu'"
       },
       "keywords": {
-        "en": ["menu","food"],
-        "es": ["menu","comida"]
+        "en": ["menu","food "],
+        "es": ["menu"," comida"]
       },
       "response": {
         "en": "We have ${food_options}",
@@ -173,7 +173,7 @@
       "name": "Food Preferences",
       "schedule": "2117-12-10T01:40:13Z",
       "keywords": {
-        "en": ["food preferences","food survey", "survey"],
+        "en": ["food preferences","food survey ", "survey"],
         "es": ["preferencias alimentarias","encuesta alimentaria"]
       },
       "questions": [
@@ -247,7 +247,7 @@
             {
               "name":"yes",
               "labels": {
-                "en": ["Yes","Sure","Ok"],
+                "en": [" Yes","Sure ","Ok"],
                 "es": ["Si","OK","Dale"]
               }
             },
@@ -320,7 +320,7 @@
         "es": "Para recibir una recomendación escribe 'recomendación'"
       },
       "keywords": {
-        "en": ["meal recommendation","recommendation"],
+        "en": ["meal recommendation","recommendation "],
         "es": ["recomendación","recomendacion"]
       },
       "tree": {
@@ -385,7 +385,7 @@
               "responses": [
                 {
                   "keywords": {
-                    "en": ["yes"],
+                    "en": ["yes "],
                     "es": ["si"]
                   },
                   "next": {
@@ -399,7 +399,7 @@
                 {
                   "keywords": {
                     "en": ["no"],
-                    "es": ["no"]
+                    "es": [" no"]
                   },
                   "next": {
                     "id": "5d79bf1c-4863-401f-8f08-89ffb3af33cf",

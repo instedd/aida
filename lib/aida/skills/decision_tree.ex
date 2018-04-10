@@ -134,7 +134,7 @@ defmodule Aida.Skill.DecisionTree do
   def downcase_keywords(keywords) do
     keywords
       |> Enum.map(fn {k, v} ->
-        {k, Enum.map(v, &String.downcase/1)}
+        {k, Enum.map(v, &String.trim(String.downcase(&1)))}
       end)
       |> Enum.into(%{})
   end

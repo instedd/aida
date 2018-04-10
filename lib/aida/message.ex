@@ -21,7 +21,7 @@ defmodule Aida.Message do
     %Message{
       session: session,
       bot: bot,
-      content: %TextContent{ text: content }
+      content: TextContent.new(content)
     }
   end
 

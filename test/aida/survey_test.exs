@@ -121,6 +121,17 @@ defmodule Aida.SurveyTest do
       assert message |> Message.get_session("survey/food_preferences/opt_in") == "yes"
     end
 
+    test "accept user reply case insensitive", %{bot: bot} do
+      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
+
+      message = Message.new("yes", bot, session)
+      message = Bot.chat(bot, message)
+
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
+      assert message.reply == ["How old are you?"]
+      assert message |> Message.get_session("survey/food_preferences/opt_in") == "yes"
+    end
+
     test "invalid reply should retry the question", %{bot: bot} do
       session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 

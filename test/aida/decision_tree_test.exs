@@ -21,7 +21,7 @@ defmodule Aida.DecisionTreeTest do
            %{"id" => "c038e08e-6095-4897-9184-eae929aba8c6",
              "question" => %{"en" => "Are you a vegetarian?",
                "es" => "Sos vegetariano?"},
-             "responses" => [%{"keywords" => %{"en" => ["yes"], "es" => ["si"]},
+             "responses" => [%{"keywords" => %{"en" => ["yes "], "es" => [" si"]},
                 "next" => %{"answer" => %{"en" => "Go with Risotto",
                     "es" => "Clavate un risotto"},
                     "id" => "9caa1ac7-1227-4b41-a303-4fa2f3085df8"}},
@@ -45,6 +45,10 @@ defmodule Aida.DecisionTreeTest do
       is_vegetarian = flattened["c038e08e-6095-4897-9184-eae929aba8c6"].responses
         |> Enum.find(&(Enum.member?(Map.values(&1.keywords), ["yes"])))
 
+      is_vegetarian_2 = flattened["c038e08e-6095-4897-9184-eae929aba8c6"].responses
+        |> Enum.find(&(Enum.member?(Map.values(&1.keywords), ["si"])))
+
+      assert is_vegetarian == is_vegetarian_2
       assert is_vegetarian.next == "9caa1ac7-1227-4b41-a303-4fa2f3085df8"
       assert flattened[is_vegetarian.next].message["en"] == "Go with Risotto"
     end

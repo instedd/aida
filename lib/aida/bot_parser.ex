@@ -100,7 +100,7 @@ defmodule Aida.BotParser do
       clarification: skill["clarification"],
       id: skill["id"],
       name: skill["name"],
-      keywords: skill["keywords"],
+      keywords: parse_string_list_map(skill["keywords"]),
       response: skill["response"],
       relevant: parse_expr(skill["relevant"])
     }
@@ -132,7 +132,7 @@ defmodule Aida.BotParser do
       bot_id: bot_id,
       name: skill["name"],
       schedule: schedule,
-      keywords: skill["keywords"],
+      keywords: parse_string_list_map(skill["keywords"]),
       relevant: parse_expr(skill["relevant"]),
       questions: skill["questions"] |> Enum.map(&(parse_survey_question(&1, choice_lists)))
     }
@@ -145,7 +145,7 @@ defmodule Aida.BotParser do
       name: skill["name"],
       explanation: skill["explanation"],
       clarification: skill["clarification"],
-      keywords: skill["keywords"],
+      keywords: parse_string_list_map(skill["keywords"]),
       relevant: parse_expr(skill["relevant"]),
       root_id: skill["tree"]["id"],
       tree: DecisionTree.flatten(skill["tree"])
@@ -261,7 +261,7 @@ defmodule Aida.BotParser do
   defp parse_survey_choice(choice) do
     %Survey.Choice{
       name: choice["name"],
-      labels: choice["labels"],
+      labels: parse_string_list_map(choice["labels"]),
       attributes: choice["attributes"]
     }
   end
@@ -287,6 +287,19 @@ defmodule Aida.BotParser do
   def parse_public_keys(public_keys) do
     public_keys
     |> Enum.map(&Base.decode64!/1)
+  end
+
+  defp parse_string_list_map(string_list_map) do
+    if string_list_map do
+      string_list_map
+      |> Enum.map(fn {key, value} -> {key, parse_string_list(value)} end)
+      |> Enum.into(%{})
+    end
+  end
+
+  defp parse_string_list(string_list) do
+    string_list
+    |> Enum.map(&String.trim/1)
   end
 
   defp validate(bot) do
