@@ -1,17 +1,20 @@
 defmodule Aida.SkillUsageTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message}
-  alias Aida.DB
+  alias Aida.{DB, BotParser, Bot, SessionStore, Message}
 
   use ExUnit.Case
 
-  @bot_id "486d6622-225a-42c6-864b-5457687adc30"
+  setup do
+    SessionStore.start_link
+    :ok
+  end
 
   describe "multiple languages bot" do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest.json")
         |> Poison.decode!
-      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(db_bot.id, manifest)
 
       %{bot: bot}
     end

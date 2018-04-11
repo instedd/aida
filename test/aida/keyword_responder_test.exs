@@ -1,11 +1,12 @@
 defmodule Aida.KeywordResponderTest do
-  alias Aida.{BotParser, Message, Skill}
-  use ExUnit.Case
+  alias Aida.{BotParser, SessionStore, Message, Skill}
+  use Aida.DataCase
 
   @bot_id "486d6622-225a-42c6-864b-5457687adc30"
 
   describe "keyword responder" do
     setup do
+      SessionStore.start_link
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
         |> Poison.decode!
         |> Map.put("languages", ["en"])

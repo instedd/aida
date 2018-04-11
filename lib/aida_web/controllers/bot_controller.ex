@@ -38,7 +38,7 @@ defmodule AidaWeb.BotController do
 
   def delete(conn, %{"id" => id}) do
     bot = DB.get_bot!(id)
-    with {:ok, %Bot{}} <- DB.delete_bot(bot) do
+    with {:ok, %{bot: %Bot{}}} <- DB.delete_bot(bot) do
       send_resp(conn, :no_content, "")
     end
   end

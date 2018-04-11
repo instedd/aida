@@ -30,11 +30,13 @@ defmodule Aida.Session do
 
   def new(id \\ Ecto.UUID.generate, uuid \\ Ecto.UUID.generate)
       when is_binary(id) and is_binary(uuid) do
-    %Session{
+    session = %Session{
       id: id,
       uuid: uuid,
       is_new?: true
     }
+    save(session)
+    session
   end
 
   @spec load(String.t) :: t

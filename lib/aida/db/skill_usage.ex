@@ -6,7 +6,6 @@ defmodule Aida.DB.SkillUsage do
   require Logger
 
   @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
   schema "skill_usage" do
     field :bot_id, :binary_id
     field :user_id, :string
