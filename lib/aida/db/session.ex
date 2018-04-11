@@ -8,7 +8,6 @@ defmodule Aida.DB.Session do
   alias __MODULE__
 
   @primary_key {:id, :string, autogenerate: false}
-  @foreign_key_type :string
   schema "sessions" do
     field :data, JSON
     field :uuid, :binary_id

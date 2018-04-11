@@ -3,7 +3,6 @@ defmodule Aida.DB.Image do
   import Ecto.Changeset
   alias __MODULE__
 
-  @foreign_key_type :string
   schema "images" do
     field :binary, :binary
     field :binary_type, :string

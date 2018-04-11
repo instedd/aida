@@ -5,7 +5,6 @@ defmodule Aida.DB.MessageLog do
   import Ecto.Query
   alias __MODULE__
 
-  @foreign_key_type :string
   schema "message_logs" do
     field :bot_id, :binary_id
     field :session_id, :string
