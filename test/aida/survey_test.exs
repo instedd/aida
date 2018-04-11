@@ -131,6 +131,7 @@ defmodule Aida.SurveyTest do
 
     test "accept user reply case insensitive", %{bot: bot} do
       session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
+      Session.save(session)
 
       message = Message.new("yes", bot, session)
       message = Bot.chat(bot, message)
