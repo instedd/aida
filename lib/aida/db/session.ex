@@ -7,11 +7,12 @@ defmodule Aida.DB.Session do
   alias Aida.Repo
   alias __MODULE__
 
-  @primary_key {:id, :string, autogenerate: false}
-  @foreign_key_type :string
+  @primary_key {:id, :binary_id, autogenerate: false}
   schema "sessions" do
     field :data, JSON
-    field :uuid, :binary_id
+    field :bot_id, :binary_id
+    field :provider, :string
+    field :provider_key, :string
 
     timestamps()
   end
