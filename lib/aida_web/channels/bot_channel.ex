@@ -1,6 +1,6 @@
 defmodule AidaWeb.BotChannel do
   use Phoenix.Channel
-  alias Aida.{BotManager, Repo, Bot, Message, Channel.WebSocket}
+  alias Aida.{BotManager, Bot, Message, Channel.WebSocket}
   alias Aida.DB.{Session}
 
   def join("bot:" <> bot_id, %{"access_token" => access_token}, socket) do

@@ -1,10 +1,10 @@
 defmodule Aida.DecisionTreeTest do
-  alias Aida.{Bot, SessionStore, BotParser, Session, Message}
+  alias Aida.{Bot, BotParser, Message}
   alias Aida.Skill.DecisionTree
+  alias Aida.DB.{Session}
   use Aida.DataCase
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
-  @session_id "#{@bot_id}/facebook/1234567890/0987654321"
 
   @basic_answer %{"answer" =>
                   %{"en" => "Go with an ice cream",
@@ -95,16 +95,19 @@ defmodule Aida.DecisionTreeTest do
 
   describe "runtime" do
     setup do
-      SessionStore.start_link
-
       manifest = File.read!("test/fixtures/valid_manifest.json")
         |> Poison.decode!
         |> Map.put("languages", ["en"])
 
       {:ok, bot} = BotParser.parse(@bot_id, manifest)
 
-      session = Session.new(@session_id)
-      Session.save(session)
+      session_struct = %{
+        bot_id: @bot_id,
+        provider: "facebook",
+        provider_key: "1234567890/0987654321"
+      }
+
+      session = Session.new(session_struct) |> Session.save
 
       %{bot: bot, session: session}
     end

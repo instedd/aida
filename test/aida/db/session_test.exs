@@ -3,30 +3,34 @@ defmodule Aida.DB.SessionTest do
   alias Aida.DB.Session
   alias Aida.Repo
 
-  @uuid "21280f3e-f1a9-4446-a171-82a85560bdfb"
-  @uuid2 "87514f2d-9aa8-4d36-bbc7-c54e6447b2b9"
+  @session_id Ecto.UUID.generate
+  @bot_id Ecto.UUID.generate
+  @provider "facebook"
+  @provider_key "1234/5678"
 
   test "can insert and retrieve sessions" do
     data = %{"foo" => 1, "bar" => 2}
 
     %Session{}
-      |> Session.changeset(%{id: "session_id", uuid: @uuid, data: data})
+      |> Session.changeset(%{id: @session_id, bot_id: @bot_id, provider: @provider, provider_key: @provider_key, data: data})
       |> Repo.insert!
 
     [session] = Session |> Repo.all
-    assert session.id == "session_id"
-    assert session.uuid == @uuid
+    assert session.id == @session_id
     assert session.data == data
+    assert session.provider == @provider
+    assert session.provider_key == @provider_key
+    assert session.bot_id == @bot_id
   end
 
   test "cannot insert two sessions with same id" do
     %Session{}
-      |> Session.changeset(%{id: "session_id", uuid: @uuid, data: %{}})
+      |> Session.changeset(%{id: @session_id, bot_id: @bot_id, provider: @provider, provider_key: @provider_key})
       |> Repo.insert!
 
     assert_raise Ecto.ConstraintError, fn ->
       %Session{}
-        |> Session.changeset(%{id: "session_id", uuid: @uuid2, data: %{}})
+        |> Session.changeset(%{id: @session_id, bot_id: @bot_id, provider: "ws", provider_key: @provider_key})
         |> Repo.insert!
     end
   end

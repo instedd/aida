@@ -22,8 +22,8 @@ defmodule Aida.Channel.WebSocket do
     ChannelRegistry.find({:websocket, bot_id})
   end
 
-  def find_channel(session_id) do
-    [bot_id, _provider, _uuid] = session_id |> String.split("/")
+  def find_channel(session) do
+    bot_id = session.bot_id
     find_channel_for_bot(bot_id)
   end
 
