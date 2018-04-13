@@ -64,7 +64,7 @@ defmodule Aida.SurveyTest do
 
         Bot.wake_up(bot, "food_preferences")
 
-        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], session_id}
+        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], ^session_id}
 
         session = Session.get(session_id)
         assert session |> Session.get(".survey/food_preferences") == %{"step" => 0}

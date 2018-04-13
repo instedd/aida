@@ -21,9 +21,20 @@ defmodule Aida.DB.Session do
 
   @type value :: Poison.Parser.t
   @typep data :: %{required(String.t) => value}
-  @spec new(id :: String.t) :: Aida.DB.Session
-  @spec new(id :: String.t | {id :: String.t, data}) :: Session
 
+  @type t :: %__MODULE__{
+    id: String.t,
+    data: data,
+    bot_id: String.t,
+    provider: String.t,
+    provider_key: String.t,
+    is_new?: boolean
+  }
+
+
+  def new(id \\ Ecto.UUID.generate)
+
+  @spec new(%{bot_id: String.t, provider: String.t, provider_key: String.t}) :: t
   def new(%{bot_id: bot_id, provider: provider, provider_key: provider_key}) do
     %Session{
       id: Ecto.UUID.generate,
@@ -34,14 +45,15 @@ defmodule Aida.DB.Session do
     }
   end
 
-  def new(id \\ Ecto.UUID.generate)
-      when is_binary(id) do
+  @spec new(String.t) :: t
+  def new(id) when is_binary(id) do
     %Session{
       id: id,
       is_new?: true
     }
   end
 
+  @spec new({String.t, data}) :: t
   def new({id, values})
       when is_binary(id) and is_map(values) do
     %Session{
@@ -64,7 +76,7 @@ defmodule Aida.DB.Session do
     end
   end
 
-  @spec merge(session :: Session, new_data :: data) :: Session
+  @spec merge(t, data) :: t
   def merge(%Session{data: data} = session, new_data) do
     %{session | data: Map.merge(data, new_data)}
   end
@@ -146,12 +158,12 @@ defmodule Aida.DB.Session do
     salt
   end
 
-  @spec get(session :: Session, key :: String.t) :: value
+  @spec get(session :: t, key :: String.t) :: value
   def get(%Session{data: data}, key) do
     Map.get(data, key)
   end
 
-  @spec put(session :: Session, key :: String.t, value :: value) :: Session
+  @spec put(session :: t, key :: String.t, value :: value) :: t
   def put(%Session{data: data} = session, key, nil) do
     %{session | data: Map.delete(data, key)}
   end
@@ -160,7 +172,7 @@ defmodule Aida.DB.Session do
     %{session | data: Map.put(data, key, value)}
   end
 
-  @spec lookup_var(session :: Session, key :: String.t) :: value
+  @spec lookup_var(session :: t, key :: String.t) :: value
   def lookup_var(%Session{data: data} = session, key) do
     case get(session, key) do
       nil ->

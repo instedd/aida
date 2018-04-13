@@ -253,7 +253,7 @@ defmodule AidaWeb.SessionControllerTest do
       with_mock ChannelProvider, [find_channel: fn _ -> channel end] do
         session_id = session.id
         post conn, bot_session_session_path(conn, :send_message, bot.id, session_id, message: "Hi!")
-        assert_received {:send_message, ["Hi!"], session_id}
+        assert_received {:send_message, ["Hi!"], ^session_id}
       end
     end
   end

@@ -140,9 +140,9 @@ defmodule Aida.DB do
       |> Repo.insert(on_conflict: :replace_all, conflict_target: :id)
   end
 
-  @doc """
-  Returns the session for the given id. If the session does not exist, it returns `nil`.
-  """
+  # @doc """
+  # Returns the session for the given id. If the session does not exist, it returns `nil`.
+  # """
   # def get_session(id) do
   #   Session |> Repo.get(id)
   # end

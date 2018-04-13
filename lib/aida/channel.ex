@@ -18,7 +18,7 @@ defmodule Aida.ChannelProvider do
   @callback init() :: :ok
   @callback new(bot_id :: String.t, config :: map) :: Aida.Channel.t
   @callback callback(conn :: Plug.Conn.t) :: Plug.Conn.t
-  @callback find_channel(session_id :: String.t) :: Aida.Channel.t
+  @callback find_channel(session :: Aida.DB.Session.t) :: Aida.Channel.t
 
   def find_channel(session) do
     provider = case session.provider do

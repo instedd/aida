@@ -161,7 +161,7 @@ defmodule Aida.Channel.Facebook do
       end
     end
 
-    @spec handle_by_message_type(Aida.Channel.t, Session, String.t, :text | :image | :unknown, String.t) :: :ok
+    @spec handle_by_message_type(Aida.Channel.t, Session.t, String.t, :text | :image | :unknown, String.t) :: :ok
     defp handle_by_message_type(channel, session, sender_id, message_type, message_string) do
       bot = BotManager.find(channel.bot_id)
 
