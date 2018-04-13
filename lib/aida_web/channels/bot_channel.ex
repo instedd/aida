@@ -1,6 +1,7 @@
 defmodule AidaWeb.BotChannel do
   use Phoenix.Channel
-  alias Aida.{Session, BotManager, Bot, Message, Channel.WebSocket}
+  alias Aida.{BotManager, Repo, Bot, Message, Channel.WebSocket}
+  alias Aida.DB.{Session}
 
   def join("bot:" <> bot_id, %{"access_token" => access_token}, socket) do
     case WebSocket.find_channel_for_bot(bot_id) do
@@ -13,28 +14,38 @@ defmodule AidaWeb.BotChannel do
   end
 
   def handle_in("new_session", attrs, socket) do
-    session_id = Ecto.UUID.generate
+    # session_id = Ecto.UUID.generate
     data = case attrs do
       %{"data" => %{} = data} -> data
       _ -> %{}
     end
 
-    Session.new({real_session_id(socket, session_id), Ecto.UUID.generate, data})
+    session_struct = %{
+      bot_id: socket.assigns.bot_id,
+      provider: "ws",
+      provider_key: Ecto.UUID.generate
+    }
+
+    session = Session.new(session_struct)
+      |> Session.merge(data)
       |> Session.save
 
-    {:reply, {:ok, %{session: session_id}}, socket}
+    {:reply, {:ok, %{session: session.id}}, socket}
   end
 
   def handle_in("put_data", %{"session" => session_id, "data" => data}, socket) do
-    Session.load(real_session_id(socket, session_id))
+    # Session.load(real_session_id(socket, session_id))
+    Session.get(session_id)
       |> Session.merge(data)
+      # |> Repo.save
       |> Session.save
 
     {:reply, :ok, socket}
   end
 
   def handle_in("delete_session", %{"session" => session_id}, socket) do
-    Session.delete(real_session_id(socket, session_id))
+    # Session.delete(real_session_id(socket, session_id))
+    Session.delete(session_id)
     {:reply, :ok, socket}
   end
 
@@ -42,9 +53,11 @@ defmodule AidaWeb.BotChannel do
     case BotManager.find(socket.assigns.bot_id) do
       :not_found -> {:stop, :not_found, socket}
       bot ->
-        real_session_id = real_session_id(socket, session_id)
-        session = Session.load(real_session_id)
+        # real_session_id = real_session_id(socket, session_id)
+        # session = Session.load(real_session_id)
+        session = Session.get(session_id)
         reply = Bot.chat(bot, Message.new(text, bot, session))
+        # reply.session |> Repo.update
         reply.session |> Session.save
 
         reply.reply |> Enum.each(fn message ->
@@ -54,7 +67,7 @@ defmodule AidaWeb.BotChannel do
     end
   end
 
-  defp real_session_id(socket, session_id) do
-    "#{socket.assigns.bot_id}/ws/#{session_id}"
-  end
+  # defp real_session_id(socket, session_id) do
+  #   "#{socket.assigns.bot_id}/ws/#{session_id}"
+  # end
 end

@@ -1,6 +1,7 @@
 defmodule Aida.Skill.DecisionTree do
   alias __MODULE__
-  alias Aida.{Bot, Message, Message.TextContent, Session, Skill.Utils}
+  alias Aida.{Bot, Message, Message.TextContent, Skill.Utils}
+  alias Aida.DB.{Session}
   alias Aida.Skill.DecisionTree.{Question, Answer, Response}
 
   @type t :: %__MODULE__{

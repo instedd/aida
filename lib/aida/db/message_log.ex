@@ -7,8 +7,7 @@ defmodule Aida.DB.MessageLog do
 
   schema "message_logs" do
     field :bot_id, :binary_id
-    field :session_id, :string
-    field :session_uuid, :binary_id
+    field :session_id, :binary_id
     field :direction, :string
     field :content, :string
     field :content_type, :string
@@ -19,8 +18,8 @@ defmodule Aida.DB.MessageLog do
   @doc false
   def changeset(%MessageLog{} = message_log, attrs) do
     message_log
-      |> cast(attrs, [:bot_id, :session_id, :session_uuid, :direction, :content, :content_type])
-      |> validate_required([:bot_id, :session_id, :session_uuid, :direction, :content, :content_type])
+      |> cast(attrs, [:bot_id, :session_id, :direction, :content, :content_type])
+      |> validate_required([:bot_id, :session_id, :direction, :content, :content_type])
   end
 
   def create(params) do

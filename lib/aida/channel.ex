@@ -20,14 +20,13 @@ defmodule Aida.ChannelProvider do
   @callback callback(conn :: Plug.Conn.t) :: Plug.Conn.t
   @callback find_channel(session_id :: String.t) :: Aida.Channel.t
 
-  def find_channel(session_id) do
-    [_bot_id, provider | _] = session_id |> String.split("/")
-    provider = case provider do
+  def find_channel(session) do
+    provider = case session.provider do
       "facebook" -> Facebook
       "ws" -> WebSocket
       "test" -> Aida.TestChannel
     end
 
-    provider.find_channel(session_id)
+    provider.find_channel(session)
   end
 end

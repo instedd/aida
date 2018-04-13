@@ -8,7 +8,7 @@ defmodule AidaWeb.SessionView do
 
   def render("session.json", %{session: session}) do
     %{
-      id: session.uuid,
+      id: session.id,
       data: session.data |> hide_internal_data()
     }
   end

@@ -1,33 +1,23 @@
 defmodule AidaWeb.SessionControllerTest do
   use AidaWeb.ConnCase
-  alias Aida.{BotParser, Session, SessionStore, DB, Repo, TestChannel, ChannelProvider, DB.MessageLog, JsonSchema}
-  alias Aida.DB.{MessageLog}
+  alias Aida.{BotParser, DB, Repo, TestChannel, ChannelProvider, DB.MessageLog, JsonSchema}
+  alias Aida.DB.{Session, MessageLog}
   alias Aida.JsonSchema
   import Mock
 
-  @uuid "2866807a-49af-454a-bf12-9d1d8e6a3827"
-  @uuid2 "e7434880-07f8-4e53-8ad4-06fad2b1c3fc"
-
   setup :create_bot
+  setup :create_session
 
   setup %{conn: conn} do
-    SessionStore.start_link
-
     GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
   describe "index" do
-    test "list sessions", %{conn: conn, bot: bot} do
-      session_id = "#{bot.id}/facebook/1234567890/1234"
-      {session_id, @uuid, %{"foo" => 1, "bar" => 2}}
-        |> Session.new
-        |> Session.save
-
+    test "list sessions", %{conn: conn, bot: bot, session: session} do
       first_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "incoming",
         content: "Hi!",
         content_type: "text",
@@ -37,8 +27,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       second_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "outgoing",
         content: "Hello, I'm a Restaurant bot",
         content_type: "text",
@@ -48,8 +37,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       third_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "incoming",
         content: "menu",
         content_type: "text",
@@ -65,21 +53,16 @@ defmodule AidaWeb.SessionControllerTest do
 
       response = json_response(conn, 200)["data"]
       assert response |> Enum.count == 1
-      assert (response |> hd)["id"] == @uuid
+      assert (response |> hd)["id"] == session.id
       assert Ecto.DateTime.cast!((response |> hd)["first_message"]) == Ecto.DateTime.cast!("2018-01-08T16:00:00")
       assert Ecto.DateTime.cast!((response |> hd)["last_message"]) == Ecto.DateTime.cast!("2018-01-08T16:30:00")
     end
 
-    test "considers only incoming messages to calculate first and last messages", %{conn: conn, bot: bot} do
-      session_id = "#{bot.id}/facebook/1234567890/1234"
-      {session_id, @uuid, %{"foo" => 1, "bar" => 2}}
-        |> Session.new
-        |> Session.save
+    test "considers only incoming messages to calculate first and last messages", %{conn: conn, bot: bot, session: session} do
 
       first_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "incoming",
         content: "Hi!",
         content_type: "text",
@@ -89,8 +72,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       second_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "outgoing",
         content: "Hello, I can give you information about the menu",
         content_type: "text",
@@ -100,8 +82,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       third_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "incoming",
         content: "menu",
         content_type: "text",
@@ -111,8 +92,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       fourth_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "outgoing",
         content: "we have barbecue and pasta and a exclusive selection of wines",
         content_type: "text",
@@ -133,27 +113,15 @@ defmodule AidaWeb.SessionControllerTest do
     end
 
     test "retrieves empty message dates when session has no messages", %{conn: conn, bot: bot} do
-      session_id = "#{bot.id}/facebook/1234567890/1234"
-      {session_id, @uuid, %{"foo" => 1, "bar" => 2}}
-        |> Session.new
-        |> Session.save
-
       conn = get conn, bot_session_path(conn, :index, bot.id)
 
       assert json_response(conn, 200)["data"] == []
     end
 
-    test "doesn't get sessions of other bot", %{conn: conn, bot: first_bot} do
-      first_session_id = "#{first_bot.id}/facebook/1234567890/1234"
-      {first_session_id, @uuid, %{"foo" => 1, "bar" => 2}}
-        |> Session.new
-        |> Session.save
-
-
+    test "doesn't get sessions of other bot", %{conn: conn, bot: first_bot, session: first_session} do
       first_message_attrs = %{
         bot_id: first_bot.id,
-        session_id: first_session_id,
-        session_uuid: @uuid,
+        session_id: first_session.id,
         direction: "incoming",
         content: "Hi!",
         content_type: "text",
@@ -163,8 +131,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       second_message_attrs = %{
         bot_id: first_bot.id,
-        session_id: first_session_id,
-        session_uuid: @uuid,
+        session_id: first_session.id,
         direction: "outgoing",
         content: "Hello, I'm a Restaurant bot",
         content_type: "text",
@@ -174,8 +141,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       third_message_attrs = %{
         bot_id: first_bot.id,
-        session_id: first_session_id,
-        session_uuid: @uuid,
+        session_id: first_session.id,
         direction: "incoming",
         content: "menu",
         content_type: "text",
@@ -188,8 +154,12 @@ defmodule AidaWeb.SessionControllerTest do
       create_message_log(third_message_attrs)
 
       [bot: second_bot] = create_bot()
-      second_session_id = "#{second_bot.id}/facebook/1234567890/1234"
-      SessionStore.save(second_session_id, @uuid2, %{"foo" => 1, "bar" => 2})
+      session_struct = %{
+        bot_id: second_bot.id,
+        provider: "facebook",
+        provider_key: "1234567890/1234"
+      }
+      Session.new(session_struct) |> Session.save
 
       conn = get conn, bot_session_path(conn, :index, second_bot.id)
       response = json_response(conn, 200)["data"]
@@ -199,31 +169,27 @@ defmodule AidaWeb.SessionControllerTest do
   end
 
   describe "session_data" do
-    test "lists sessions data", %{conn: conn, bot: bot}  do
+    test "lists sessions data", %{conn: conn, bot: bot, session: session}  do
       data = %{"foo" => 1, "bar" => 2}
-      {"#{bot.id}/facebook/1234567890/1234", @uuid, data}
-        |> Session.new
-        |> Session.save
+      session |> Session.merge(data) |> Session.save
 
       conn = get conn, bot_session_path(conn, :session_data, bot.id)
       assert json_response(conn, 200)["data"] == [
         %{
-          "id" => @uuid,
+          "id" => session.id,
           "data" => data
         }
       ]
     end
 
-    test "do not include variables starting with dot", %{conn: conn, bot: bot} do
+    test "do not include variables starting with dot", %{conn: conn, bot: bot, session: session} do
       data = %{"foo" => 1, "bar" => 2, ".internal" => %{"state" => 1}}
-      {"#{bot.id}/facebook/1234567890/1234", @uuid, data}
-        |> Session.new
-        |> Session.save
+      session = session |> Session.merge(data) |> Session.save
 
       conn = get conn, bot_session_path(conn, :session_data, bot.id)
       assert json_response(conn, 200)["data"] == [
         %{
-          "id" => @uuid,
+          "id" => session.id,
           "data" => Map.delete(data, ".internal")
         }
       ]
@@ -231,17 +197,10 @@ defmodule AidaWeb.SessionControllerTest do
   end
 
   describe "log" do
-    test "list all messages of a session", %{conn: conn, bot: bot} do
-      session_id = "#{bot.id}/facebook/1234567890/1234"
-      {session_id, @uuid, %{"foo" => 1, "bar" => 2}}
-        |> Session.new
-        |> Session.save
-
-
+    test "list all messages of a session", %{conn: conn, bot: bot, session: session} do
       first_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "incoming",
         content: "Hi!",
         content_type: "text",
@@ -251,8 +210,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       second_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "outgoing",
         content: "Hello, I'm a Restaurant bot",
         content_type: "text",
@@ -262,8 +220,7 @@ defmodule AidaWeb.SessionControllerTest do
 
       third_message_attrs = %{
         bot_id: bot.id,
-        session_id: session_id,
-        session_uuid: @uuid,
+        session_id: session.id,
         direction: "incoming",
         content: "menu",
         content_type: "text",
@@ -275,7 +232,7 @@ defmodule AidaWeb.SessionControllerTest do
       create_message_log(second_message_attrs)
       create_message_log(third_message_attrs)
 
-      conn = get conn, bot_session_session_path(conn, :log, bot.id, @uuid)
+      conn = get conn, bot_session_session_path(conn, :log, bot.id, session.id)
       response = json_response(conn, 200)["data"]
       assert response |> Enum.count == 3
       assert response |> Enum.any?(&(is_equal?(&1, first_message_attrs)))
@@ -291,13 +248,12 @@ defmodule AidaWeb.SessionControllerTest do
       [channel: channel]
     end
 
-    test "sends message to a session", %{conn: conn, bot: bot, channel: channel} do
-      session = Session.new("session_id", @uuid)
-      session |> Session.save
+    test "sends message to a session", %{conn: conn, bot: bot, channel: channel, session: session} do
 
-      with_mock ChannelProvider, [find_channel: fn "session_id" -> channel end] do
-        post conn, bot_session_session_path(conn, :send_message, bot.id, session.uuid, message: "Hi!")
-        assert_received {:send_message, ["Hi!"], "session_id"}
+      with_mock ChannelProvider, [find_channel: fn _ -> channel end] do
+        session_id = session.id
+        post conn, bot_session_session_path(conn, :send_message, bot.id, session_id, message: "Hi!")
+        assert_received {:send_message, ["Hi!"], session_id}
       end
     end
   end
@@ -311,11 +267,22 @@ defmodule AidaWeb.SessionControllerTest do
     [bot: bot]
   end
 
+  defp create_session(%{bot: bot}) do
+    session_struct = %{
+      bot_id: bot.id,
+      provider: "facebook",
+      provider_key: "1234/5678"
+    }
+
+    session = Session.new(session_struct) |> Session.save
+    [session: session]
+  end
+
   # This function is used instead of MessageLog.create in order to
   # set created_at, updated_at properties
   defp create_message_log(attrs) do
     %MessageLog{}
-    |> Ecto.Changeset.cast(attrs, [:bot_id, :session_id, :session_uuid, :direction, :content, :content_type, :inserted_at, :updated_at])
+    |> Ecto.Changeset.cast(attrs, [:bot_id, :session_id, :direction, :content, :content_type, :inserted_at, :updated_at])
     |> Repo.insert
   end
 

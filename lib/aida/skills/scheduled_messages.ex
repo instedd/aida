@@ -1,6 +1,6 @@
 defmodule Aida.Skill.ScheduledMessages do
-  alias Aida.{Message, Session, Skill, BotManager, DB, DB.MessageLog, Recurrence, Bot}
-  alias Aida.DB.SkillUsage
+  alias Aida.{Message, Skill, BotManager, DB, Recurrence, Bot}
+  alias Aida.DB.{Session, SkillUsage, MessageLog}
   alias __MODULE__
 
   defmodule DelayedMessage do
@@ -101,7 +101,7 @@ defmodule Aida.Skill.ScheduledMessages do
     def init(skill, _bot), do: skill
 
     defp send_message(skill, bot, session_id, content) do
-      session = Session.load(session_id)
+      session = Session.get(session_id)
       message = Message.new("", bot, session)
 
       if Message.language(message) && Skill.is_relevant?(skill, message) do

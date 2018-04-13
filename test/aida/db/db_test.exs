@@ -2,6 +2,13 @@ defmodule Aida.DBTest do
   use Aida.DataCase
 
   alias Aida.{DB, BotManager, ChannelRegistry}
+  alias Aida.DB.Session
+
+  @session_struct %{
+    bot_id: Ecto.UUID.generate,
+    provider: "facebook",
+    provider_key: "1234/5678"
+  }
 
   describe "bots" do
     alias Aida.DB.Bot
@@ -12,8 +19,6 @@ defmodule Aida.DBTest do
     @valid_attrs %{manifest: @manifest}
     @update_attrs %{manifest: @updated_manifest}
     @invalid_attrs %{manifest: nil}
-    @session_uuid_1 "27646aaa-d1bd-4fa3-836f-ef6479ccddb9"
-    @session_uuid_2 "2b41f4d8-6749-442e-a39b-315f7ca91f5b"
 
     def bot_fixture(attrs \\ %{}) do
       {:ok, bot} =
@@ -102,54 +107,58 @@ defmodule Aida.DBTest do
       assert %Ecto.Changeset{} = DB.change_bot(bot)
     end
 
-    test "save_session/3 stores session data" do
-      data = %{"foo" => 1, "bar" => 2}
-      {:ok, session} = DB.save_session("session_id", @session_uuid_1, data)
+    # test "save_session/3 stores session data" do
+    #   data = %{"foo" => 1, "bar" => 2}
+    #   {:ok, session} = DB.save_session("session_id", @session_uuid_1, data)
 
-      assert session.id == "session_id"
-      assert session.uuid == @session_uuid_1
-      assert session.data == data
-    end
+    #   assert session.id == "session_id"
+    #   assert session.uuid == @session_uuid_1
+    #   assert session.data == data
+    # end
 
     test "get_session/1 returns nil if the session doesn't exist" do
-      assert DB.get_session("session_id") == nil
+      assert Session.get(Ecto.UUID.generate) == nil
     end
 
     test "get_session/1 returns the session with the given id" do
-      data = %{"foo" => 1, "bar" => 2}
-      {:ok, _session} = DB.save_session("session_id", @session_uuid_1, data)
+      session = Session.new(@session_struct)
+        |> Session.merge(%{"foo" => 1, "bar" => 2})
+        |> Session.save
 
-      session = DB.get_session("session_id")
-      assert session.id == "session_id"
-      assert session.uuid == @session_uuid_1
-      assert session.data == data
+      session = Session.get(session.id)
+      assert session.bot_id == @session_struct.bot_id
+      assert session.data == %{"foo" => 1, "bar" => 2}
+      assert session.provider_key == @session_struct.provider_key
     end
 
-    test "save_session/3 replaces existing session" do
-      {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 1, "bar" => 2})
-      {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 3, "bar" => 4})
+    # test "save_session/3 replaces existing session" do
+    #   {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 1, "bar" => 2})
+    #   {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 3, "bar" => 4})
 
-      session = DB.get_session("session_id")
-      assert session.id == "session_id"
-      assert session.uuid == @session_uuid_1
-      assert session.data == %{"foo" => 3, "bar" => 4}
-    end
+    #   session = DB.get_session("session_id")
+    #   assert session.id == "session_id"
+    #   assert session.uuid == @session_uuid_1
+    #   assert session.data == %{"foo" => 3, "bar" => 4}
+    # end
 
     test "get sessions by bot" do
-      {:ok, s1} = DB.save_session("bot1/x", @session_uuid_1, %{})
-      {:ok, _s2} = DB.save_session("bot2/x", @session_uuid_2, %{})
+      bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
+      Session.new(%{@session_struct | bot_id: bot_id}) |> Session.save
+      Session.new(@session_struct) |> Session.save
 
-      sessions = DB.sessions_by_bot("bot1")
+      s1 = Session.load(%{@session_struct | bot_id: bot_id})
+      sessions = DB.sessions_by_bot(bot_id)
       assert sessions == [s1]
     end
 
     test "delete_session/1 deletes a session" do
-      {:ok, _session} = DB.save_session("session_1", @session_uuid_1, %{"foo" => 1, "bar" => 2})
-      {:ok, _session} = DB.save_session("session_2", @session_uuid_2, %{"foo" => 1, "bar" => 2})
+      bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
+      s1 = Session.new(%{@session_struct | bot_id: bot_id}) |> Session.save
+      s2 = Session.new(@session_struct) |> Session.save
 
-      assert :ok = DB.delete_session("session_1")
-      assert DB.get_session("session_1") == nil
-      assert DB.get_session("session_2")
+      Session.delete(s1.id)
+      assert Session.get(s1.id) == nil
+      assert Session.get(s2.id)
     end
 
     test "create_or_update_skill_usage/1 updates existing skill usage with the proper last_usage" do

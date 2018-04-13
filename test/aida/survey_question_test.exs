@@ -1,6 +1,7 @@
 defmodule Aida.SurveyQuestionTest do
   alias Aida.Skill.Survey.{Question, InputQuestion, SelectQuestion, Choice}
-  alias Aida.{Session, Message, Bot, Message.ImageContent}
+  alias Aida.{Message, Bot, Message.ImageContent}
+  alias Aida.DB.{Session}
   use Aida.DataCase
   import Mock
 
@@ -92,9 +93,9 @@ defmodule Aida.SurveyQuestionTest do
   ]
 
   @bot %Bot{}
-  @session_uuid "18723278-0665-454f-98a3-d85cec9a7acd"
-  @session Session.new({"1", @session_uuid, %{"language" => "en"}})
-  @session_with_food_type Session.new({"1", @session_uuid, %{"language" => "en", "food_type" => "pasta"}})
+  @session_id "18723278-0665-454f-98a3-d85cec9a7acd"
+  @session Session.new({@session_id, %{"language" => "en"}})
+  @session_with_food_type Session.new({@session_id, %{"language" => "en", "food_type" => "pasta"}})
 
   describe "select_one" do
     test "valid_answer?" do

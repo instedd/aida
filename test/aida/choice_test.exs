@@ -1,9 +1,10 @@
 defmodule Aida.ChoiceTest do
-  alias Aida.{Bot, Skill.Survey.Choice, Session, Message}
+  alias Aida.{Bot, Skill.Survey.Choice, Message}
+  alias Aida.DB.{Session}
   import Aida.Expr
   use ExUnit.Case
 
-  @session Session.new({"1", "7373f115-e6af-4385-8289-a823b43f727d", %{"language" => "en"}})
+  @session Session.new({"7373f115-e6af-4385-8289-a823b43f727d", %{"language" => "en"}})
   @message Message.new("ok", %Bot{}, @session)
 
   test "availability" do

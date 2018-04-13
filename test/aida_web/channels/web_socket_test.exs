@@ -1,13 +1,13 @@
 defmodule AidaWeb.Channel.WebSocketTest do
   alias AidaWeb.BotChannel
-  alias Aida.{BotManager, ChannelRegistry, SessionStore}
+  alias Aida.{BotManager, ChannelRegistry}
+  alias Aida.DB.{Session}
   use AidaWeb.ChannelCase
 
   @bot_id "ee20683d-d100-4911-9328-61c7b6e01f84"
   @bot Aida.BotParser.parse!(@bot_id, File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!)
 
   setup do
-    SessionStore.start_link
     ChannelRegistry.start_link
     BotManager.start_link
     BotManager.start(@bot)
@@ -42,9 +42,7 @@ defmodule AidaWeb.Channel.WebSocketTest do
       |> push("new_session")
       |> assert_reply(:ok, %{session: session_id})
 
-    session_id = "#{@bot_id}/ws/#{session_id}"
-
-    assert {^session_id, _uuid, %{}} = SessionStore.find(session_id)
+    assert Session.get(session_id)
   end
 
   test "start new session with data" do
@@ -55,9 +53,7 @@ defmodule AidaWeb.Channel.WebSocketTest do
       |> push("new_session", %{"data" => data})
       |> assert_reply(:ok, %{session: session_id})
 
-    session_id = "#{@bot_id}/ws/#{session_id}"
-
-    assert {^session_id, _uuid, ^data} = SessionStore.find(session_id)
+    assert Session.get(session_id).data == data
   end
 
   test "push data to be merged in the session" do
@@ -73,9 +69,9 @@ defmodule AidaWeb.Channel.WebSocketTest do
     socket |> push("put_data", %{"session" => session_id, "data" => new_data})
       |> assert_reply(:ok, _)
 
-    session_id = "#{@bot_id}/ws/#{session_id}"
     data = data |> Map.merge(new_data)
-    assert {^session_id, _uuid, ^data} = SessionStore.find(session_id)
+
+    assert Session.get(session_id).data == data
   end
 
   test "bot answers a utb message" do

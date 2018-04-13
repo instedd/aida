@@ -1,5 +1,6 @@
 defmodule Aida.ScheduledMessagesTest do
-  alias Aida.{Skill.ScheduledMessages, Message, Bot, DB.MessageLog, Skill, Session, SessionStore, BotManager, Recurrence}
+  alias Aida.{Skill.ScheduledMessages, Message, Bot, Skill, BotManager, Recurrence}
+  alias Aida.DB.{Session, MessageLog}
   alias Aida.Skill.ScheduledMessages.{DelayedMessage, FixedTimeMessage, RecurrentMessage}
   alias Aida.Scheduler
   use Aida.DataCase
@@ -10,8 +11,7 @@ defmodule Aida.ScheduledMessagesTest do
   @session_uuid "d03edb47-bc88-4dc9-8717-057227a06af1"
 
   describe "scheduled messages with fixed time" do
-    setup :generate_session_id_for_test_channel
-    setup :create_session
+    setup :create_session_for_test_channel
     setup :create_bot
 
     setup do
@@ -63,8 +63,7 @@ defmodule Aida.ScheduledMessagesTest do
   end
 
   describe "schedule messages since last incoming message" do
-    setup :generate_session_id_for_test_channel
-    setup :create_session
+    setup :create_session_for_test_channel
     setup :create_bot
 
     setup do
@@ -154,7 +153,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "don't send if the language is not set", %{session: session, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session.id, session_uuid: @session_uuid, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log = MessageLog.create(%{bot_id: @bot_id, session_id: session.id, direction: "incoming", content: "Hi", content_type: "text"})
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
       session |> Session.put("language", nil) |> Session.save
@@ -170,7 +169,7 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "don't do anything if the session id is invalid", %{bot: bot, skill: skill} do
-      skill |> Skill.wake_up(bot, "invalid_session_id")
+      skill |> Skill.wake_up(bot, Ecto.UUID.generate)
       refute_received _
       assert [] = Scheduler.Task.load
     end
@@ -183,8 +182,7 @@ defmodule Aida.ScheduledMessagesTest do
   end
 
   describe "scheduled messages with recurrence" do
-    setup :generate_session_id_for_test_channel
-    setup :create_session
+    setup :create_session_for_test_channel
     setup :create_bot
 
     setup do
@@ -216,20 +214,18 @@ defmodule Aida.ScheduledMessagesTest do
     end
   end
 
-  defp generate_session_id_for_test_channel(_context) do
+  defp create_session_for_test_channel(_context) do
     pid = System.unique_integer([:positive])
     Process.register(self(), "#{pid}" |> String.to_atom)
-    session_id = "#{@bot_id}/test/#{pid}"
+    session_struct = %{
+      bot_id: @bot_id,
+      provider: "test",
+      provider_key: "#{pid}"
+    }
 
-    [session_id: session_id]
-  end
+    session = Session.new(session_struct) |> Session.merge(%{"language" => "en"}) |> Session.save
 
-  defp create_session(%{session_id: session_id}) do
-    SessionStore.start_link
-    session = Session.new({session_id, @session_uuid, %{"language" => "en"}})
-    session |> Session.save
-
-    [session: session]
+    [session: session, session_id: session.id]
   end
 
   defp create_bot(_context) do

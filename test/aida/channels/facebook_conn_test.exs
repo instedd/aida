@@ -1,9 +1,10 @@
-defmodule Aida.Channel.FacebookConnTest do
+  defmodule Aida.Channel.FacebookConnTest do
   use Aida.DataCase
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, SessionStore, Session}
+  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser}
+  alias Aida.DB.Session
   alias Aida.Channel.Facebook
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
@@ -38,7 +39,6 @@ defmodule Aida.Channel.FacebookConnTest do
   setup do
     ChannelRegistry.start_link
     BotManager.start_link
-    SessionStore.start_link
     :ok
   end
 
@@ -105,7 +105,7 @@ defmodule Aida.Channel.FacebookConnTest do
 
         recipient_id = Session.encrypt_id("1234", @uuid)
 
-        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
         assert Session.get(session, "first_name") == "John"
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
@@ -118,14 +118,14 @@ defmodule Aida.Channel.FacebookConnTest do
     test "profile is not pull if it was already pulled within the last 24hs" do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
           |> Session.put(".facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
           |> Session.save
 
         build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
-        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
         assert Session.get(session, "first_name") == nil
         assert Session.get(session, "last_name") == nil
         assert Session.get(session, "gender") == nil
@@ -135,7 +135,7 @@ defmodule Aida.Channel.FacebookConnTest do
     test "profile is pulled again when the last pull was more than a day ago" do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
           |> Session.put("first_name", "---")
           |> Session.put(".facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
           |> Session.save
@@ -143,7 +143,7 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
-        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
         assert Session.get(session, "first_name") == "John"
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
@@ -160,7 +160,7 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", @incoming_message)
         |> Facebook.callback()
 
-        session = Session.load("#{bot.id}/facebook/1234567890/#{recipient_id}")
+        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
         assert "John" == Session.get(session, "first_name")
         assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
         assert "male" == Session.get(session, "gender")

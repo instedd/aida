@@ -5,8 +5,8 @@ defmodule Aida.TestChannel do
     %Aida.TestChannel{pid: pid}
   end
 
-  def find_channel(session_id) do
-    [_bot_id, _provider, pid] = session_id |> String.split("/")
+  def find_channel(session) do
+    pid = session.provider_key
     new(pid |> String.to_atom)
   end
 

@@ -4,7 +4,7 @@ defmodule Aida.Channel.Facebook do
   alias Aida.BotManager
   alias Aida.Bot
   alias Aida.Message
-  alias Aida.Session
+  alias Aida.DB.Session
   import Aida.ErrorHandler
 
   @behaviour Aida.ChannelProvider
@@ -30,8 +30,8 @@ defmodule Aida.Channel.Facebook do
     ChannelRegistry.find({:facebook, page_id})
   end
 
-  def find_channel(session_id) do
-    [_bot_id, _provider, page_id, _user_id] = session_id |> String.split("/")
+  def find_channel(session) do
+    [page_id, _user_id] = session.provider_key |> String.split("/")
     find_channel_for_page_id(page_id)
   end
 
@@ -111,12 +111,19 @@ defmodule Aida.Channel.Facebook do
 
         sender_id = Session.encrypt_id(sender_id, channel.bot_id)
         recipient_id = message["recipient"]["id"]
-        session_id = "#{channel.bot_id}/facebook/#{recipient_id}/#{sender_id}"
+        # session_id = "#{channel.bot_id}/facebook/#{recipient_id}/#{sender_id}"
+        session_struct = %{
+          bot_id: channel.bot_id,
+          provider: "facebook",
+          provider_key: "#{recipient_id}/#{sender_id}"
+        }
+
+        session = Session.load(session_struct)
 
         case text do
           "##RESET" ->
-            Session.delete(session_id)
-            send_message(channel, ["Session was reset"], session_id)
+            Session.delete(session.id)
+            send_message(channel, ["Session was reset"], session_struct.provider_key)
 
           nil ->
             attachment = if message["message"]["attachments"] do
@@ -134,18 +141,18 @@ defmodule Aida.Channel.Facebook do
                     ""
                   end
                 try do
-                  handle_by_message_type(channel, session_id, sender_id, :image, source_url)
+                  handle_by_message_type(channel, session, sender_id, :image, source_url)
                 rescue
                   _ ->
                     :ok
                 end
               nil -> :ok
               _ ->
-                handle_by_message_type(channel, session_id, sender_id, :unknown, "")
+                handle_by_message_type(channel, session, sender_id, :unknown, "")
             end
 
           _ ->
-            handle_by_message_type(channel, session_id, sender_id, :text, text)
+            handle_by_message_type(channel, session, sender_id, :text, text)
         end
       rescue
         error ->
@@ -154,10 +161,9 @@ defmodule Aida.Channel.Facebook do
       end
     end
 
-    @spec handle_by_message_type(Aida.Channel.t, String.t, String.t, :text | :image | :unknown, String.t) :: :ok
-    defp handle_by_message_type(channel, session_id, sender_id, message_type, message_string) do
+    @spec handle_by_message_type(Aida.Channel.t, Session, String.t, :text | :image | :unknown, String.t) :: :ok
+    defp handle_by_message_type(channel, session, sender_id, message_type, message_string) do
       bot = BotManager.find(channel.bot_id)
-      session = Session.load(session_id)
 
       message =
         case message_type do
@@ -170,7 +176,7 @@ defmodule Aida.Channel.Facebook do
       reply = Bot.chat(bot, message)
       reply.session |> Session.save
 
-      send_message(channel, reply.reply, session_id)
+      send_message(channel, reply.reply, session.provider_key)
     end
 
     @spec pull_profile(Message.t(), Aida.Channel.t(), String.t()) :: Message.t()
@@ -207,8 +213,8 @@ defmodule Aida.Channel.Facebook do
       DateTime.diff(DateTime.utc_now(), ts, :second) > 86400
     end
 
-    def send_message(channel, messages, session_id) do
-      recipient = session_id
+    def send_message(channel, messages, provider_key) do
+      recipient = provider_key
         |> String.split("/")
         |> List.last
         |> Session.decrypt_id(channel.bot_id)
