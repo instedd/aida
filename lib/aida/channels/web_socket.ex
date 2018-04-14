@@ -45,8 +45,8 @@ defmodule Aida.Channel.WebSocket do
       raise "not implemented"
     end
 
-    def send_message(channel, messages, session_id) do
-      recipient = session_id |> String.split("/") |> List.last
+    def send_message(channel, messages, session) do
+      recipient = session.id
 
       messages |> Enum.each(fn message ->
         AidaWeb.Endpoint.broadcast("bot:#{channel.bot_id}", "btu_msg", %{text: message, session: recipient})

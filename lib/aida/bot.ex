@@ -244,6 +244,6 @@ defmodule Aida.Bot do
     log_outgoing(message)
 
     channel = ChannelProvider.find_channel(session)
-    channel |> Channel.send_message(message.reply, session.id)
+    channel |> Channel.send_message(message.reply, session)
   end
 end

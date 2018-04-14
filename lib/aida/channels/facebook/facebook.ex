@@ -123,7 +123,7 @@ defmodule Aida.Channel.Facebook do
         case text do
           "##RESET" ->
             Session.delete(session.id)
-            send_message(channel, ["Session was reset"], session_struct.provider_key)
+            send_message(channel, ["Session was reset"], session)
 
           nil ->
             attachment = if message["message"]["attachments"] do
@@ -157,7 +157,7 @@ defmodule Aida.Channel.Facebook do
       rescue
         error ->
           capture_exception("Error processing Facebook message", error, bot_id: channel.bot_id, message: message)
-          send_message(channel, ["Oops! Something went wrong"], sender_id)
+          send_message(channel, ["Oops! Something went wrong"], %{provider_key: sender_id})
       end
     end
 
@@ -176,7 +176,7 @@ defmodule Aida.Channel.Facebook do
       reply = Bot.chat(bot, message)
       reply.session |> Session.save
 
-      send_message(channel, reply.reply, session.provider_key)
+      send_message(channel, reply.reply, session)
     end
 
     @spec pull_profile(Message.t(), Aida.Channel.t(), String.t()) :: Message.t()
@@ -213,8 +213,8 @@ defmodule Aida.Channel.Facebook do
       DateTime.diff(DateTime.utc_now(), ts, :second) > 86400
     end
 
-    def send_message(channel, messages, provider_key) do
-      recipient = provider_key
+    def send_message(channel, messages, session) do
+      recipient = session.provider_key
         |> String.split("/")
         |> List.last
         |> Session.decrypt_id(channel.bot_id)

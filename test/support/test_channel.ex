@@ -25,8 +25,8 @@ defmodule Aida.TestChannel do
       conn
     end
 
-    def send_message(channel, messages, recipient) do
-      send channel.pid, {:send_message, messages, recipient}
+    def send_message(channel, messages, session) do
+      send channel.pid, {:send_message, messages, session.id}
     end
   end
 end

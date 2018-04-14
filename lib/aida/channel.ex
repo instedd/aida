@@ -8,7 +8,7 @@ defprotocol Aida.Channel do
   @spec callback(channel :: Aida.Channel.t, conn :: Plug.Conn.t) :: Plug.Conn.t
   def callback(channel, conn)
 
-  @spec send_message(channel :: Aida.Channel.t, messages :: [String.t], session_id :: String.t) :: :ok
+  @spec send_message(channel :: Aida.Channel.t, messages :: [String.t], session :: Aida.DB.Session.t) :: :ok
   def send_message(channel, messages, session_id)
 end
 

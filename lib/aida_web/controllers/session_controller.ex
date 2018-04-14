@@ -21,7 +21,7 @@ defmodule AidaWeb.SessionController do
     session = Session.get(session_id)
 
     ChannelProvider.find_channel(session)
-    |> Channel.send_message([message], session_id)
+    |> Channel.send_message([message], session)
 
     conn |> send_resp(200, "")
   end
