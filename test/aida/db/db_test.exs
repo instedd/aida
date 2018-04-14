@@ -145,7 +145,7 @@ defmodule Aida.DBTest do
       Session.new(@session_tuple) |> Session.save
 
       s1 = Session.find_or_create(bot_id, provider, provider_key)
-      sessions = DB.sessions_by_bot(bot_id)
+      sessions = Session.sessions_by_bot(bot_id)
       assert sessions == [s1]
     end
 

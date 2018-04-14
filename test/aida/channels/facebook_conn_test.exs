@@ -106,11 +106,11 @@
         recipient_id = Session.encrypt_id("1234", @uuid)
 
         session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
-        assert Session.get(session, "first_name") == "John"
-        assert Session.get(session, "last_name") == "Doe"
-        assert Session.get(session, "gender") == "male"
+        assert Session.get_value(session, "first_name") == "John"
+        assert Session.get_value(session, "last_name") == "Doe"
+        assert Session.get_value(session, "gender") == "male"
 
-        {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601
+        {:ok, pull_ts, 0} = Session.get_value(session, ".facebook_profile_ts") |> DateTime.from_iso8601
         assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
       end
     end
@@ -126,9 +126,9 @@
           |> Facebook.callback()
 
         session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
-        assert Session.get(session, "first_name") == nil
-        assert Session.get(session, "last_name") == nil
-        assert Session.get(session, "gender") == nil
+        assert Session.get_value(session, "first_name") == nil
+        assert Session.get_value(session, "last_name") == nil
+        assert Session.get_value(session, "gender") == nil
       end
     end
 
@@ -144,9 +144,9 @@
           |> Facebook.callback()
 
         session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
-        assert Session.get(session, "first_name") == "John"
-        assert Session.get(session, "last_name") == "Doe"
-        assert Session.get(session, "gender") == "male"
+        assert Session.get_value(session, "first_name") == "John"
+        assert Session.get_value(session, "last_name") == "Doe"
+        assert Session.get_value(session, "gender") == "male"
       end
     end
   end
@@ -161,11 +161,11 @@
         |> Facebook.callback()
 
         session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
-        assert "John" == Session.get(session, "first_name")
-        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
-        assert "male" == Session.get(session, "gender")
+        assert "John" == Session.get_value(session, "first_name")
+        assert "Doe" == Session.get_value(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
+        assert "male" == Session.get_value(session, "gender")
 
-        {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601
+        {:ok, pull_ts, 0} = Session.get_value(session, ".facebook_profile_ts") |> DateTime.from_iso8601
         assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
       end
     end

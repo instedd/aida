@@ -7,7 +7,7 @@ defmodule Aida.DB do
   alias Aida.Repo
   alias Aida.PubSub
 
-  alias Aida.DB.{Bot, SkillUsage, Session, MessagesPerDay, Image}
+  alias Aida.DB.{Bot, SkillUsage, MessagesPerDay, Image}
 
   @doc """
   Returns the list of bots.
@@ -130,53 +130,6 @@ defmodule Aida.DB do
   def change_bot(%Bot{} = bot) do
     Bot.changeset(bot, %{})
   end
-
-  @doc """
-  Creates or updates the session data stored for the given session id
-  """
-  def save_session(id, uuid, data) do
-    %Session{}
-      |> Session.changeset(%{id: id, data: data, uuid: uuid})
-      |> Repo.insert(on_conflict: :replace_all, conflict_target: :id)
-  end
-
-  # @doc """
-  # Returns the session for the given id. If the session does not exist, it returns `nil`.
-  # """
-  # def get_session(id) do
-  #   Session |> Repo.get(id)
-  # end
-
-  # def get_session_by_uuid(uuid) do
-  #   Session |> Repo.get_by(uuid: uuid)
-  # end
-
-  @doc """
-  Returns all the sessions for the given bot id. If there is none, it returns an empty array.
-  """
-  def sessions_by_bot(bot_id) do
-    Session
-      |> where(fragment("bot_id = ?", type(^bot_id, :binary_id)))
-      |> Repo.all()
-  end
-
-  def session_ids_by_bot(bot_id) do
-    Session
-      |> where([s], s.bot_id == ^bot_id)
-      |> select([s], s.id)
-      |> Repo.all()
-  end
-
-  @doc """
-  Deletes the session with the given id.
-  """
-  # def delete_session(id) do
-  #   Session
-  #     |> where([s], s.id == ^id)
-  #     |> Repo.delete_all
-
-  #   :ok
-  # end
 
   def list_skill_usages do
     Repo.all(SkillUsage)

@@ -192,7 +192,7 @@ defmodule Aida.Bot do
       |> Enum.filter(&Skill.is_relevant?(&1, message))
       |> Enum.filter(fn
         %Skill.LanguageDetector{} -> true
-        _ -> Session.get(message.session, "language") != nil
+        _ -> Session.get_value(message.session, "language") != nil
       end)
   end
 

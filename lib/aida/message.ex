@@ -100,7 +100,7 @@ defmodule Aida.Message do
 
   @spec get_session(message :: t, key :: String.t) :: Session.value
   def get_session(%{session: session}, key) do
-    Session.get(session, key)
+    Session.get_value(session, key)
   end
 
   @spec put_session(message :: t, key :: String.t, value :: Session.value) :: t

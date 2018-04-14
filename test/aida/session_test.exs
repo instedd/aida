@@ -56,7 +56,7 @@ defmodule Aida.SessionTest do
   describe "value store" do
     test "get" do
       session = Session.new(@session_tuple) |> Session.merge(%{"foo" => "bar"})
-      assert session |> Session.get("foo") == "bar"
+      assert session |> Session.get_value("foo") == "bar"
     end
 
     test "put" do

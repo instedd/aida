@@ -61,7 +61,7 @@ defmodule Aida.SurveyTest do
         assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], ^session_id}
 
         session = Session.get(session_id)
-        assert session |> Session.get(".survey/food_preferences") == %{"step" => 0}
+        assert session |> Session.get_value(".survey/food_preferences") == %{"step" => 0}
       end
     end
 

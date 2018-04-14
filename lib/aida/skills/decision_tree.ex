@@ -174,7 +174,7 @@ defmodule Aida.Skill.DecisionTree do
       {next_question, message} = case question do
         nil ->
           session = message.session
-          if session |> Session.get("language") do
+          if session |> Session.get_value("language") do
             message = message
               |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => decision_tree.root_id})
 

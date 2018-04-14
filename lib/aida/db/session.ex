@@ -97,23 +97,6 @@ defmodule Aida.DB.Session do
     Session |> Repo.get(id)
   end
 
-  def session_index_by_bot(bot_id) do
-    Session
-      |> join(:inner, [s], m in MessageLog, m.session_id == s.id)
-      |> where([s], s.bot_id == ^bot_id)
-      |> where([_, m], m.direction == "incoming")
-      |> group_by([s, m], s.id)
-      |> select([s, m], %{id: s.id, first_message: min(m.inserted_at), last_message: max(m.inserted_at)})
-      |> Repo.all()
-  end
-
-  def message_logs_by_session(session_id) do
-    MessageLog
-      |> where([m], m.session_id == ^session_id)
-      |> select([m], %{timestamp: m.inserted_at, direction: m.direction, content: m.content, content_type: m.content_type})
-      |> Repo.all
-  end
-
   @doc false
   def changeset(%Session{} = session, attrs) do
     session
@@ -133,10 +116,21 @@ defmodule Aida.DB.Session do
       |> Repo.insert!(on_conflict: :replace_all, conflict_target: :id)
   end
 
-  def update(%Session{} = session) do
-    session
-      |> Session.changeset(%{data: session.data, is_new?: false})
-      |> Repo.update
+  @doc """
+  Returns all the sessions for the given bot id. If there is none, it returns an empty array.
+  """
+  def sessions_by_bot(bot_id) do
+    Session
+      |> where([s], s.bot_id == ^bot_id)
+      # |> where(fragment("bot_id = ?", type(^bot_id, :binary_id)))
+      |> Repo.all()
+  end
+
+  def session_ids_by_bot(bot_id) do
+    Session
+      |> where([s], s.bot_id == ^bot_id)
+      |> select([s], s.id)
+      |> Repo.all()
   end
 
   @spec encrypt_id(id :: String.t, bot_id :: String.t) :: binary
@@ -158,8 +152,8 @@ defmodule Aida.DB.Session do
     salt
   end
 
-  @spec get(session :: t, key :: String.t) :: value
-  def get(%Session{data: data}, key) do
+  @spec get_value(session :: t, key :: String.t) :: value
+  def get_value(%Session{data: data}, key) do
     Map.get(data, key)
   end
 
@@ -174,7 +168,7 @@ defmodule Aida.DB.Session do
 
   @spec lookup_var(session :: t, key :: String.t) :: value
   def lookup_var(%Session{data: data} = session, key) do
-    case get(session, key) do
+    case get_value(session, key) do
       nil ->
         match = data |> Enum.find(fn {k, _} -> k |> String.ends_with?("/#{key}") end)
         case match do
