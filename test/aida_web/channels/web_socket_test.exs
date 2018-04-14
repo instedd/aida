@@ -1,7 +1,6 @@
 defmodule AidaWeb.Channel.WebSocketTest do
   alias AidaWeb.BotChannel
-  alias Aida.{BotManager, ChannelRegistry}
-  alias Aida.DB.{Session}
+  alias Aida.{BotManager, ChannelRegistry, DB.Session}
   use AidaWeb.ChannelCase
 
   @bot_id "ee20683d-d100-4911-9328-61c7b6e01f84"

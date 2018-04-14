@@ -1,7 +1,6 @@
 defmodule Aida.SurveyQuestionTest do
   alias Aida.Skill.Survey.{Question, InputQuestion, SelectQuestion, Choice}
-  alias Aida.{Message, Bot, Message.ImageContent}
-  alias Aida.DB.{Session}
+  alias Aida.{Message, Bot, Message.ImageContent, DB.Session}
   use Aida.DataCase
   import Mock
 

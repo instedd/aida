@@ -1,10 +1,9 @@
-  defmodule Aida.Channel.FacebookConnTest do
+defmodule Aida.Channel.FacebookConnTest do
   use Aida.DataCase
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser}
-  alias Aida.DB.Session
+  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, DB.Session}
   alias Aida.Channel.Facebook
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"

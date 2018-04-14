@@ -23,8 +23,7 @@ defmodule Aida.Channel.WebSocket do
   end
 
   def find_channel(session) do
-    bot_id = session.bot_id
-    find_channel_for_bot(bot_id)
+    find_channel_for_bot(session.bot_id)
   end
 
   def callback(_channel) do

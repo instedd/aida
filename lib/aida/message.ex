@@ -1,6 +1,6 @@
 defmodule Aida.Message do
-  alias Aida.DB.{Session}
   alias Aida.{Message, Bot}
+  alias Aida.DB.{Session}
   alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content}
 
   @type t :: %__MODULE__{
