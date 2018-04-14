@@ -101,13 +101,8 @@ defmodule Aida.DecisionTreeTest do
 
       {:ok, bot} = BotParser.parse(@bot_id, manifest)
 
-      session_struct = %{
-        bot_id: @bot_id,
-        provider: "facebook",
-        provider_key: "1234567890/0987654321"
-      }
-
-      session = Session.new(session_struct) |> Session.save
+      session = Session.new({@bot_id, "facebook", "1234567890/0987654321"})
+        |> Session.save
 
       %{bot: bot, session: session}
     end

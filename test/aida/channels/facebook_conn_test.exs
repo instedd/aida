@@ -105,7 +105,7 @@
 
         recipient_id = Session.encrypt_id("1234", @uuid)
 
-        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
         assert Session.get(session, "first_name") == "John"
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
@@ -118,14 +118,14 @@
     test "profile is not pull if it was already pulled within the last 24hs" do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
+        Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
           |> Session.put(".facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
           |> Session.save
 
         build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
-        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
         assert Session.get(session, "first_name") == nil
         assert Session.get(session, "last_name") == nil
         assert Session.get(session, "gender") == nil
@@ -135,7 +135,7 @@
     test "profile is pulled again when the last pull was more than a day ago" do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
+        Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
           |> Session.put("first_name", "---")
           |> Session.put(".facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
           |> Session.save
@@ -143,7 +143,7 @@
         build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
-        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
         assert Session.get(session, "first_name") == "John"
         assert Session.get(session, "last_name") == "Doe"
         assert Session.get(session, "gender") == "male"
@@ -160,7 +160,7 @@
         build_conn(:post, "/callback/facebook", @incoming_message)
         |> Facebook.callback()
 
-        session = Session.load(%{bot_id: @uuid, provider: "facebook", provider_key: "1234567890/#{recipient_id}"})
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
         assert "John" == Session.get(session, "first_name")
         assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
         assert "male" == Session.get(session, "gender")

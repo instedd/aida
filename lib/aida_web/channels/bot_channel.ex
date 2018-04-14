@@ -19,13 +19,7 @@ defmodule AidaWeb.BotChannel do
       _ -> %{}
     end
 
-    session_struct = %{
-      bot_id: socket.assigns.bot_id,
-      provider: "ws",
-      provider_key: Ecto.UUID.generate
-    }
-
-    session = Session.new(session_struct)
+    session = Session.new({socket.assigns.bot_id, "ws", Ecto.UUID.generate})
       |> Session.merge(data)
       |> Session.save
 

@@ -216,13 +216,10 @@ defmodule Aida.ScheduledMessagesTest do
   defp create_session_for_test_channel(_context) do
     pid = System.unique_integer([:positive])
     Process.register(self(), "#{pid}" |> String.to_atom)
-    session_struct = %{
-      bot_id: @bot_id,
-      provider: "test",
-      provider_key: "#{pid}"
-    }
 
-    session = Session.new(session_struct) |> Session.merge(%{"language" => "en"}) |> Session.save
+    session = Session.new({@bot_id, "test", "#{pid}"})
+      |> Session.merge(%{"language" => "en"})
+      |> Session.save
 
     [session: session, session_id: session.id]
   end

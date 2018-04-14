@@ -4,11 +4,7 @@ defmodule Aida.DBTest do
   alias Aida.{DB, BotManager, ChannelRegistry}
   alias Aida.DB.Session
 
-  @session_struct %{
-    bot_id: Ecto.UUID.generate,
-    provider: "facebook",
-    provider_key: "1234/5678"
-  }
+  @session_tuple {Ecto.UUID.generate, "facebook", "1234/5678"}
 
   describe "bots" do
     alias Aida.DB.Bot
@@ -107,54 +103,57 @@ defmodule Aida.DBTest do
       assert %Ecto.Changeset{} = DB.change_bot(bot)
     end
 
-    # test "save_session/3 stores session data" do
-    #   data = %{"foo" => 1, "bar" => 2}
-    #   {:ok, session} = DB.save_session("session_id", @session_uuid_1, data)
-
-    #   assert session.id == "session_id"
-    #   assert session.uuid == @session_uuid_1
-    #   assert session.data == data
-    # end
-
     test "get_session/1 returns nil if the session doesn't exist" do
       assert Session.get(Ecto.UUID.generate) == nil
     end
 
     test "get_session/1 returns the session with the given id" do
-      session = Session.new(@session_struct)
+      {bot_id, provider, provider_key} = @session_tuple
+      session = Session.new(@session_tuple)
         |> Session.merge(%{"foo" => 1, "bar" => 2})
         |> Session.save
 
       session = Session.get(session.id)
-      assert session.bot_id == @session_struct.bot_id
+      assert session.bot_id ==bot_id
       assert session.data == %{"foo" => 1, "bar" => 2}
-      assert session.provider_key == @session_struct.provider_key
+      assert session.provider == provider
+      assert session.provider_key == provider_key
     end
 
-    # test "save_session/3 replaces existing session" do
-    #   {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 1, "bar" => 2})
-    #   {:ok, _session} = DB.save_session("session_id", @session_uuid_1, %{"foo" => 3, "bar" => 4})
+    test "replaces existing session" do
+      {bot_id, provider, provider_key} = @session_tuple
+      s1 = Session.new(@session_tuple)
+        |> Session.merge(%{"foo" => 1, "bar" => 2})
+        |> Session.save
 
-    #   session = DB.get_session("session_id")
-    #   assert session.id == "session_id"
-    #   assert session.uuid == @session_uuid_1
-    #   assert session.data == %{"foo" => 3, "bar" => 4}
-    # end
+      Session.find_or_create(bot_id, provider, provider_key)
+        |> Session.merge(%{"foo" => 3, "bar" => 4})
+        |> Session.save
+
+      session = Session.get(s1.id)
+      assert session.id == s1.id
+      assert session.bot_id == s1.bot_id
+      assert session.provider == s1.provider
+      assert session.provider_key == s1.provider_key
+      assert session.data == %{"foo" => 3, "bar" => 4}
+    end
 
     test "get sessions by bot" do
-      bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
-      Session.new(%{@session_struct | bot_id: bot_id}) |> Session.save
-      Session.new(@session_struct) |> Session.save
+      {bot_id, provider, provider_key} = @session_tuple
+      other_bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
+      Session.new({other_bot_id, provider, provider_key}) |> Session.save
+      Session.new(@session_tuple) |> Session.save
 
-      s1 = Session.load(%{@session_struct | bot_id: bot_id})
+      s1 = Session.find_or_create(bot_id, provider, provider_key)
       sessions = DB.sessions_by_bot(bot_id)
       assert sessions == [s1]
     end
 
     test "delete_session/1 deletes a session" do
-      bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
-      s1 = Session.new(%{@session_struct | bot_id: bot_id}) |> Session.save
-      s2 = Session.new(@session_struct) |> Session.save
+      {_, provider, provider_key} = @session_tuple
+      other_bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
+      s1 = Session.new({other_bot_id, provider, provider_key}) |> Session.save
+      s2 = Session.new(@session_tuple) |> Session.save
 
       Session.delete(s1.id)
       assert Session.get(s1.id) == nil

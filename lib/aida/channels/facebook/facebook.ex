@@ -111,14 +111,8 @@ defmodule Aida.Channel.Facebook do
 
         sender_id = Session.encrypt_id(sender_id, channel.bot_id)
         recipient_id = message["recipient"]["id"]
-        # session_id = "#{channel.bot_id}/facebook/#{recipient_id}/#{sender_id}"
-        session_struct = %{
-          bot_id: channel.bot_id,
-          provider: "facebook",
-          provider_key: "#{recipient_id}/#{sender_id}"
-        }
 
-        session = Session.load(session_struct)
+        session = Session.find_or_create(channel.bot_id, "facebook", "#{recipient_id}/#{sender_id}")
 
         case text do
           "##RESET" ->

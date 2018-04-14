@@ -484,8 +484,7 @@ defmodule Aida.BotTest do
 
   describe "logging" do
     setup :create_manifest_bot
-    setup :generate_session_id_for_test_channel
-    setup :create_session
+    setup :generate_session_for_test_channel
 
     test "logs messages on chat", %{bot: bot, session: session} do
       input = Message.new("Hi!", bot, session)
@@ -637,23 +636,12 @@ defmodule Aida.BotTest do
     [bot: bot]
   end
 
-  defp generate_session_id_for_test_channel(%{bot: bot}) do
+  defp generate_session_for_test_channel(%{bot: bot}) do
     pid = System.unique_integer([:positive])
     Process.register(self(), "#{pid}" |> String.to_atom)
-    session_id = "#{bot.id}/test/#{pid}"
+    session = Session.new({bot.id, "test", "#{pid}"})
 
-    [session_id: session_id]
-  end
-
-  defp create_session(%{session_id: session_id}) do
-    [bot_id, provider, provider_key] = session_id |> String.split("/")
-    session_struct = %{
-      bot_id: bot_id,
-      provider: provider,
-      provider_key: provider_key
-    }
-
-    session = Session.new(session_struct) |> Session.save
     [session: session]
   end
+
 end

@@ -35,12 +35,7 @@ defmodule Aida.Channel.WebSocketTest do
     }
 
     channel |> Channel.start
-
-    session = %{
-      bot_id: @bot_id,
-      provider: "ws",
-      provider_key: "4fd60b7f-785a-4dcb-8b1e-c2db4a431864"
-    } |> Session.new
+    session = Session.new({@bot_id, "ws", "4fd60b7f-785a-4dcb-8b1e-c2db4a431864"})
 
     assert channel == WebSocket.find_channel(session)
     assert channel == Aida.ChannelProvider.find_channel(session)

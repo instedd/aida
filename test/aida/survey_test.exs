@@ -50,13 +50,7 @@ defmodule Aida.SurveyTest do
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
         bot = %{bot | channels: [channel]}
 
-        session_struct = %{
-          bot_id: bot.id,
-          provider: "facebook",
-          provider_key: "1234/5678"
-        }
-
-        session = Session.new(session_struct)
+        session = Session.new({bot.id, "facebook", "1234/5678"})
           |> Session.merge(%{"language" => "en"})
           |> Session.save
 
@@ -76,14 +70,7 @@ defmodule Aida.SurveyTest do
 
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
         bot = %{bot | channels: [channel]}
-
-        session_struct = %{
-          bot_id: bot.id,
-          provider: "facebook",
-          provider_key: "1234/5678"
-        }
-
-        Session.new(session_struct) |> Session.save
+        Session.new({bot.id, "facebook", "1234/5678"}) |> Session.save
 
         Bot.wake_up(bot, "food_preferences")
 
@@ -99,13 +86,7 @@ defmodule Aida.SurveyTest do
       bot = %{BotParser.parse!(@bot_id, manifest) | channels: [channel]}
 
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
-        session_struct = %{
-          bot_id: bot.id,
-          provider: "facebook",
-          provider_key: "1234/5678"
-        }
-
-        Session.new(session_struct)
+        Session.new({bot.id, "facebook", "1234/5678"})
           |> Session.merge(%{"language" => "en", "opt_in" => false})
           |> Session.save
 

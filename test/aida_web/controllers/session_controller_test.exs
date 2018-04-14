@@ -154,12 +154,7 @@ defmodule AidaWeb.SessionControllerTest do
       create_message_log(third_message_attrs)
 
       [bot: second_bot] = create_bot()
-      session_struct = %{
-        bot_id: second_bot.id,
-        provider: "facebook",
-        provider_key: "1234567890/1234"
-      }
-      Session.new(session_struct) |> Session.save
+      Session.new({second_bot.id, "facebook", "1234567890/1234"}) |> Session.save
 
       conn = get conn, bot_session_path(conn, :index, second_bot.id)
       response = json_response(conn, 200)["data"]
@@ -268,13 +263,9 @@ defmodule AidaWeb.SessionControllerTest do
   end
 
   defp create_session(%{bot: bot}) do
-    session_struct = %{
-      bot_id: bot.id,
-      provider: "facebook",
-      provider_key: "1234/5678"
-    }
+    session = Session.new({bot.id, "facebook", "1234/5678"})
+      |> Session.save
 
-    session = Session.new(session_struct) |> Session.save
     [session: session]
   end
 

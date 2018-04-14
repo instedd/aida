@@ -34,8 +34,8 @@ defmodule Aida.DB.Session do
 
   def new(id \\ Ecto.UUID.generate)
 
-  @spec new(%{bot_id: String.t, provider: String.t, provider_key: String.t}) :: t
-  def new(%{bot_id: bot_id, provider: provider, provider_key: provider_key}) do
+  @spec new({String.t, String.t, String.t}) :: t
+  def new({bot_id, provider, provider_key}) do
     %Session{
       id: Ecto.UUID.generate,
       bot_id: bot_id,
@@ -63,7 +63,7 @@ defmodule Aida.DB.Session do
   end
 
   # @spec load(String.t) :: Session
-  def load(%{bot_id: bot_id, provider: provider, provider_key: provider_key} = session_struct) do
+  def find_or_create(bot_id, provider, provider_key) do
     s = Session
       |> where([s], s.bot_id == ^bot_id)
       |> where([s], s.provider == ^provider)
@@ -71,7 +71,7 @@ defmodule Aida.DB.Session do
       |> Repo.one
 
     case s do
-      nil -> new(session_struct)
+      nil -> new({bot_id, provider, provider_key})
       session -> session
     end
   end
