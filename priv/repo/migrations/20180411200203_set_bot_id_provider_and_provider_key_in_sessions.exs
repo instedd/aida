@@ -22,7 +22,7 @@ defmodule Aida.Repo.Migrations.SetBotIdProviderAndProviderKeyInSessions do
 
   def down do
     Session |> Repo.all |> Enum.each(fn s ->
-      Ecto.Changeset.change(s, %{bot_id: nil}) |> Repo.update!
+      Ecto.Changeset.change(s, %{bot_id: nil, provider: nil, provider_key: nil}) |> Repo.update!
     end)
   end
 end
