@@ -5,8 +5,8 @@ defmodule Aida.TestChannel do
     %Aida.TestChannel{pid: pid}
   end
 
-  def find_channel(session_id) do
-    [_bot_id, _provider, pid] = session_id |> String.split("/")
+  def find_channel(session) do
+    pid = session.provider_key
     new(pid |> String.to_atom)
   end
 
@@ -25,8 +25,8 @@ defmodule Aida.TestChannel do
       conn
     end
 
-    def send_message(channel, messages, recipient) do
-      send channel.pid, {:send_message, messages, recipient}
+    def send_message(channel, messages, session) do
+      send channel.pid, {:send_message, messages, session.id}
     end
   end
 end

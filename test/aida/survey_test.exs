@@ -6,21 +6,19 @@ defmodule Aida.SurveyTest do
     Skill,
     Skill.Survey,
     Skill.Survey.InputQuestion,
-    SessionStore,
     BotParser,
     TestChannel,
-    Session,
     Message,
     ChannelProvider
   }
+  alias Aida.DB.{Session}
 
   use Aida.DataCase
   import Mock
 
   @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
   @skill_id "e7f2702c-5188-4d12-97b7-274162509ed1"
-  @session_id "#{@bot_id}/facebook/1234567890/0987654321"
-  @session_uuid "67227ae9-5750-428d-bf03-203f198faf3e"
+  @session_id "67227ae9-5750-428d-bf03-203f198faf3e"
 
   test "init schedules wake_up" do
     bot = %Bot{id: @bot_id}
@@ -52,15 +50,18 @@ defmodule Aida.SurveyTest do
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
         bot = %{bot | channels: [channel]}
 
-        Session.new({@session_id, @session_uuid, %{"language" => "en"}})
-        |> Session.save
+        session = Session.new({bot.id, "facebook", "1234/5678"})
+          |> Session.merge(%{"language" => "en"})
+          |> Session.save
+
+        session_id = session.id
 
         Bot.wake_up(bot, "food_preferences")
 
-        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], @session_id}
+        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], ^session_id}
 
-        session = Session.load(@session_id)
-        assert session |> Session.get(".survey/food_preferences") == %{"step" => 0}
+        session = Session.get(session_id)
+        assert session |> Session.get_value(".survey/food_preferences") == %{"step" => 0}
       end
     end
 
@@ -69,9 +70,7 @@ defmodule Aida.SurveyTest do
 
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
         bot = %{bot | channels: [channel]}
-
-        Session.new(@session_id)
-        |> Session.save
+        Session.new({bot.id, "facebook", "1234/5678"}) |> Session.save
 
         Bot.wake_up(bot, "food_preferences")
 
@@ -87,8 +86,9 @@ defmodule Aida.SurveyTest do
       bot = %{BotParser.parse!(@bot_id, manifest) | channels: [channel]}
 
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
-        Session.new({@session_id, @session_uuid, %{"language" => "en", "opt_in" => false}})
-        |> Session.save
+        Session.new({bot.id, "facebook", "1234/5678"})
+          |> Session.merge(%{"language" => "en", "opt_in" => false})
+          |> Session.save
 
         Bot.wake_up(bot, "food_preferences")
 
@@ -101,7 +101,7 @@ defmodule Aida.SurveyTest do
 
       bot = %{bot | channels: [channel]}
 
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en"}})
+      session = Session.new({@session_id, %{"language" => "en"}})
 
       message = Message.new("survey", bot, session)
       message = Bot.chat(bot, message)
@@ -111,7 +111,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "accept user reply", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
 
       message = Message.new("Yes", bot, session)
       message = Bot.chat(bot, message)
@@ -122,7 +122,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "accept user reply case insensitive", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
 
       message = Message.new("yes", bot, session)
       message = Bot.chat(bot, message)
@@ -133,7 +133,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "invalid reply should retry the question", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("bananas", bot, session)
       message = Bot.chat(bot, message)
@@ -143,7 +143,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "unknown content should retry the question", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 4}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 4}}})
 
       message = Message.new_unknown(bot, session)
       message = Bot.chat(bot, message)
@@ -152,7 +152,7 @@ defmodule Aida.SurveyTest do
 
     test "bot should answer a keyword even if survey is active on highest threshold", %{bot: bot} do
       bot = %{bot | front_desk: %{bot.front_desk | threshold: 0.5}}
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("hours", bot, session)
       message = Bot.chat(bot, message)
@@ -162,7 +162,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "accept user reply on select_many", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 3}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 3}}})
 
       message = Message.new("merlot, syrah", bot, session)
       message = Bot.chat(bot, message)
@@ -173,7 +173,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "clears the store to end the survey", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 5}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 5}}})
 
       message = Message.new("No, thanks!", bot, session)
       message = Bot.chat(bot, message)
@@ -182,7 +182,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "skip questions when the relevant attribute evaluates to false", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
 
       message = Message.new("15", bot, session)
       message = Bot.chat(bot, message)
@@ -192,7 +192,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "do not skip questions when the relevant attribute evaluates to false", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
 
       message = Message.new("20", bot, session)
       message = Bot.chat(bot, message)
@@ -202,7 +202,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "validate input responses and continue if the value is valid", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("20", bot, session)
       message = Bot.chat(bot, message)
@@ -213,7 +213,7 @@ defmodule Aida.SurveyTest do
     end
 
     test "validate input responses and return constraint message when the value is invalid", %{bot: bot} do
-      session = Session.new({@session_id, @session_uuid, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
+      session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("200", bot, session)
       message = Bot.chat(bot, message)
@@ -235,7 +235,7 @@ defmodule Aida.SurveyTest do
     test "marks user reply as sensitive", %{survey: survey, bot: bot} do
       session =
         Session.new(
-          {@session_id, @session_uuid,
+          {@session_id,
            %{"language" => "en", ".survey/encrypted_question" => %{"step" => 0}}}
         )
 
@@ -247,7 +247,7 @@ defmodule Aida.SurveyTest do
     test "stores user reply encrypted in session", %{bot: bot, private: private} do
       session =
         Session.new(
-          {@session_id, @session_uuid,
+          {@session_id,
            %{"language" => "en", ".survey/encrypted_question" => %{"step" => 0}}}
         )
 
@@ -283,8 +283,6 @@ defmodule Aida.SurveyTest do
   end
 
   defp load_manifest_bot(_context) do
-    SessionStore.start_link()
-
     manifest =
       File.read!("test/fixtures/valid_manifest.json")
       |> Poison.decode!()

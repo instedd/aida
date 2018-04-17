@@ -1,7 +1,8 @@
 defmodule Aida.Skill.Survey do
   alias __MODULE__
   alias __MODULE__.{Question, SelectQuestion, InputQuestion}
-  alias Aida.{Bot, BotManager, Session, Message, Skill.Survey.Question, DB, Skill, Skill.Utils}
+  alias Aida.{Bot, BotManager, Message, Skill.Survey.Question, Skill, Skill.Utils}
+  alias Aida.DB.{Session}
   import Aida.ErrorHandler
 
   @type t :: %__MODULE__{
@@ -23,12 +24,12 @@ defmodule Aida.Skill.Survey do
             questions: []
 
   def scheduled_start_survey(survey, bot, session_id) do
-    session = Session.load(session_id)
+    session = Session.get(session_id)
     message = Message.new("", bot, session)
 
     if Skill.is_relevant?(survey, message) do
 
-      if session |> Session.get("language") do
+      if session |> Session.get_value("language") do
         message = start_survey(survey, message)
 
         try do
@@ -38,7 +39,7 @@ defmodule Aida.Skill.Survey do
             capture_exception("Error starting survey", error, bot_id: bot.id, skill_id: survey.id, session_id: session.id)
         else
           _ ->
-          Session.save(message.session)
+          message.session |> Session.save
         end
       end
     end
@@ -113,7 +114,7 @@ defmodule Aida.Skill.Survey do
     end
 
     def wake_up(skill, %{id: bot_id} = bot, _data) do
-      DB.session_ids_by_bot(bot_id)
+      Session.session_ids_by_bot(bot_id)
         |> Enum.each(&(Survey.scheduled_start_survey(skill, bot, &1)))
 
       :ok

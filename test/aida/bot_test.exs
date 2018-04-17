@@ -10,11 +10,10 @@ defmodule Aida.BotTest do
     DB.MessageLog,
     FrontDesk,
     Message,
-    Session,
-    SessionStore,
     Skill.KeywordResponder,
     TestSkill
   }
+  alias Aida.DB.{Session}
 
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
@@ -67,7 +66,7 @@ defmodule Aida.BotTest do
   @language_selection_speech [ @language_selection_text ]
 
   @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
-  @session_uuid "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
+  @session_id "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
 
   describe "single language bot" do
     setup do
@@ -247,7 +246,7 @@ defmodule Aida.BotTest do
     end
 
     test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
-      session = Session.new({"sid", @session_uuid, %{"language" => "jp"}})
+      session = Session.new({@session_id, %{"language" => "jp"}})
       input = Message.new("Hi!", bot, session)
       output = bot |> Bot.chat(input)
       assert output.reply == @language_selection_speech
@@ -266,7 +265,7 @@ defmodule Aida.BotTest do
     end
 
     test "introduction message includes only relevant skills", %{bot: bot} do
-      session = Session.new({"sid", @session_uuid, %{"language" => "en", "age" => 14}})
+      session = Session.new({@session_id, %{"language" => "en", "age" => 14}})
       input = Message.new("Hi!", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -278,8 +277,9 @@ defmodule Aida.BotTest do
     end
 
     test "only relevant skills receive the message", %{bot: bot} do
-      session = Session.new({"sid", @session_uuid, %{"language" => "en", "age" => 14}})
+      session = Session.new({@session_id, %{"language" => "en", "age" => 14}})
       input = Message.new("menu", bot, session)
+
       output = bot |> Bot.chat(input)
 
       assert output.reply == [
@@ -290,7 +290,7 @@ defmodule Aida.BotTest do
     end
 
     test "relevance expressions containing undefined variables are considered false", %{bot: bot} do
-      session = Session.new({"sid", @session_uuid, %{"language" => "en"}})
+      session = Session.new({@session_id, %{"language" => "en"}})
       input = Message.new("menu", bot, session)
       output = bot |> Bot.chat(input)
 
@@ -327,19 +327,19 @@ defmodule Aida.BotTest do
     end
 
     test "lookup variabe evaluate overrides", %{bot: bot} do
-      session = Session.new({"sid", @session_uuid, %{"age" => 20}})
+      session = Session.new({@session_id, %{"age" => 20}})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta and a exclusive selection of wines"
 
-      session = Session.new({"sid", @session_uuid, %{"age" => 15}})
+      session = Session.new({@session_id, %{"age" => 15}})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
 
     test "lookup from eval", %{bot: bot} do
-      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"language" => "en"}}))
+      expr_context = Message.new("foo", bot, Session.new({@session_id, %{"language" => "en"}}))
         |> Message.expr_context(lookup_raises: true)
 
       value = Aida.Expr.parse("${food_options}")
@@ -413,7 +413,7 @@ defmodule Aida.BotTest do
     end
 
     test "lookup from eval", %{bot: bot} do
-      expr_context = Message.new("foo", bot, Session.new({"sid", @session_uuid, %{"key" => "Kakuma 2"}}))
+      expr_context = Message.new("foo", bot, Session.new({@session_id, %{"key" => "Kakuma 2"}}))
         |> Message.expr_context(lookup_raises: true)
 
       value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Day')")
@@ -484,8 +484,7 @@ defmodule Aida.BotTest do
 
   describe "logging" do
     setup :create_manifest_bot
-    setup :generate_session_id_for_test_channel
-    setup :create_session
+    setup :generate_session_for_test_channel
 
     test "logs messages on chat", %{bot: bot, session: session} do
       input = Message.new("Hi!", bot, session)
@@ -637,19 +636,12 @@ defmodule Aida.BotTest do
     [bot: bot]
   end
 
-  defp generate_session_id_for_test_channel(%{bot: bot}) do
+  defp generate_session_for_test_channel(%{bot: bot}) do
     pid = System.unique_integer([:positive])
     Process.register(self(), "#{pid}" |> String.to_atom)
-    session_id = "#{bot.id}/test/#{pid}"
-
-    [session_id: session_id]
-  end
-
-  defp create_session(%{session_id: session_id}) do
-    SessionStore.start_link
-    session = Session.new({session_id, @session_uuid, %{}})
-    session |> Session.save
+    session = Session.new({bot.id, "test", "#{pid}"})
 
     [session: session]
   end
+
 end

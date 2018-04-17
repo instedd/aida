@@ -8,7 +8,7 @@ defprotocol Aida.Channel do
   @spec callback(channel :: Aida.Channel.t, conn :: Plug.Conn.t) :: Plug.Conn.t
   def callback(channel, conn)
 
-  @spec send_message(channel :: Aida.Channel.t, messages :: [String.t], session_id :: String.t) :: :ok
+  @spec send_message(channel :: Aida.Channel.t, messages :: [String.t], session :: Aida.DB.Session.t) :: :ok
   def send_message(channel, messages, session_id)
 end
 
@@ -18,16 +18,15 @@ defmodule Aida.ChannelProvider do
   @callback init() :: :ok
   @callback new(bot_id :: String.t, config :: map) :: Aida.Channel.t
   @callback callback(conn :: Plug.Conn.t) :: Plug.Conn.t
-  @callback find_channel(session_id :: String.t) :: Aida.Channel.t
+  @callback find_channel(session :: Aida.DB.Session.t) :: Aida.Channel.t
 
-  def find_channel(session_id) do
-    [_bot_id, provider | _] = session_id |> String.split("/")
-    provider = case provider do
+  def find_channel(session) do
+    provider = case session.provider do
       "facebook" -> Facebook
       "ws" -> WebSocket
       "test" -> Aida.TestChannel
     end
 
-    provider.find_channel(session_id)
+    provider.find_channel(session)
   end
 end

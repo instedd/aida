@@ -1,6 +1,7 @@
 defmodule Aida.Channel.WebSocketTest do
   alias Aida.Channel.WebSocket
   alias Aida.{Channel, ChannelRegistry}
+  alias Aida.DB.Session
   use ExUnit.Case
 
   @bot_id "986a4b66-b3a0-40d5-83b2-c535427dc0f9"
@@ -34,8 +35,9 @@ defmodule Aida.Channel.WebSocketTest do
     }
 
     channel |> Channel.start
+    session = Session.new({@bot_id, "ws", "4fd60b7f-785a-4dcb-8b1e-c2db4a431864"})
 
-    assert channel == WebSocket.find_channel("#{@bot_id}/ws/4fd60b7f-785a-4dcb-8b1e-c2db4a431864")
-    assert channel == Aida.ChannelProvider.find_channel("#{@bot_id}/ws/4fd60b7f-785a-4dcb-8b1e-c2db4a431864")
+    assert channel == WebSocket.find_channel(session)
+    assert channel == Aida.ChannelProvider.find_channel(session)
   end
 end

@@ -1,5 +1,5 @@
 defmodule Aida.Variable do
-  alias Aida.{Bot, Variable.Override, Session, Message}
+  alias Aida.{Bot, Variable.Override, DB.Session, Message}
 
   @type t :: %__MODULE__{
     name: String.t,

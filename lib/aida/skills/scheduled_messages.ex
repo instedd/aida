@@ -1,6 +1,6 @@
 defmodule Aida.Skill.ScheduledMessages do
-  alias Aida.{Message, Session, Skill, BotManager, DB, DB.MessageLog, Recurrence, Bot}
-  alias Aida.DB.SkillUsage
+  alias Aida.{Message, Skill, BotManager, Recurrence, Bot}
+  alias Aida.DB.{Session, SkillUsage, MessageLog}
   alias __MODULE__
 
   defmodule DelayedMessage do
@@ -101,7 +101,7 @@ defmodule Aida.Skill.ScheduledMessages do
     def init(skill, _bot), do: skill
 
     defp send_message(skill, bot, session_id, content) do
-      session = Session.load(session_id)
+      session = Session.get(session_id)
       message = Message.new("", bot, session)
 
       if Message.language(message) && Skill.is_relevant?(skill, message) do
@@ -131,7 +131,7 @@ defmodule Aida.Skill.ScheduledMessages do
     end
 
     def wake_up(%{schedule_type: :fixed_time, messages: [fixed_message | _]} = skill, bot, nil) do
-      DB.session_ids_by_bot(bot.id)
+      Session.session_ids_by_bot(bot.id)
       |> Enum.each(fn session_id ->
         send_message(skill, bot, session_id, fixed_message.message)
       end)
@@ -140,7 +140,7 @@ defmodule Aida.Skill.ScheduledMessages do
     def wake_up(%{schedule_type: :recurrent, messages: messages} = skill, bot, message_index) do
       message_index = String.to_integer(message_index)
       recurrent_message = messages |> Enum.at(message_index)
-      DB.session_ids_by_bot(bot.id)
+      Session.session_ids_by_bot(bot.id)
       |> Enum.each(fn session_id ->
         send_message(skill, bot, session_id, recurrent_message.message)
       end)

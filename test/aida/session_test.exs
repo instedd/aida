@@ -1,93 +1,74 @@
 defmodule Aida.SessionTest do
   use Aida.DataCase
-  alias Aida.{Session, SessionStore}
+  alias Aida.DB.Session
 
-  @uuid "cecaeffa-1fc4-49f1-925a-a5d17047504f"
+  @id "cecaeffa-1fc4-49f1-925a-a5d17047504f"
+  @session_tuple {Ecto.UUID.generate, "facebook", "1234/5678"}
 
   test "create new session" do
-    session = Session.new("session_id", @uuid)
+    session = Session.new(@id)
     assert session == %Session{
-      id: "session_id",
+      id: @id,
       is_new?: true,
-      uuid: @uuid,
-      values: %{}
+      data: %{}
     }
   end
 
   test "create existing session" do
-    session = Session.new({"session_id", @uuid, %{"foo" => "bar"}})
+    session = Session.new({@id, %{"foo" => "bar"}})
     assert session == %Session{
-      id: "session_id",
+      id: @id,
       is_new?: false,
-      uuid: @uuid,
-      values: %{"foo" => "bar"}
+      data: %{"foo" => "bar"}
     }
   end
 
-  describe "with session store" do
-    setup do
-      SessionStore.start_link
-      :ok
-    end
-
+  describe "persisted in database" do
     test "return new session when it doesn't exist" do
-      loaded_session = Session.load("session_id")
+      {bot_id, provider, provider_key} = @session_tuple
+      loaded_session = Session.find_or_create(bot_id, provider, provider_key)
       assert loaded_session == %Session{
-        id: "session_id",
+        id: loaded_session.id,
+        bot_id: bot_id,
+        provider: provider,
+        provider_key: provider_key,
         is_new?: true,
-        uuid: loaded_session.uuid,
-        values: %{}
+        data: %{}
       }
     end
 
-    test "load session from store" do
-      SessionStore.save("session_id", @uuid, %{"foo" => "bar"})
+    test "load persisted session" do
+      {bot_id, provider, provider_key} = @session_tuple
+      Session.new(@session_tuple)
+        |> Session.merge(%{"foo" => "bar"})
+        |> Session.save
 
-      assert Session.load("session_id") == %Session{
-        id: "session_id",
-        is_new?: false,
-        uuid: @uuid,
-        values: %{"foo" => "bar"}
-      }
+      loaded_session = Session.find_or_create(bot_id, provider, provider_key)
+      assert loaded_session.bot_id == bot_id
+      assert loaded_session.provider == provider
+      assert loaded_session.provider_key == provider_key
+      assert !loaded_session.is_new?
+      assert loaded_session.data == %{"foo" => "bar"}
     end
 
-    test "save session to store" do
-      session = Session.new({"session_id", @uuid, %{"foo" => "bar"}})
-      assert Session.save(session) == :ok
-
-      assert SessionStore.find("session_id") == {"session_id", @uuid, %{"foo" => "bar"}}
-    end
   end
 
   describe "value store" do
     test "get" do
-      session = Session.new({"session_id", @uuid, %{"foo" => "bar"}})
-
-      assert session |> Session.get("foo") == "bar"
+      session = Session.new(@session_tuple) |> Session.merge(%{"foo" => "bar"})
+      assert session |> Session.get_value("foo") == "bar"
     end
 
     test "put" do
-      session = Session.new({"session_id", @uuid, %{}})
-      session = session |> Session.put("foo", "bar")
-
-      assert session == %Session{
-        id: "session_id",
-        uuid: @uuid,
-        is_new?: false,
-        values: %{"foo" => "bar"}
-      }
+      session = Session.new(@session_tuple) |> Session.put("foo", "bar")
+      assert session.data == %{"foo" => "bar"}
     end
 
     test "put nil deletes key" do
-      session = Session.new({"session_id", @uuid, %{"foo" => "bar"}})
+      session = Session.new(@session_tuple) |> Session.put("foo", "bar")
       session = session |> Session.put("foo", nil)
 
-      assert session == %Session{
-        id: "session_id",
-        uuid: @uuid,
-        is_new?: false,
-        values: %{}
-      }
+      assert session.data == %{}
     end
   end
 end

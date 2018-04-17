@@ -1,5 +1,6 @@
 defmodule Aida.Message do
-  alias Aida.{Session, Message, Bot}
+  alias Aida.{Message, Bot}
+  alias Aida.DB.{Session}
   alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content}
 
   @type t :: %__MODULE__{
@@ -99,7 +100,7 @@ defmodule Aida.Message do
 
   @spec get_session(message :: t, key :: String.t) :: Session.value
   def get_session(%{session: session}, key) do
-    Session.get(session, key)
+    Session.get_value(session, key)
   end
 
   @spec put_session(message :: t, key :: String.t, value :: Session.value) :: t
@@ -117,7 +118,7 @@ defmodule Aida.Message do
 
   @spec new_session?(message :: t) :: boolean
   def new_session?(%{session: session}) do
-    Session.is_new?(session)
+    session.is_new?
   end
 
   @spec language(message :: t) :: Session.value

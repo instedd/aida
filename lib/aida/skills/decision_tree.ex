@@ -1,6 +1,7 @@
 defmodule Aida.Skill.DecisionTree do
   alias __MODULE__
-  alias Aida.{Bot, Message, Message.TextContent, Session, Skill.Utils}
+  alias Aida.{Bot, Message, Message.TextContent, Skill.Utils}
+  alias Aida.DB.{Session}
   alias Aida.Skill.DecisionTree.{Question, Answer, Response}
 
   @type t :: %__MODULE__{
@@ -173,7 +174,7 @@ defmodule Aida.Skill.DecisionTree do
       {next_question, message} = case question do
         nil ->
           session = message.session
-          if session |> Session.get("language") do
+          if session |> Session.get_value("language") do
             message = message
               |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => decision_tree.root_id})
 

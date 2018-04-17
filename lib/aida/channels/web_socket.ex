@@ -22,9 +22,8 @@ defmodule Aida.Channel.WebSocket do
     ChannelRegistry.find({:websocket, bot_id})
   end
 
-  def find_channel(session_id) do
-    [bot_id, _provider, _uuid] = session_id |> String.split("/")
-    find_channel_for_bot(bot_id)
+  def find_channel(session) do
+    find_channel_for_bot(session.bot_id)
   end
 
   def callback(_channel) do
@@ -45,8 +44,8 @@ defmodule Aida.Channel.WebSocket do
       raise "not implemented"
     end
 
-    def send_message(channel, messages, session_id) do
-      recipient = session_id |> String.split("/") |> List.last
+    def send_message(channel, messages, session) do
+      recipient = session.id
 
       messages |> Enum.each(fn message ->
         AidaWeb.Endpoint.broadcast("bot:#{channel.bot_id}", "btu_msg", %{text: message, session: recipient})

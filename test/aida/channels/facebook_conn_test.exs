@@ -3,7 +3,7 @@ defmodule Aida.Channel.FacebookConnTest do
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, SessionStore, Session}
+  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, DB.Session}
   alias Aida.Channel.Facebook
 
   @uuid "f1168bcf-59e5-490b-b2eb-30a4d6b01e7b"
@@ -38,7 +38,6 @@ defmodule Aida.Channel.FacebookConnTest do
   setup do
     ChannelRegistry.start_link
     BotManager.start_link
-    SessionStore.start_link
     :ok
   end
 
@@ -105,12 +104,12 @@ defmodule Aida.Channel.FacebookConnTest do
 
         recipient_id = Session.encrypt_id("1234", @uuid)
 
-        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
-        assert Session.get(session, "first_name") == "John"
-        assert Session.get(session, "last_name") == "Doe"
-        assert Session.get(session, "gender") == "male"
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
+        assert Session.get_value(session, "first_name") == "John"
+        assert Session.get_value(session, "last_name") == "Doe"
+        assert Session.get_value(session, "gender") == "male"
 
-        {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601
+        {:ok, pull_ts, 0} = Session.get_value(session, ".facebook_profile_ts") |> DateTime.from_iso8601
         assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
       end
     end
@@ -118,24 +117,24 @@ defmodule Aida.Channel.FacebookConnTest do
     test "profile is not pull if it was already pulled within the last 24hs" do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
           |> Session.put(".facebook_profile_ts", DateTime.utc_now |> DateTime.to_iso8601)
           |> Session.save
 
         build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
-        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
-        assert Session.get(session, "first_name") == nil
-        assert Session.get(session, "last_name") == nil
-        assert Session.get(session, "gender") == nil
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
+        assert Session.get_value(session, "first_name") == nil
+        assert Session.get_value(session, "last_name") == nil
+        assert Session.get_value(session, "gender") == nil
       end
     end
 
     test "profile is pulled again when the last pull was more than a day ago" do
       recipient_id = Session.encrypt_id("1234", @uuid)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
+        Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
           |> Session.put("first_name", "---")
           |> Session.put(".facebook_profile_ts", DateTime.utc_now |> Timex.add(Timex.Duration.from_hours(-25)) |> DateTime.to_iso8601)
           |> Session.save
@@ -143,10 +142,10 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", @incoming_message)
           |> Facebook.callback()
 
-        session = Session.load("#{@uuid}/facebook/1234567890/#{recipient_id}")
-        assert Session.get(session, "first_name") == "John"
-        assert Session.get(session, "last_name") == "Doe"
-        assert Session.get(session, "gender") == "male"
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
+        assert Session.get_value(session, "first_name") == "John"
+        assert Session.get_value(session, "last_name") == "Doe"
+        assert Session.get_value(session, "gender") == "male"
       end
     end
   end
@@ -160,12 +159,12 @@ defmodule Aida.Channel.FacebookConnTest do
         build_conn(:post, "/callback/facebook", @incoming_message)
         |> Facebook.callback()
 
-        session = Session.load("#{bot.id}/facebook/1234567890/#{recipient_id}")
-        assert "John" == Session.get(session, "first_name")
-        assert "Doe" == Session.get(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
-        assert "male" == Session.get(session, "gender")
+        session = Session.find_or_create(@uuid, "facebook", "1234567890/#{recipient_id}")
+        assert "John" == Session.get_value(session, "first_name")
+        assert "Doe" == Session.get_value(session, "last_name") |> Crypto.decrypt(private) |> Poison.decode!
+        assert "male" == Session.get_value(session, "gender")
 
-        {:ok, pull_ts, 0} = Session.get(session, ".facebook_profile_ts") |> DateTime.from_iso8601
+        {:ok, pull_ts, 0} = Session.get_value(session, ".facebook_profile_ts") |> DateTime.from_iso8601
         assert DateTime.diff(DateTime.utc_now, pull_ts, :second) < 5
       end
     end

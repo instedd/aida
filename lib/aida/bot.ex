@@ -11,6 +11,7 @@ defmodule Aida.Bot do
     Skill,
     Variable
   }
+  alias Aida.DB.Session
 
   alias __MODULE__
   require Logger
@@ -88,7 +89,6 @@ defmodule Aida.Bot do
     MessageLog.create(%{
       bot_id: bot.id,
       session_id: message.session.id,
-      session_uuid: message.session.uuid,
       content: content,
       content_type: content_type,
       direction: "incoming"
@@ -103,7 +103,6 @@ defmodule Aida.Bot do
       MessageLog.create(%{
         bot_id: message.bot.id,
         session_id: message.session.id,
-        session_uuid: message.session.uuid,
         content: reply,
         content_type: "text",
         direction: "outgoing"
@@ -193,7 +192,7 @@ defmodule Aida.Bot do
       |> Enum.filter(&Skill.is_relevant?(&1, message))
       |> Enum.filter(fn
         %Skill.LanguageDetector{} -> true
-        _ -> Aida.Session.get(message.session, "language") != nil
+        _ -> Session.get_value(message.session, "language") != nil
       end)
   end
 
@@ -244,7 +243,7 @@ defmodule Aida.Bot do
   def send_message(%{session: session} = message) do
     log_outgoing(message)
 
-    channel = ChannelProvider.find_channel(session.id)
-    channel |> Channel.send_message(message.reply, session.id)
+    channel = ChannelProvider.find_channel(session)
+    channel |> Channel.send_message(message.reply, session)
   end
 end

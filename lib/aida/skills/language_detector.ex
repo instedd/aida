@@ -92,7 +92,7 @@ defmodule Aida.Skill.LanguageDetector do
             error,
             message: Message.text_content(message),
             message_type: Message.type(message),
-            session_uuid: message.session.uuid,
+            session_id: message.session.id,
             bot_id: message.bot.id
           )
 
