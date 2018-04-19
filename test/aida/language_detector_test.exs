@@ -1,6 +1,7 @@
 defmodule Aida.LanguageDetectorTest do
   use Aida.DataCase
   use Aida.LogHelper
+  use Aida.SessionHelper
 
   alias Aida.{
     Bot,
@@ -18,14 +19,23 @@ defmodule Aida.LanguageDetectorTest do
   @russian_not_understood_message "К сожалению, я не говорю по-русски сейчас"
   @generic_not_understood_message "Sorry, I didn't understand that"
 
-  @uuid "2c20e05c-74e1-4b9b-923f-10b65a82dbd8"
+  @bot_id "2c20e05c-74e1-4b9b-923f-10b65a82dbd8"
+
+  setup do
+    initial_session = new_session({Ecto.UUID.generate, %{}})
+    [initial_session: initial_session]
+  end
 
   describe "unsupported language response bot" do
     setup :unsupported_language_response_skill
     setup :bot
 
-    test "sets the language when sending the correct keyword", %{skill: skill, bot: bot} do
-      input = Message.new("spanish", bot)
+    test "sets the language when sending the correct keyword", %{
+      skill: skill,
+      bot: bot,
+      initial_session: initial_session
+    } do
+      input = Message.new("spanish", bot, initial_session)
       output = skill |> Skill.put_response(input)
       assert output.reply == []
       assert output |> Message.get_session("language") == "es"
@@ -33,34 +43,41 @@ defmodule Aida.LanguageDetectorTest do
 
     test "answers with language explanation if the detected language is supported", %{
       skill: skill,
-      bot: bot
+      bot: bot,
+      initial_session: initial_session
     } do
-      input = Message.new("que bien que anda esto", bot)
+      input = Message.new("que bien que anda esto", bot, initial_session)
       output = skill |> Skill.put_response(input)
       assert output.reply == [@language_selection_explanation]
     end
 
     test "answers not understood message if the language is not supported", %{
       skill: skill,
-      bot: bot
+      bot: bot,
+      initial_session: initial_session
     } do
-      input = Message.new("Hi!", bot)
+      input = Message.new("Hi!", bot, initial_session)
       output = skill |> Skill.put_response(input)
       assert output.reply == [@english_not_understood_message, @language_selection_explanation]
     end
 
-    test "translates not understood message to the detected language", %{skill: skill, bot: bot} do
-      input = Message.new("Здравствуй!", bot)
+    test "translates not understood message to the detected language", %{
+      skill: skill,
+      bot: bot,
+      initial_session: initial_session
+    } do
+      input = Message.new("Здравствуй!", bot, initial_session)
       output = skill |> Skill.put_response(input)
       assert output.reply == [@russian_not_understood_message, @language_selection_explanation]
     end
 
     test "responds with generic not understood if the language was not detected", %{
       skill: skill,
-      bot: bot
+      bot: bot,
+      initial_session: initial_session
     } do
       without_logging do
-        input = Message.new("qwertyui", bot)
+        input = Message.new("qwertyui", bot, initial_session)
         output = skill |> Skill.put_response(input)
         assert output.reply == [@generic_not_understood_message, @language_selection_explanation]
       end
@@ -68,14 +85,15 @@ defmodule Aida.LanguageDetectorTest do
 
     test "answers with generic not understood if message cannot be translated", %{
       bot: bot,
-      skill: skill
+      skill: skill,
+      initial_session: initial_session
     } do
       without_logging do
         with_mock AwsComprehend,
           detect_dominant_language: fn _ ->
             raise "Error contacting AWS"
           end do
-          input = Message.new("hello", bot)
+          input = Message.new("hello", bot, initial_session)
           output = skill |> Skill.put_response(input)
 
           assert output.reply == [
@@ -88,9 +106,10 @@ defmodule Aida.LanguageDetectorTest do
 
     test "responds with generic not understood when the message is empty ", %{
       skill: skill,
-      bot: bot
+      bot: bot,
+      initial_session: initial_session
     } do
-      input = Message.new("", bot)
+      input = Message.new("", bot, initial_session)
       output = skill |> Skill.put_response(input)
       assert output.reply == [@generic_not_understood_message, @language_selection_explanation]
     end
@@ -102,13 +121,14 @@ defmodule Aida.LanguageDetectorTest do
 
     test "responds with explanation and doesn't try to detect the language", %{
       skill: skill,
-      bot: bot
+      bot: bot,
+      initial_session: initial_session
     } do
       with_mock AwsComprehend,
         detect_dominant_language: fn _ ->
           assert false
         end do
-        input = Message.new("qwertyui", bot)
+        input = Message.new("qwertyui", bot, initial_session)
         output = skill |> Skill.put_response(input)
         assert output.reply == [@language_selection_explanation]
       end
@@ -118,7 +138,7 @@ defmodule Aida.LanguageDetectorTest do
   defp simple_response_skill(_context) do
     skill = %LanguageDetector{
       explanation: @language_selection_explanation,
-      bot_id: @uuid,
+      bot_id: @bot_id,
       languages: %{
         "es" => ["español", "spanish"]
       }
@@ -130,7 +150,7 @@ defmodule Aida.LanguageDetectorTest do
   defp unsupported_language_response_skill(_context) do
     skill = %LanguageDetector{
       explanation: @language_selection_explanation,
-      bot_id: @uuid,
+      bot_id: @bot_id,
       languages: %{
         "es" => ["español", "spanish"]
       },
@@ -142,7 +162,7 @@ defmodule Aida.LanguageDetectorTest do
 
   defp bot(%{skill: skill}) do
     bot = %Bot{
-      id: @uuid,
+      id: @bot_id,
       languages: ["en", "es"],
       front_desk: %FrontDesk{threshold: 0.3},
       skills: [skill]

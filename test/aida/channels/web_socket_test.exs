@@ -2,7 +2,7 @@ defmodule Aida.Channel.WebSocketTest do
   alias Aida.Channel.WebSocket
   alias Aida.{Channel, ChannelRegistry}
   alias Aida.DB.Session
-  use ExUnit.Case
+  use Aida.DataCase
 
   @bot_id "986a4b66-b3a0-40d5-83b2-c535427dc0f9"
 

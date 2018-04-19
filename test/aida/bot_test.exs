@@ -1,5 +1,7 @@
-defmodule Aida.BotTest do
+defmodule Aida.BotTest  do
   use Aida.DataCase
+  use Aida.SessionHelper
+  alias Aida.DB.{Session}
 
   alias Aida.{
     Bot,
@@ -13,7 +15,6 @@ defmodule Aida.BotTest do
     Skill.KeywordResponder,
     TestSkill
   }
-  alias Aida.DB.{Session}
 
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
@@ -68,6 +69,11 @@ defmodule Aida.BotTest do
   @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
   @session_id "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
 
+  setup do
+    initial_session = new_session({@session_id, %{}}) |> Session.save
+    [initial_session: initial_session]
+  end
+
   describe "single language bot" do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest_single_lang.json")
@@ -79,26 +85,26 @@ defmodule Aida.BotTest do
       %{bot: bot}
     end
 
-    test "replies with greeting on the first message", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "replies with greeting on the first message", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @english_single_lang_restaurant_greet
     end
 
-    test "replies with explanation when message not understood and is not the first message", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with explanation when message not understood and is not the first message", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("foobar", bot, response.session))
       assert output.reply == @english_single_lang_not_understood
     end
 
-    test "replies with explanation when message has unknown content and is not the first message", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with explanation when message has unknown content and is not the first message", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new_unknown(bot, response.session))
       assert output.reply == @english_single_lang_not_understood
     end
 
-    test "replies with clarification when message matches more than one skill and similar confidence", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with clarification when message matches more than one skill and similar confidence", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("food hours", bot, response.session))
       assert output.reply == [
         "I'm not sure exactly what you need.",
@@ -107,16 +113,16 @@ defmodule Aida.BotTest do
       ]
     end
 
-    test "replies with the skill with more confidence when message matches more than one skill", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with the skill with more confidence when message matches more than one skill", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("Want time food hours", bot, response.session))
       assert output.reply == [
         "We are open every day from 7pm to 11pm"
       ]
     end
 
-    test "replies with clarification when message matches only one skill but with low confidence", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with clarification when message matches only one skill but with low confidence", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("I want to know the opening hours for this restaurant", bot, response.session))
       assert output.reply == [
         "I'm not sure exactly what you need.",
@@ -124,8 +130,8 @@ defmodule Aida.BotTest do
       ]
     end
 
-    test "replies with skill when message matches one skill", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with skill when message matches one skill", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("hours", bot, response.session))
       assert output.reply == [
         "We are open every day from 7pm to 11pm"
@@ -136,14 +142,14 @@ defmodule Aida.BotTest do
   describe "multiple languages bot" do
     setup :create_manifest_bot
 
-    test "replies with language selection on the first message", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "replies with language selection on the first message", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
     end
 
-    test "selects language when the user sends 'english'", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "selects language when the user sends 'english'", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -152,8 +158,8 @@ defmodule Aida.BotTest do
       assert output2.reply == @english_restaurant_greet
     end
 
-    test "selects language when the user sends 'español'", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "selects language when the user sends 'español'", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -162,8 +168,8 @@ defmodule Aida.BotTest do
       assert output2.reply == @spanish_restaurant_greet
     end
 
-    test "after selecting language it doesn't switch when a phrase includes a different one", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "after selecting language it doesn't switch when a phrase includes a different one", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -174,11 +180,10 @@ defmodule Aida.BotTest do
       input3 = Message.new("no se hablar english", bot, output2.session)
       output3 = Bot.chat(input3)
       assert output3.reply == @spanish_not_understood
-
     end
 
-    test "after selecting language only switches when just the new language is received", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "after selecting language only switches when just the new language is received", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -195,48 +200,48 @@ defmodule Aida.BotTest do
       assert output4.reply == @english_not_understood
     end
 
-    test "selects language when the user sends 'english' in a long sentence", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "selects language when the user sends 'english' in a long sentence", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("I want to speak in english please", bot)
+      input2 = Message.new("I want to speak in english please", bot, initial_session)
       output2 = Bot.chat(input2)
       assert output2.reply == @english_restaurant_greet
     end
 
-    test "selects language when the user sends 'español' in a long sentence", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "selects language when the user sends 'español' in a long sentence", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("Quiero hablar en español por favor", bot)
+      input2 = Message.new("Quiero hablar en español por favor", bot, initial_session)
       output2 = Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
     end
 
-    test "selects language when the user sends 'español' followed by a question mark", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "selects language when the user sends 'español' followed by a question mark", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("Puedo hablar en español?", bot)
+      input2 = Message.new("Puedo hablar en español?", bot, initial_session)
       output2 = Bot.chat(input2)
       assert output2.reply == @spanish_restaurant_greet
     end
 
-    test "selects the first language when the user sends more than one", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "selects the first language when the user sends more than one", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
-      input2 = Message.new("I want to speak in english or spanish o inglés", bot)
+      input2 = Message.new("I want to speak in english or spanish o inglés", bot, initial_session)
       output2 = Bot.chat(input2)
       assert output2.reply == @english_restaurant_greet
     end
 
-    test "replies language selection when the user selects a not available language ", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "replies language selection when the user selects a not available language ", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
 
@@ -246,7 +251,7 @@ defmodule Aida.BotTest do
     end
 
     test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
-      session = Session.new({@session_id, %{"language" => "jp"}})
+      session = new_session({@session_id, %{"language" => "jp"}})
       input = Message.new("Hi!", bot, session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
@@ -265,7 +270,7 @@ defmodule Aida.BotTest do
     end
 
     test "introduction message includes only relevant skills", %{bot: bot} do
-      session = Session.new({@session_id, %{"language" => "en", "age" => 14}})
+      session = Session.get(@session_id) |> Session.merge(%{"language" => "en", "age" => 14})
       input = Message.new("Hi!", bot, session)
       output = Bot.chat(input)
 
@@ -277,7 +282,7 @@ defmodule Aida.BotTest do
     end
 
     test "only relevant skills receive the message", %{bot: bot} do
-      session = Session.new({@session_id, %{"language" => "en", "age" => 14}})
+      session = Session.get(@session_id) |> Session.merge(%{"language" => "en", "age" => 14})
       input = Message.new("menu", bot, session)
 
       output = Bot.chat(input)
@@ -290,7 +295,7 @@ defmodule Aida.BotTest do
     end
 
     test "relevance expressions containing undefined variables are considered false", %{bot: bot} do
-      session = Session.new({@session_id, %{"language" => "en"}})
+      session = Session.get(@session_id) |> Session.merge(%{"language" => "en"})
       input = Message.new("menu", bot, session)
       output = Bot.chat(input)
 
@@ -313,33 +318,33 @@ defmodule Aida.BotTest do
     end
 
     test "lookup", %{bot: bot} do
-      session = Session.new("sid")
+      session = new_session({@session_id, %{}})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
 
     test "lookup non existing variable returns nil", %{bot: bot} do
-      session = Session.new("sid")
+      session = new_session({@session_id, %{}})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "foo")
       assert value == nil
     end
 
     test "lookup variabe evaluate overrides", %{bot: bot} do
-      session = Session.new({@session_id, %{"age" => 20}})
+      session = new_session({@session_id, %{"age" => 20}})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta and a exclusive selection of wines"
 
-      session = Session.new({@session_id, %{"age" => 15}})
+      session = new_session({@session_id, %{"age" => 15}})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
 
     test "lookup from eval", %{bot: bot} do
-      expr_context = Message.new("foo", bot, Session.new({@session_id, %{"language" => "en"}}))
+      expr_context = Message.new("foo", bot, new_session({@session_id, %{"language" => "en"}}))
         |> Message.expr_context(lookup_raises: true)
 
       value = Aida.Expr.parse("${food_options}")
@@ -348,7 +353,7 @@ defmodule Aida.BotTest do
       assert value == "barbecue and pasta"
     end
 
-    test "ignore non existing vars in messages" do
+    test "ignore non existing vars in messages", %{initial_session: initial_session} do
       bot = %Bot{
         id: @uuid,
         languages: ["en"],
@@ -369,7 +374,7 @@ defmodule Aida.BotTest do
         ]
       }
 
-      output = Bot.chat(Message.new("days", bot))
+      output = Bot.chat(Message.new("days", bot, initial_session))
       assert output.reply == [
         "We will deliver "
       ]
@@ -413,7 +418,7 @@ defmodule Aida.BotTest do
     end
 
     test "lookup from eval", %{bot: bot} do
-      expr_context = Message.new("foo", bot, Session.new({@session_id, %{"key" => "Kakuma 2"}}))
+      expr_context = Message.new("foo", bot, new_session({@session_id, %{"key" => "Kakuma 2"}}))
         |> Message.expr_context(lookup_raises: true)
 
       value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Day')")
@@ -427,8 +432,8 @@ defmodule Aida.BotTest do
       assert value == "In front of the church"
     end
 
-    test "interpolate expression", %{bot: bot} do
-      output = Bot.chat(Message.new("days", bot))
+    test "interpolate expression", %{bot: bot, initial_session: initial_session} do
+      output = Bot.chat(Message.new("days", bot, initial_session))
       assert output.reply == [
         "We will deliver Next Thursday"
       ]
@@ -460,8 +465,8 @@ defmodule Aida.BotTest do
       %{bot: bot}
     end
 
-    test "display errors in messages", %{bot: bot} do
-      output = Bot.chat(Message.new("days", bot))
+    test "display errors in messages", %{bot: bot, initial_session: initial_session} do
+      output = Bot.chat(Message.new("days", bot, initial_session))
       assert output.reply == [
         "We will deliver [ERROR: Could not find attribute named 'attribute']"
       ]
@@ -607,8 +612,8 @@ defmodule Aida.BotTest do
       %{bot: bot}
     end
 
-    test "replies with no explanation message if the skills have empty explanation", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with no explanation message if the skills have empty explanation", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("foobar", bot, response.session))
       assert output.reply == [
         "Sorry, I didn't understand that",
@@ -616,8 +621,8 @@ defmodule Aida.BotTest do
       ]
     end
 
-    test "replies with no clarification when message matches more than one skill and similar confidence but they have no clarification", %{bot: bot} do
-      response = Bot.chat(Message.new("Hi!", bot))
+    test "replies with no clarification when message matches more than one skill and similar confidence but they have no clarification", %{bot: bot, initial_session: initial_session} do
+      response = Bot.chat(Message.new("Hi!", bot, initial_session))
       output = Bot.chat(Message.new("food hours", bot, response.session))
       assert output.reply == [
         "I'm not sure exactly what you need."

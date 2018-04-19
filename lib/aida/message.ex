@@ -18,7 +18,7 @@ defmodule Aida.Message do
             reply: []
 
   @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
-  def new(content, %Bot{} = bot, session \\ Session.new) do
+  def new(content, %Bot{} = bot, session) do
     %Message{
       session: session,
       bot: bot,
@@ -27,7 +27,7 @@ defmodule Aida.Message do
   end
 
   @spec new_from_image(source_url :: String.t, bot :: Bot.t, session :: Session.t) :: t
-  def new_from_image(source_url, %Bot{} = bot, session \\ Session.new) do
+  def new_from_image(source_url, %Bot{} = bot, session) do
     %Message{
       session: session,
       bot: bot,
@@ -36,7 +36,7 @@ defmodule Aida.Message do
   end
 
   @spec new_unknown(bot :: Bot.t, session :: Session.t) :: t
-  def new_unknown(%Bot{} = bot, session \\ Session.new) do
+  def new_unknown(%Bot{} = bot, session) do
     %Message{
       session: session,
       bot: bot,

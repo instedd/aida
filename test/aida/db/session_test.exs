@@ -1,7 +1,8 @@
 defmodule Aida.DB.SessionTest do
   use Aida.DataCase
-  alias Aida.DB.Session
+  use Aida.SessionHelper
   alias Aida.Repo
+  alias Aida.DB.{Session, MessageLog}
 
   @session_id Ecto.UUID.generate
   @bot_id Ecto.UUID.generate
@@ -35,6 +36,21 @@ defmodule Aida.DB.SessionTest do
     end
   end
 
+  describe "on delete" do
+    test "delete message logs of that session" do
+      bot_id = Ecto.UUID.generate
+      id1 = Ecto.UUID.generate
+      id2 = Ecto.UUID.generate
+      new_session({id1, %{}}) |> Session.save
+      new_session({id2, %{}}) |> Session.save
+      MessageLog.create(%{bot_id: bot_id, session_id: id1, direction: "incoming", content_type: "text", content: "Hello"})
+      MessageLog.create(%{bot_id: bot_id, session_id: id2, direction: "incoming", content_type: "text", content: "Hello"})
+
+      Session.delete(id1)
+
+      assert MessageLog |> Repo.all |> Enum.count == 1
+    end
+  end
   # TODO: This should work
   # test "cannot insert two sessions with same uuid" do
   #   %Session{}

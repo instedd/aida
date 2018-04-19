@@ -1,8 +1,7 @@
 defmodule Aida.SkillUsageTest do
   use Aida.DataCase
-  alias Aida.{BotParser, Bot, Message}
-  alias Aida.DB
-
+  alias Aida.{BotParser, Bot, Message, DB, DB.Session}
+  use Aida.SessionHelper
   use ExUnit.Case
 
   @bot_id "486d6622-225a-42c6-864b-5457687adc30"
@@ -12,19 +11,20 @@ defmodule Aida.SkillUsageTest do
       manifest = File.read!("test/fixtures/valid_manifest.json")
         |> Poison.decode!
       {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      initial_session = new_session({Ecto.UUID.generate, %{}}) |> Session.save
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
-    test "stores an interaction per sent message when the front_desk answers", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "stores an interaction per sent message when the front_desk answers", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
         |> Message.put_session("language", "en")
       Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 1
     end
 
-    test "stores only one interaction per sent message for each skill", %{bot: bot} do
-      input = Message.new("english", bot)
+    test "stores only one interaction per sent message for each skill", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("english", bot, initial_session)
       output = Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 2
 
@@ -33,8 +33,8 @@ defmodule Aida.SkillUsageTest do
       assert Enum.count(DB.list_skill_usages()) == 2
     end
 
-    test "stores one interaction per sent message for each skill", %{bot: bot} do
-      input = Message.new("english", bot)
+    test "stores one interaction per sent message for each skill", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("english", bot, initial_session)
       output = Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 2
 
@@ -48,8 +48,8 @@ defmodule Aida.SkillUsageTest do
 
     end
 
-    test "stores an interaction per sent message with the proper data for language_detector", %{bot: bot} do
-      input = Message.new("english", bot)
+    test "stores an interaction per sent message with the proper data for language_detector", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("english", bot, initial_session)
       Bot.chat(input)
       skill_usage = DB.list_skill_usages() |> Enum.find(&(&1.skill_id == "language_detector"))
 
@@ -59,8 +59,8 @@ defmodule Aida.SkillUsageTest do
       assert skill_usage.user_generated == true
     end
 
-    test "stores an interaction per sent message with the proper data when the front desk answers", %{bot: bot} do
-      input = Message.new("Hi!", bot)
+    test "stores an interaction per sent message with the proper data when the front desk answers", %{bot: bot, initial_session: initial_session} do
+      input = Message.new("Hi!", bot, initial_session)
         |> Message.put_session("language", "en")
       Bot.chat(input)
 
