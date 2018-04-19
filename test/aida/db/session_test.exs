@@ -2,7 +2,7 @@ defmodule Aida.DB.SessionTest do
   use Aida.DataCase
   use Aida.SessionHelper
   alias Aida.Repo
-  alias Aida.DB.{Session, MessageLog}
+  alias Aida.DB.{Session, MessageLog, Image}
 
   @session_id Ecto.UUID.generate
   @bot_id Ecto.UUID.generate
@@ -37,7 +37,7 @@ defmodule Aida.DB.SessionTest do
   end
 
   describe "on delete" do
-    test "delete message logs of that session" do
+    test "deletes message logs of that session" do
       bot_id = Ecto.UUID.generate
       id1 = Ecto.UUID.generate
       id2 = Ecto.UUID.generate
@@ -49,6 +49,20 @@ defmodule Aida.DB.SessionTest do
       Session.delete(id1)
 
       assert MessageLog |> Repo.all |> Enum.count == 1
+    end
+
+    test "deletes images of that session" do
+      bot_id = Ecto.UUID.generate
+      id1 = Ecto.UUID.generate
+      id2 = Ecto.UUID.generate
+      new_session({id1, %{}}) |> Session.save
+      new_session({id2, %{}}) |> Session.save
+      %Image{} |> Image.changeset(%{binary: <<0,1>>, binary_type: "image/jpeg", source_url: "foo", bot_id: bot_id, session_id: id1}) |> Repo.insert
+      %Image{} |> Image.changeset(%{binary: <<0,1>>, binary_type: "image/jpeg", source_url: "foo", bot_id: bot_id, session_id: id2}) |> Repo.insert
+
+      Session.delete(id1)
+
+      assert Image |> Repo.all |> Enum.count == 1
     end
   end
   # TODO: This should work

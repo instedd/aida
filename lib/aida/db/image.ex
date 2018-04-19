@@ -8,7 +8,7 @@ defmodule Aida.DB.Image do
     field :binary_type, :string
     field :source_url, :string
     field :bot_id, :binary_id
-    field :session_id, :string
+    field :session_id, :binary_id
     field :uuid, :binary_id, read_after_writes: true
 
     timestamps()

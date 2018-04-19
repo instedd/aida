@@ -401,7 +401,8 @@ defmodule Aida.SurveyQuestionTest do
 
     test "stores correct content type for image" do
       url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
-      session_id = Ecto.UUID.generate
+      bot_id = "e75ecc4a-b8b6-421f-a40d-6c72a13d910c"
+      session = Session.new({bot_id, "facebook", "1234"})
 
       response = %HTTPoison.Response{
         body: "an_image",
@@ -410,7 +411,7 @@ defmodule Aida.SurveyQuestionTest do
 
       with_mock HTTPoison, [get!: fn(_) -> response end] do
         image_content = %ImageContent{source_url: url, image_id: nil}
-        ImageContent.pull_and_store_image(image_content, "e75ecc4a-b8b6-421f-a40d-6c72a13d910c", session_id)
+        ImageContent.pull_and_store_image(image_content, bot_id, session.id)
         assert (Aida.DB.Image |> Aida.Repo.all |> hd).binary_type == "image/png"
       end
     end
