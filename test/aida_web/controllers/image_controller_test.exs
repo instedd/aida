@@ -2,8 +2,12 @@ defmodule AidaWeb.ImageControllerTest do
   use AidaWeb.ConnCase
   alias Aida.{DB, DB.Session}
 
-  test "gets image", %{conn: conn} do
-    bot_id = "e75ecc4a-b8b6-421f-a40d-6c72a13d910c"
+  setup do
+    {:ok, bot} = DB.create_bot(%{manifest: %{}})
+    [bot_id: bot.id]
+  end
+
+  test "gets image", %{conn: conn, bot_id: bot_id} do
     session = Session.new({bot_id, "facebook", "1234"})
     image_attrs = %{
       binary: "an image",

@@ -9,7 +9,7 @@ defmodule Aida.MessageTest do
   @bot Aida.BotParser.parse!(@bot_id, File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!)
 
   setup do
-    initial_session = new_session({@session_id, %{}})
+    initial_session = new_session(@session_id, %{})
     [initial_session: initial_session]
   end
 
@@ -23,7 +23,7 @@ defmodule Aida.MessageTest do
   end
 
   test "create new incoming message with existing session" do
-    session = new_session({@session_id, %{"foo" => "bar"}})
+    session = new_session(@session_id, %{"foo" => "bar"})
     message = Message.new("Hi!", @bot, session)
     assert %Message{
       session: ^session,
@@ -39,49 +39,49 @@ defmodule Aida.MessageTest do
 
   describe "variable interpolation" do
     test "works with strings and numbers" do
-      session = new_session({@session_id, %{"foo" => 1, "bar" => "baz"}})
+      session = new_session(@session_id, %{"foo" => 1, "bar" => "baz"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("foo: ${foo}, bar: ${bar}")
       assert message.reply == ["foo: 1, bar: baz"]
     end
 
     test "accept whitespace inside brackets" do
-      session = new_session({@session_id, %{"foo" => 1, "bar" => "baz"}})
+      session = new_session(@session_id, %{"foo" => 1, "bar" => "baz"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("foo: ${ foo }, bar: ${\tbar\t}")
       assert message.reply == ["foo: 1, bar: baz"]
     end
 
     test "interpolate skill results" do
-      session = new_session({@session_id, %{"skill/1/foo" => 1, "skill/2/bar" => "baz"}})
+      session = new_session(@session_id, %{"skill/1/foo" => 1, "skill/2/bar" => "baz"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("foo: ${foo}, bar: ${bar}")
       assert message.reply == ["foo: 1, bar: baz"]
     end
 
     test "interpolate with bot variables" do
-      session = new_session({@session_id, %{"language" => "en"}})
+      session = new_session(@session_id, %{"language" => "en"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("We have ${food_options}")
       assert message.reply == ["We have barbecue and pasta"]
     end
 
     test "interpolate in a unicode message" do
-      session = new_session({@session_id, %{"language" => "en"}})
+      session = new_session(@session_id, %{"language" => "en"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("We have “${food_options}”")
       assert message.reply == ["We have “barbecue and pasta”"]
     end
 
     test "interpolate recursively" do
-      session = new_session({@session_id, %{"language" => "en", "first_name" => "John", "last_name" => "Doe", "gender" => "male"}})
+      session = new_session(@session_id, %{"language" => "en", "first_name" => "John", "last_name" => "Doe", "gender" => "male"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("Hi ${full_name}!")
       assert message.reply == ["Hi Mr. John Doe!"]
     end
 
     test "interpolate breaks infinite loops" do
-      session = new_session({@session_id, %{"language" => "en"}})
+      session = new_session(@session_id, %{"language" => "en"})
       devil_var = %Aida.Variable{
         name: "loop_var",
         values: %{
@@ -95,14 +95,14 @@ defmodule Aida.MessageTest do
     end
 
     test "interpolates correctly a multiple choice variable with two options" do
-      session = new_session({@session_id, %{"pepe" => 3, "food" => ["barbecue", "pasta"]}})
+      session = new_session(@session_id, %{"pepe" => 3, "food" => ["barbecue", "pasta"]})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("We have ${food}")
       assert message.reply == ["We have barbecue, pasta"]
     end
 
     test "interpolates correctly a multiple choice variable with more than two options" do
-      session = new_session({@session_id, %{"pepe" => 3, "food" => ["barbecue", "pasta", "salad"]}})
+      session = new_session(@session_id, %{"pepe" => 3, "food" => ["barbecue", "pasta", "salad"]})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("We have ${food}")
       assert message.reply == ["We have barbecue, pasta, salad"]
@@ -123,14 +123,14 @@ defmodule Aida.MessageTest do
     end
 
     test "works with session variables" do
-      session = new_session({@session_id, %{"foo" => 3}})
+      session = new_session(@session_id, %{"foo" => 3})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("value: {{ ${foo} + 1 }}")
       assert message.reply == ["value: 4"]
     end
 
     test "works with bot variables" do
-      session = new_session({@session_id, %{"age" => 22, "language" => "en"}})
+      session = new_session(@session_id, %{"age" => 22, "language" => "en"})
       message = Message.new("Hi!", @bot, session)
         |> Message.respond("Food options: {{ ${food_options} }}")
       assert message.reply == ["Food options: barbecue and pasta and a exclusive selection of wines"]

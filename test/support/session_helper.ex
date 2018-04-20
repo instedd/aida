@@ -3,11 +3,11 @@ defmodule Aida.SessionHelper do
     quote do
       alias Aida.DB.Session
 
-      def new_session({id, values}) when is_binary(id) and is_map(values) do
+      def new_session(id, values, bot_id \\ Ecto.UUID.generate) when is_binary(id) and is_map(values) do
         %Session{
           id: id,
           data: values,
-          bot_id: Ecto.UUID.generate,
+          bot_id: bot_id,
           is_new?: true,
           provider: "facebook",
           provider_key: "1234/5678"

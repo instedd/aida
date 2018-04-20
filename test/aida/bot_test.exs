@@ -9,12 +9,13 @@ defmodule Aida.BotTest  do
     Crypto,
     DataTable,
     DB,
-    DB.MessageLog,
     FrontDesk,
     Message,
     Skill.KeywordResponder,
     TestSkill
   }
+
+  alias Aida.DB.{MessageLog, Session}
 
   @english_restaurant_greet [
     "Hello, I'm a Restaurant bot",
@@ -66,13 +67,8 @@ defmodule Aida.BotTest  do
 
   @language_selection_speech [ @language_selection_text ]
 
-  @uuid "1c75b0a6-934c-4272-9d25-1d607c08a7b7"
-  @session_id "ab11d25c-85c1-41c7-910a-3e64fa13cbbe"
-
-  setup do
-    initial_session = new_session({@session_id, %{}}) |> Session.save
-    [initial_session: initial_session]
-  end
+  @provider "facebook"
+  @provider_key "1234/5678"
 
   describe "single language bot" do
     setup do
@@ -81,8 +77,9 @@ defmodule Aida.BotTest  do
         |> Map.put("languages", ["en"])
       {:ok, bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(bot.id, manifest)
+      initial_session = Session.new({bot.id, @provider, @provider_key})
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
     test "replies with greeting on the first message", %{bot: bot, initial_session: initial_session} do
@@ -250,8 +247,8 @@ defmodule Aida.BotTest  do
       assert output2.reply == ["Desculpe, eu não falo Português para agora"] ++ @language_selection_speech
     end
 
-    test "reset language when the session already has a language not understood by the bot", %{bot: bot} do
-      session = new_session({@session_id, %{"language" => "jp"}})
+    test "reset language when the session already has a language not understood by the bot", %{bot: bot, initial_session: initial_session} do
+      session = initial_session |> Session.merge(%{"language" => "jp"})
       input = Message.new("Hi!", bot, session)
       output = Bot.chat(input)
       assert output.reply == @language_selection_speech
@@ -265,12 +262,13 @@ defmodule Aida.BotTest  do
         |> Poison.decode!
       {:ok, bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(bot.id, manifest)
+      initial_session = Session.new({bot.id, @provider, @provider_key})
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
-    test "introduction message includes only relevant skills", %{bot: bot} do
-      session = Session.get(@session_id) |> Session.merge(%{"language" => "en", "age" => 14})
+    test "introduction message includes only relevant skills", %{bot: bot, initial_session: initial_session} do
+      session = Session.get(initial_session.id) |> Session.merge(%{"language" => "en", "age" => 14})
       input = Message.new("Hi!", bot, session)
       output = Bot.chat(input)
 
@@ -281,8 +279,8 @@ defmodule Aida.BotTest  do
       ]
     end
 
-    test "only relevant skills receive the message", %{bot: bot} do
-      session = Session.get(@session_id) |> Session.merge(%{"language" => "en", "age" => 14})
+    test "only relevant skills receive the message", %{bot: bot, initial_session: initial_session} do
+      session = Session.get(initial_session.id) |> Session.merge(%{"language" => "en", "age" => 14})
       input = Message.new("menu", bot, session)
 
       output = Bot.chat(input)
@@ -294,8 +292,8 @@ defmodule Aida.BotTest  do
       ]
     end
 
-    test "relevance expressions containing undefined variables are considered false", %{bot: bot} do
-      session = Session.get(@session_id) |> Session.merge(%{"language" => "en"})
+    test "relevance expressions containing undefined variables are considered false", %{bot: bot, initial_session: initial_session} do
+      session = Session.get(initial_session.id) |> Session.merge(%{"language" => "en"})
       input = Message.new("menu", bot, session)
       output = Bot.chat(input)
 
@@ -313,38 +311,37 @@ defmodule Aida.BotTest  do
         |> Poison.decode!
       {:ok, bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(bot.id, manifest)
+      initial_session = Session.new({bot.id, @provider, @provider_key})
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
-    test "lookup", %{bot: bot} do
-      session = new_session({@session_id, %{}})
-      message = Message.new("foo", bot, session)
+    test "lookup", %{bot: bot, initial_session: initial_session} do
+      message = Message.new("foo", bot, initial_session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
 
-    test "lookup non existing variable returns nil", %{bot: bot} do
-      session = new_session({@session_id, %{}})
-      message = Message.new("foo", bot, session)
+    test "lookup non existing variable returns nil", %{bot: bot, initial_session: initial_session} do
+      message = Message.new("foo", bot, initial_session)
       value = bot |> Bot.lookup_var(message, "foo")
       assert value == nil
     end
 
-    test "lookup variabe evaluate overrides", %{bot: bot} do
-      session = new_session({@session_id, %{"age" => 20}})
+    test "lookup variabe evaluate overrides", %{bot: bot, initial_session: initial_session} do
+      session = initial_session |> Session.merge(%{"age" => 20})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta and a exclusive selection of wines"
 
-      session = new_session({@session_id, %{"age" => 15}})
+      session = initial_session |> Session.merge(%{"age" => 15})
       message = Message.new("foo", bot, session)
       value = bot |> Bot.lookup_var(message, "food_options")
       assert value["en"] == "barbecue and pasta"
     end
 
-    test "lookup from eval", %{bot: bot} do
-      expr_context = Message.new("foo", bot, new_session({@session_id, %{"language" => "en"}}))
+    test "lookup from eval", %{bot: bot, initial_session: initial_session} do
+      expr_context = Message.new("foo", bot, initial_session |> Session.merge(%{"language" => "en"}))
         |> Message.expr_context(lookup_raises: true)
 
       value = Aida.Expr.parse("${food_options}")
@@ -414,12 +411,13 @@ defmodule Aida.BotTest  do
           }
         ]
       }
+      initial_session = Session.new({bot.id, @provider, @provider_key})
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
-    test "lookup from eval", %{bot: bot} do
-      expr_context = Message.new("foo", bot, new_session({@session_id, %{"key" => "Kakuma 2"}}))
+    test "lookup from eval", %{bot: bot, initial_session: initial_session} do
+      expr_context = Message.new("foo", bot, initial_session |> Session.merge(%{"key" => "Kakuma 2"}))
         |> Message.expr_context(lookup_raises: true)
 
       value = Aida.Expr.parse("lookup(${key}, 'Distribution_days', 'Day')")
@@ -463,8 +461,9 @@ defmodule Aida.BotTest  do
           }
         ]
       }
+      initial_session = Session.new({bot.id, @provider, @provider_key})
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
     test "display errors in messages", %{bot: bot, initial_session: initial_session} do
@@ -600,7 +599,7 @@ defmodule Aida.BotTest  do
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Hours",
             keywords: %{
               "en" => ["hours"]
@@ -611,8 +610,9 @@ defmodule Aida.BotTest  do
           }
         ]
       }
+      initial_session = Session.new({bot.id, @provider, @provider_key})
 
-      %{bot: bot}
+      %{bot: bot, initial_session: initial_session}
     end
 
     test "replies with no explanation message if the skills have empty explanation", %{bot: bot, initial_session: initial_session} do
@@ -640,8 +640,9 @@ defmodule Aida.BotTest  do
 
     {:ok, bot} = DB.create_bot(%{manifest: manifest})
     {:ok, bot} = BotParser.parse(bot.id, manifest)
+    initial_session = Session.new({bot.id, @provider, @provider_key})
 
-    [bot: bot]
+    [bot: bot, initial_session: initial_session]
   end
 
   defp generate_session_for_test_channel(%{bot: bot}) do

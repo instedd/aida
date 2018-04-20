@@ -1,6 +1,6 @@
 defmodule Aida.SurveyQuestionTest do
   alias Aida.Skill.Survey.{Question, InputQuestion, SelectQuestion, Choice}
-  alias Aida.{Message, Bot, Message.ImageContent, DB.Session}
+  alias Aida.{DB, Message, Bot, Message.ImageContent, DB.Session}
   use Aida.DataCase
   use Aida.SessionHelper
   import Mock
@@ -96,8 +96,8 @@ defmodule Aida.SurveyQuestionTest do
 
   setup do
     session_id = "18723278-0665-454f-98a3-d85cec9a7acd"
-    session = new_session({session_id, %{"language" => "en"}})
-    session_with_food_type = new_session({session_id, %{"language" => "en", "food_type" => "pasta"}})
+    session = new_session(session_id, %{"language" => "en"})
+    session_with_food_type = new_session(session_id, %{"language" => "en", "food_type" => "pasta"})
     [session: session, session_with_food_type: session_with_food_type]
   end
 
@@ -401,8 +401,8 @@ defmodule Aida.SurveyQuestionTest do
 
     test "stores correct content type for image" do
       url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
-      bot_id = "e75ecc4a-b8b6-421f-a40d-6c72a13d910c"
-      session = Session.new({bot_id, "facebook", "1234"})
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      session = Session.new({bot.id, "facebook", "1234"})
 
       response = %HTTPoison.Response{
         body: "an_image",
@@ -411,7 +411,7 @@ defmodule Aida.SurveyQuestionTest do
 
       with_mock HTTPoison, [get!: fn(_) -> response end] do
         image_content = %ImageContent{source_url: url, image_id: nil}
-        ImageContent.pull_and_store_image(image_content, bot_id, session.id)
+        ImageContent.pull_and_store_image(image_content, bot.id, session.id)
         assert (Aida.DB.Image |> Aida.Repo.all |> hd).binary_type == "image/png"
       end
     end

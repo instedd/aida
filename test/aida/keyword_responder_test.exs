@@ -11,7 +11,7 @@ defmodule Aida.KeywordResponderTest do
         |> Poison.decode!
         |> Map.put("languages", ["en"])
       {:ok, bot} = BotParser.parse(@bot_id, manifest)
-      initial_session = new_session({Ecto.UUID.generate, %{}})
+      initial_session = new_session(Ecto.UUID.generate, %{})
 
       %{bot: bot, initial_session: initial_session}
     end

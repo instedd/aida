@@ -4,7 +4,8 @@ defmodule Aida.DBTest do
   alias Aida.{DB, BotManager, ChannelRegistry}
   alias Aida.DB.{Session, SkillUsage, MessagesPerDay}
 
-  @session_tuple {Ecto.UUID.generate, "facebook", "1234/5678"}
+  @provider "facebook"
+  @provider_key "1234/5678"
 
   describe "bots" do
     alias Aida.DB.Bot
@@ -98,6 +99,24 @@ defmodule Aida.DBTest do
       assert BotManager.find(bot.id) == :not_found
     end
 
+    test "deletes associated sessions when deletes a bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+      bot = bot_fixture()
+      bot2 = bot_fixture()
+      BotManager.flush()
+
+      Session.new({bot.id, "facebook", "1234"})
+      Session.new({bot2.id, "facebook", "5678"})
+
+      assert (Session |> Repo.all |> Enum.count == 2)
+
+      DB.delete_bot(bot)
+      BotManager.flush()
+
+      assert (Session |> Repo.all |> Enum.count == 1)
+    end
+
     test "deletes associated skill usage entries when deletes a bot" do
       ChannelRegistry.start_link
       BotManager.start_link
@@ -143,25 +162,25 @@ defmodule Aida.DBTest do
     end
 
     test "get_session/1 returns the session with the given id" do
-      {bot_id, provider, provider_key} = @session_tuple
-      session = Session.new(@session_tuple)
+      bot = bot_fixture()
+      session = Session.new({bot.id, @provider, @provider_key})
         |> Session.merge(%{"foo" => 1, "bar" => 2})
         |> Session.save
 
       session = Session.get(session.id)
-      assert session.bot_id ==bot_id
+      assert session.bot_id == bot.id
       assert session.data == %{"foo" => 1, "bar" => 2}
-      assert session.provider == provider
-      assert session.provider_key == provider_key
+      assert session.provider == @provider
+      assert session.provider_key == @provider_key
     end
 
     test "replaces existing session" do
-      {bot_id, provider, provider_key} = @session_tuple
-      s1 = Session.new(@session_tuple)
+      bot = bot_fixture()
+      s1 = Session.new({bot.id, @provider, @provider_key})
         |> Session.merge(%{"foo" => 1, "bar" => 2})
         |> Session.save
 
-      Session.find_or_create(bot_id, provider, provider_key)
+      Session.find_or_create(bot.id, @provider, @provider_key)
         |> Session.merge(%{"foo" => 3, "bar" => 4})
         |> Session.save
 
@@ -174,21 +193,21 @@ defmodule Aida.DBTest do
     end
 
     test "get sessions by bot" do
-      {bot_id, provider, provider_key} = @session_tuple
-      other_bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
-      Session.new({other_bot_id, provider, provider_key}) |> Session.save
-      Session.new(@session_tuple) |> Session.save
+      bot = bot_fixture()
+      other_bot = bot_fixture()
+      Session.new({bot.id, @provider, @provider_key}) |> Session.save
+      Session.new({other_bot.id, @provider, "4321/9876"}) |> Session.save
 
-      s1 = Session.find_or_create(bot_id, provider, provider_key)
-      sessions = Session.sessions_by_bot(bot_id)
+      s1 = Session.find_or_create(bot.id, @provider, @provider_key)
+      sessions = Session.sessions_by_bot(bot.id)
       assert sessions == [s1]
     end
 
     test "delete_session/1 deletes a session" do
-      {_, provider, provider_key} = @session_tuple
-      other_bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
-      s1 = Session.new({other_bot_id, provider, provider_key}) |> Session.save
-      s2 = Session.new(@session_tuple) |> Session.save
+      bot = bot_fixture()
+      other_bot = bot_fixture()
+      s1 = Session.new({bot.id, @provider, @provider_key}) |> Session.save
+      s2 = Session.new({other_bot.id, @provider, @provider_key}) |> Session.save
 
       Session.delete(s1.id)
       assert Session.get(s1.id) == nil

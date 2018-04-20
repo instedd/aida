@@ -83,7 +83,8 @@ defmodule Aida.SurveyTest do
       manifest = File.read!("test/fixtures/valid_manifest_with_skill_relevances.json")
         |> Poison.decode!
         |> Map.put("languages", ["en"])
-      bot = %{BotParser.parse!(@bot_id, manifest) | channels: [channel]}
+      {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+      bot = %{BotParser.parse!(db_bot.id, manifest) | channels: [channel]}
 
       with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
         Session.new({bot.id, "facebook", "1234/5678"})

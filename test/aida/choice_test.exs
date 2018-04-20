@@ -5,7 +5,7 @@ defmodule Aida.ChoiceTest do
   use ExUnit.Case
 
   setup do
-    session = new_session({"7373f115-e6af-4385-8289-a823b43f727d", %{"language" => "en"}})
+    session = new_session("7373f115-e6af-4385-8289-a823b43f727d", %{"language" => "en"})
     message = Message.new("ok", %Bot{}, session)
     [message: message]
   end
