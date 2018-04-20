@@ -2,7 +2,7 @@ defmodule Aida.DBTest do
   use Aida.DataCase
 
   alias Aida.{DB, BotManager, ChannelRegistry}
-  alias Aida.DB.{Session, SkillUsage}
+  alias Aida.DB.{Session, SkillUsage, MessagesPerDay}
 
   @session_tuple {Ecto.UUID.generate, "facebook", "1234/5678"}
 
@@ -114,6 +114,23 @@ defmodule Aida.DBTest do
       BotManager.flush()
 
       assert (SkillUsage |> Repo.all |> Enum.count == 1)
+    end
+
+    test "deletes associated messages per day entries when deletes a bot" do
+      ChannelRegistry.start_link
+       BotManager.start_link
+       bot1 = bot_fixture()
+       bot2 = bot_fixture()
+       BotManager.flush()
+
+       DB.create_or_update_messages_per_day_received(%{bot_id: bot1.id, day: Date.utc_today(), received_messages: 1})
+       DB.create_or_update_messages_per_day_received(%{bot_id: bot2.id, day: Date.utc_today(), received_messages: 1})
+
+       assert (MessagesPerDay |> Repo.all |> Enum.count == 2)
+       DB.delete_bot(bot1)
+       BotManager.flush()
+
+       assert (MessagesPerDay |> Repo.all |> Enum.count == 1)
     end
 
     test "change_bot/1 returns a bot changeset" do
@@ -365,7 +382,8 @@ defmodule Aida.DBTest do
 
 
     test "create_or_update_messages_per_day_received/1 increments existing messages_per_day with the proper count" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, received_messages: 1}
@@ -392,7 +410,8 @@ defmodule Aida.DBTest do
 
 
     test "create_or_update_messages_per_day_sent/1 increments existing messages_per_day with the proper count" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
@@ -420,7 +439,8 @@ defmodule Aida.DBTest do
 
 
     test "get_bot_messages_per_day_for_period/3 returns the proper count for a bot in a certain period" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
