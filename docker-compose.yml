@@ -68,5 +68,6 @@ services:
       - 'yarn-cache:/usr/local/share/.cache/yarn'
     environment:
       REACT_APP_API_BASE_URL: http://app.aida.lvh.me
+      REACT_APP_WEB_SOCKET: ws://app.aida.lvh.me/socket
     ports:
       - 3000:3000
