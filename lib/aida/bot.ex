@@ -54,13 +54,13 @@ defmodule Aida.Bot do
       |> Skill.wake_up(bot, data)
   end
 
-  @spec chat(bot :: t, message :: Message.t) :: Message.t
-  def chat(%Bot{} = bot, %Message{} = message) do
+  @spec chat(message :: Message.t) :: Message.t
+  def chat(%Message{} = message) do
     message
-    |> reset_language_if_invalid(bot)
-    |> choose_language_for_single_language_bot(bot)
-    |> handle(bot)
-    |> greet_if_no_response_and_language_was_set(bot, message)
+    |> reset_language_if_invalid()
+    |> choose_language_for_single_language_bot()
+    |> handle()
+    |> greet_if_no_response_and_language_was_set(message)
     |> unset_session_new
     |> log_incoming
     |> log_outgoing
@@ -118,47 +118,46 @@ defmodule Aida.Bot do
     %{message | session: %{message.session | is_new?: false}}
   end
 
-  defp greet_if_no_response_and_language_was_set(message, bot, original_message) do
+  defp greet_if_no_response_and_language_was_set(message, original_message) do
     lang_before = Message.language(original_message)
     lang_after = Message.language(message)
 
     if lang_before == nil && lang_after != nil && message.reply == [] do
       message
-      |> FrontDesk.greet(bot)
+      |> FrontDesk.greet(message.bot)
     else
       message
     end
   end
 
-  defp reset_language_if_invalid(message, bot) do
-    if Message.language(message) not in bot.languages do
+  defp reset_language_if_invalid(message) do
+    if Message.language(message) not in message.bot.languages do
       Message.put_session(message, "language", nil)
     else
       message
     end
   end
 
-  defp choose_language_for_single_language_bot(message, bot) do
-    if !Message.language(message) && Enum.count(bot.languages) == 1 do
-      Message.put_session(message, "language", bot.languages |> List.first)
+  defp choose_language_for_single_language_bot(message) do
+    if !Message.language(message) && Enum.count(message.bot.languages) == 1 do
+      Message.put_session(message, "language", message.bot.languages |> List.first)
     else
       message
     end
   end
 
-  defp handle(message, bot) do
-    skills_sorted = bot
-      |> relevant_skills(message)
-      |> Enum.map(&evaluate_confidence(&1, bot, message))
+  defp handle(message) do
+    skills_sorted = relevant_skills(message)
+      |> Enum.map(&evaluate_confidence(&1, message))
       |> Enum.reject(&is_nil/1)
       |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
 
     case skills_sorted do
       [] ->
         if Message.new_session?(message) do
-          message |> FrontDesk.greet(bot)
+          message |> FrontDesk.greet(message.bot)
         else
-          message |> FrontDesk.not_understood(bot)
+          message |> FrontDesk.not_understood(message.bot)
         end
       skills ->
         higher_confidence_skill = Enum.at(skills, 0)
@@ -168,27 +167,27 @@ defmodule Aida.Bot do
           _ -> higher_confidence_skill.confidence - Enum.at(skills, 1).confidence
         end
 
-        if threshold(bot) <= difference do
+        if threshold(message.bot) <= difference do
           Skill.respond(higher_confidence_skill.skill, message)
         else
-          message |> FrontDesk.clarification(bot, Enum.map(skills, fn(skill) -> skill.skill end))
+          message |> FrontDesk.clarification(message.bot, Enum.map(skills, fn(skill) -> skill.skill end))
         end
     end
   end
 
-  defp evaluate_confidence(skill, bot, message) do
+  defp evaluate_confidence(skill, message) do
     confidence = Skill.confidence(skill, message)
     case confidence do
       :threshold ->
-        %{confidence: threshold(bot), skill: skill}
+        %{confidence: threshold(message.bot), skill: skill}
       confidence when confidence > 0 ->
         %{confidence: confidence, skill: skill}
       _ -> nil
     end
   end
 
-  def relevant_skills(bot, message) do
-    bot.skills
+  def relevant_skills(message) do
+    message.bot.skills
       |> Enum.filter(&Skill.is_relevant?(&1, message))
       |> Enum.filter(fn
         %Skill.LanguageDetector{} -> true

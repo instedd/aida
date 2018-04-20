@@ -19,38 +19,38 @@ defmodule Aida.SkillUsageTest do
     test "stores an interaction per sent message when the front_desk answers", %{bot: bot} do
       input = Message.new("Hi!", bot)
         |> Message.put_session("language", "en")
-      bot |> Bot.chat(input)
+      Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 1
     end
 
     test "stores only one interaction per sent message for each skill", %{bot: bot} do
       input = Message.new("english", bot)
-      output = bot |> Bot.chat(input)
+      output = Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 2
 
       input2 = Message.new("español", bot, output.session)
-      bot |> Bot.chat(input2)
+      Bot.chat(input2)
       assert Enum.count(DB.list_skill_usages()) == 2
     end
 
     test "stores one interaction per sent message for each skill", %{bot: bot} do
       input = Message.new("english", bot)
-      output = bot |> Bot.chat(input)
+      output = Bot.chat(input)
       assert Enum.count(DB.list_skill_usages()) == 2
 
       input2 = Message.new("español", bot, output.session)
-      output2 = bot |> Bot.chat(input2)
+      output2 = Bot.chat(input2)
       assert Enum.count(DB.list_skill_usages()) == 2
 
       input3 = Message.new("menu", bot, output2.session)
-      bot |> Bot.chat(input3)
+      Bot.chat(input3)
       assert Enum.count(DB.list_skill_usages()) == 3
 
     end
 
     test "stores an interaction per sent message with the proper data for language_detector", %{bot: bot} do
       input = Message.new("english", bot)
-      bot |> Bot.chat(input)
+      Bot.chat(input)
       skill_usage = DB.list_skill_usages() |> Enum.find(&(&1.skill_id == "language_detector"))
 
       assert skill_usage.user_id == input.session.id
@@ -62,7 +62,7 @@ defmodule Aida.SkillUsageTest do
     test "stores an interaction per sent message with the proper data when the front desk answers", %{bot: bot} do
       input = Message.new("Hi!", bot)
         |> Message.put_session("language", "en")
-      bot |> Bot.chat(input)
+      Bot.chat(input)
 
       assert Enum.count(DB.list_skill_usages()) == 1
 

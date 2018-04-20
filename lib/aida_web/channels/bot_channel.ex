@@ -44,7 +44,7 @@ defmodule AidaWeb.BotChannel do
       :not_found -> {:stop, :not_found, socket}
       bot ->
         session = Session.get(session_id)
-        reply = Bot.chat(bot, Message.new(text, bot, session))
+        reply = Bot.chat(Message.new(text, bot, session))
         reply.session |> Session.save
 
         reply.reply |> Enum.each(fn message ->

@@ -104,7 +104,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en"}})
 
       message = Message.new("survey", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 0}
       assert message.reply == ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"]
@@ -114,7 +114,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
 
       message = Message.new("Yes", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
       assert message.reply == ["How old are you?"]
@@ -125,7 +125,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 0}}})
 
       message = Message.new("yes", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
       assert message.reply == ["How old are you?"]
@@ -136,7 +136,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("bananas", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message.reply == ["Invalid temperature", "At what temperature do your like red wine the best?"]
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
@@ -146,7 +146,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 4}}})
 
       message = Message.new_unknown(bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
       assert message.reply == ["Can we see your home?"]
     end
 
@@ -155,7 +155,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("hours", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message.reply == ["We are open every day from 7pm to 11pm"]
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
@@ -165,7 +165,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 3}}})
 
       message = Message.new("merlot, syrah", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
       assert message.reply == ["Can we see your home?"]
@@ -176,7 +176,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 5}}})
 
       message = Message.new("No, thanks!", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == nil
     end
@@ -185,7 +185,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
 
       message = Message.new("15", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
       assert message.reply == ["Can we see your home?"]
@@ -195,7 +195,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 1}}})
 
       message = Message.new("20", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
       assert message.reply == ["At what temperature do your like red wine the best?"]
@@ -205,7 +205,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("20", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == 20.0
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 3}
@@ -216,7 +216,7 @@ defmodule Aida.SurveyTest do
       session = Session.new({@session_id, %{"language" => "en", ".survey/food_preferences" => %{"step" => 2}}})
 
       message = Message.new("200", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == nil
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
@@ -252,7 +252,7 @@ defmodule Aida.SurveyTest do
         )
 
       message = Message.new("19", bot, session)
-      message = Bot.chat(bot, message)
+      message = Bot.chat(message)
 
       json = message |> Message.get_session("survey/encrypted_question/age")
 
