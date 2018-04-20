@@ -2,7 +2,7 @@ defmodule Aida.DBTest do
   use Aida.DataCase
 
   alias Aida.{DB, BotManager, ChannelRegistry}
-  alias Aida.DB.Session
+  alias Aida.DB.{Session, SkillUsage}
 
   @session_tuple {Ecto.UUID.generate, "facebook", "1234/5678"}
 
@@ -98,6 +98,24 @@ defmodule Aida.DBTest do
       assert BotManager.find(bot.id) == :not_found
     end
 
+    test "deletes associated skill usage entries when deletes a bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+      bot1 = bot_fixture()
+      bot2 = bot_fixture()
+      BotManager.flush()
+
+      DB.create_or_update_skill_usage(%{bot_id: bot1.id, user_id: "session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
+      DB.create_or_update_skill_usage(%{bot_id: bot2.id, user_id: "other_session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
+
+      assert (SkillUsage |> Repo.all |> Enum.count == 2)
+
+      DB.delete_bot(bot1)
+      BotManager.flush()
+
+      assert (SkillUsage |> Repo.all |> Enum.count == 1)
+    end
+
     test "change_bot/1 returns a bot changeset" do
       bot = bot_fixture()
       assert %Ecto.Changeset{} = DB.change_bot(bot)
@@ -161,7 +179,8 @@ defmodule Aida.DBTest do
     end
 
     test "create_or_update_skill_usage/1 updates existing skill usage with the proper last_usage" do
-      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       session_id = "facebook/123456789/987654321"
       session_id_2 = "facebook/0123456789/0987654321"
       skill_id = "language_detector"
@@ -178,8 +197,9 @@ defmodule Aida.DBTest do
     end
 
     test "skill_usages_per_user_bot_and_period/2 returns the count for each skill" do
-      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
-      bot_id_2 = "13aaf183-9c29-42ee-946c-138701dbdee8"
+      {:ok, bot1} = DB.create_bot(%{manifest: %{}})
+      {:ok, bot2} = DB.create_bot(%{manifest: %{}})
+      {bot_id, bot_id_2} = {bot1.id, bot2.id}
       session_id = "facebook/123456789/987654321"
       session_id_2 = "facebook/123456789/0987654321"
       session_id_3 = "facebook/123456789/1111111111"
@@ -260,8 +280,9 @@ defmodule Aida.DBTest do
     end
 
     test "active_users_per_bot_and_period/2 returns the active users for a bot" do
-      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
-      bot_id_2 = "13aaf183-9c29-42ee-946c-138701dbdee8"
+      {:ok, bot1} = DB.create_bot(%{manifest: %{}})
+      {:ok, bot2} = DB.create_bot(%{manifest: %{}})
+      {bot_id, bot_id_2} = {bot1.id, bot2.id}
       session_id = "facebook/123456789/987654321"
       session_id_2 = "facebook/123456789/0987654321"
       session_id_3 = "facebook/123456789/1111111111"

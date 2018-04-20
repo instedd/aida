@@ -4,14 +4,13 @@ defmodule Aida.SkillUsageTest do
   use Aida.SessionHelper
   use ExUnit.Case
 
-  @bot_id "486d6622-225a-42c6-864b-5457687adc30"
-
   describe "multiple languages bot" do
     setup do
       manifest = File.read!("test/fixtures/valid_manifest.json")
         |> Poison.decode!
-      {:ok, bot} = BotParser.parse(@bot_id, manifest)
-      initial_session = new_session({Ecto.UUID.generate, %{}}) |> Session.save
+      {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(db_bot.id, manifest)
+      initial_session = Session.new({bot.id, "facebook", "1234/5678"})
 
       %{bot: bot, initial_session: initial_session}
     end

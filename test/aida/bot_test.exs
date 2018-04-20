@@ -353,16 +353,16 @@ defmodule Aida.BotTest  do
       assert value == "barbecue and pasta"
     end
 
-    test "ignore non existing vars in messages", %{initial_session: initial_session} do
+    test "ignore non existing vars in messages", %{initial_session: initial_session, bot: bot} do
       bot = %Bot{
-        id: @uuid,
+        id: bot.id,
         languages: ["en"],
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: bot.id,
             name: "Distribution days",
             keywords: %{
               "en" => ["days"]
@@ -383,15 +383,16 @@ defmodule Aida.BotTest  do
 
   describe "data_tables" do
     setup do
+      {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
       bot = %Bot{
-        id: @uuid,
+        id: db_bot.id,
         languages: ["en"],
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Distribution days",
             keywords: %{
               "en" => ["days"]
@@ -442,15 +443,16 @@ defmodule Aida.BotTest  do
   end
   describe "attributes" do
     setup do
+      {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
       bot = %Bot{
-        id: @uuid,
+        id: db_bot.id,
         languages: ["en"],
         skills: [
           %KeywordResponder{
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Distribution",
             keywords: %{
               "en" => ["days"]
@@ -569,8 +571,9 @@ defmodule Aida.BotTest  do
 
   describe "empty clarification" do
     setup do
+      {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
       bot = %Bot{
-        id: @uuid,
+        id: db_bot.id,
         languages: ["en"],
         front_desk: %FrontDesk{
           threshold: 0.5,
@@ -584,7 +587,7 @@ defmodule Aida.BotTest  do
             explanation: %{ "en" => "" },
             clarification: %{ "en" => "" },
             id: "id",
-            bot_id: @uuid,
+            bot_id: db_bot.id,
             name: "Food",
             keywords: %{
               "en" => ["food"]
