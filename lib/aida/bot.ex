@@ -124,7 +124,7 @@ defmodule Aida.Bot do
 
     if lang_before == nil && lang_after != nil && message.reply == [] do
       message
-      |> FrontDesk.greet(message.bot)
+      |> FrontDesk.greet()
     else
       message
     end
@@ -155,9 +155,9 @@ defmodule Aida.Bot do
     case skills_sorted do
       [] ->
         if Message.new_session?(message) do
-          message |> FrontDesk.greet(message.bot)
+          message |> FrontDesk.greet()
         else
-          message |> FrontDesk.not_understood(message.bot)
+          message |> FrontDesk.not_understood()
         end
       skills ->
         higher_confidence_skill = Enum.at(skills, 0)
@@ -170,7 +170,7 @@ defmodule Aida.Bot do
         if threshold(message.bot) <= difference do
           Skill.respond(higher_confidence_skill.skill, message)
         else
-          message |> FrontDesk.clarification(message.bot, Enum.map(skills, fn(skill) -> skill.skill end))
+          message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
         end
     end
   end

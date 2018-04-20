@@ -1,22 +1,22 @@
 defprotocol Aida.Skill do
   alias Aida.Message
 
-  @spec explain(skill :: t, msg :: Message.t) :: Message.t
-  def explain(skill, msg)
+  @spec explain(skill :: t, message :: Message.t) :: Message.t
+  def explain(skill, message)
 
-  @spec clarify(skill :: t, msg :: Message.t) :: Message.t
-  def clarify(skill, msg)
+  @spec clarify(skill :: t, message :: Message.t) :: Message.t
+  def clarify(skill, message)
 
-  @spec confidence(skill :: t, msg :: Message.t) :: non_neg_integer | :threshold
-  def confidence(skill, msg)
+  @spec confidence(skill :: t, message :: Message.t) :: non_neg_integer | :threshold
+  def confidence(skill, message)
 
-  @spec put_response(skill :: t, msg :: Message.t) :: Message.t
+  @spec put_response(skill :: t, message :: Message.t) :: Message.t
   def put_response(skill, message)
 
   @spec id(skill :: t) :: String.t
   def id(skill)
 
-  @spec respond(skill :: t, msg :: Message.t) :: Message.t
+  @spec respond(skill :: t, message :: Message.t) :: Message.t
   defdelegate respond(skill, message), to: Aida.Skill.Utils
 
   @spec init(skill :: t, bot :: Aida.Bot.t) :: t

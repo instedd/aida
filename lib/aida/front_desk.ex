@@ -20,21 +20,21 @@ defmodule Aida.FrontDesk do
     threshold
   end
 
-  @spec greet(message :: Message.t, bot :: Bot.t) :: Message.t
-  def greet(%Message{} = message, bot) do
-    log_usage(bot.id, message.session.id)
+  @spec greet(message :: Message.t) :: Message.t
+  def greet(%Message{} = message) do
+    log_usage(message.bot.id, message.session.id)
 
     message
-      |> Message.respond(bot.front_desk.greeting)
-      |> introduction(bot)
+      |> Message.respond(message.bot.front_desk.greeting)
+      |> introduction()
   end
 
-  @spec introduction(message :: Message.t, bot :: Bot.t) :: Message.t
-  def introduction(message, bot) do
+  @spec introduction(message :: Message.t) :: Message.t
+  def introduction(message) do
     message = message
-      |> Message.respond(bot.front_desk.introduction)
+      |> Message.respond(message.bot.front_desk.introduction)
 
-    log_usage(bot.id, message.session.id)
+    log_usage(message.bot.id, message.session.id)
 
     Bot.relevant_skills(message)
       |> Enum.reduce(message, fn(skill, message) ->
@@ -42,11 +42,11 @@ defmodule Aida.FrontDesk do
       end)
   end
 
-  def clarification(message, bot, skills) do
+  def clarification(message, skills) do
     message = message
-      |> Message.respond(bot.front_desk.clarification)
+      |> Message.respond(message.bot.front_desk.clarification)
 
-    log_usage(bot.id, message.session.id)
+    log_usage(message.bot.id, message.session.id)
 
     skills
       |> Enum.reduce(message, fn(skill, message) ->
@@ -54,12 +54,12 @@ defmodule Aida.FrontDesk do
       end)
   end
 
-  def not_understood(message, bot) do
-    log_usage(bot.id, message.session.id)
+  def not_understood(message) do
+    log_usage(message.bot.id, message.session.id)
 
     message
-      |> Message.respond(bot.front_desk.not_understood)
-      |> introduction(bot)
+      |> Message.respond(message.bot.front_desk.not_understood)
+      |> introduction()
   end
 
   defp log_usage(bot_id, session_id) do
