@@ -1,6 +1,6 @@
 defmodule AidaWeb.SessionController do
   use AidaWeb, :controller
-  alias Aida.{DB, ChannelProvider, Channel}
+  alias Aida.{ChannelProvider, Channel}
   alias Aida.DB.{Session, MessageLog}
 
   def index(conn, %{"bot_id" => bot_id}) do
