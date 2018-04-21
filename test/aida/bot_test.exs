@@ -1,4 +1,4 @@
-defmodule Aida.BotTest  do
+defmodule Aida.BotTest do
   use Aida.DataCase
   use Aida.SessionHelper
   alias Aida.DB.{Session}
