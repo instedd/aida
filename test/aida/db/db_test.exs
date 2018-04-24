@@ -2,9 +2,10 @@ defmodule Aida.DBTest do
   use Aida.DataCase
 
   alias Aida.{DB, BotManager, ChannelRegistry}
-  alias Aida.DB.Session
+  alias Aida.DB.{Session, SkillUsage, MessagesPerDay}
 
-  @session_tuple {Ecto.UUID.generate, "facebook", "1234/5678"}
+  @provider "facebook"
+  @provider_key "1234/5678"
 
   describe "bots" do
     alias Aida.DB.Bot
@@ -98,6 +99,59 @@ defmodule Aida.DBTest do
       assert BotManager.find(bot.id) == :not_found
     end
 
+    test "deletes associated sessions when deletes a bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+      bot = bot_fixture()
+      bot2 = bot_fixture()
+      BotManager.flush()
+
+      Session.new({bot.id, "facebook", "1234"})
+      Session.new({bot2.id, "facebook", "5678"})
+
+      assert (Session |> Repo.all |> Enum.count == 2)
+
+      DB.delete_bot(bot)
+      BotManager.flush()
+
+      assert (Session |> Repo.all |> Enum.count == 1)
+    end
+
+    test "deletes associated skill usage entries when deletes a bot" do
+      ChannelRegistry.start_link
+      BotManager.start_link
+      bot1 = bot_fixture()
+      bot2 = bot_fixture()
+      BotManager.flush()
+
+      DB.create_or_update_skill_usage(%{bot_id: bot1.id, user_id: "session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
+      DB.create_or_update_skill_usage(%{bot_id: bot2.id, user_id: "other_session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
+
+      assert (SkillUsage |> Repo.all |> Enum.count == 2)
+
+      DB.delete_bot(bot1)
+      BotManager.flush()
+
+      assert (SkillUsage |> Repo.all |> Enum.count == 1)
+    end
+
+    test "deletes associated messages per day entries when deletes a bot" do
+      ChannelRegistry.start_link
+       BotManager.start_link
+       bot1 = bot_fixture()
+       bot2 = bot_fixture()
+       BotManager.flush()
+
+       DB.create_or_update_messages_per_day_received(%{bot_id: bot1.id, day: Date.utc_today(), received_messages: 1})
+       DB.create_or_update_messages_per_day_received(%{bot_id: bot2.id, day: Date.utc_today(), received_messages: 1})
+
+       assert (MessagesPerDay |> Repo.all |> Enum.count == 2)
+       DB.delete_bot(bot1)
+       BotManager.flush()
+
+       assert (MessagesPerDay |> Repo.all |> Enum.count == 1)
+    end
+
     test "change_bot/1 returns a bot changeset" do
       bot = bot_fixture()
       assert %Ecto.Changeset{} = DB.change_bot(bot)
@@ -108,25 +162,25 @@ defmodule Aida.DBTest do
     end
 
     test "get_session/1 returns the session with the given id" do
-      {bot_id, provider, provider_key} = @session_tuple
-      session = Session.new(@session_tuple)
+      bot = bot_fixture()
+      session = Session.new({bot.id, @provider, @provider_key})
         |> Session.merge(%{"foo" => 1, "bar" => 2})
         |> Session.save
 
       session = Session.get(session.id)
-      assert session.bot_id ==bot_id
+      assert session.bot_id == bot.id
       assert session.data == %{"foo" => 1, "bar" => 2}
-      assert session.provider == provider
-      assert session.provider_key == provider_key
+      assert session.provider == @provider
+      assert session.provider_key == @provider_key
     end
 
     test "replaces existing session" do
-      {bot_id, provider, provider_key} = @session_tuple
-      s1 = Session.new(@session_tuple)
+      bot = bot_fixture()
+      s1 = Session.new({bot.id, @provider, @provider_key})
         |> Session.merge(%{"foo" => 1, "bar" => 2})
         |> Session.save
 
-      Session.find_or_create(bot_id, provider, provider_key)
+      Session.find_or_create(bot.id, @provider, @provider_key)
         |> Session.merge(%{"foo" => 3, "bar" => 4})
         |> Session.save
 
@@ -139,21 +193,21 @@ defmodule Aida.DBTest do
     end
 
     test "get sessions by bot" do
-      {bot_id, provider, provider_key} = @session_tuple
-      other_bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
-      Session.new({other_bot_id, provider, provider_key}) |> Session.save
-      Session.new(@session_tuple) |> Session.save
+      bot = bot_fixture()
+      other_bot = bot_fixture()
+      Session.new({bot.id, @provider, @provider_key}) |> Session.save
+      Session.new({other_bot.id, @provider, "4321/9876"}) |> Session.save
 
-      s1 = Session.find_or_create(bot_id, provider, provider_key)
-      sessions = Session.sessions_by_bot(bot_id)
+      s1 = Session.find_or_create(bot.id, @provider, @provider_key)
+      sessions = Session.sessions_by_bot(bot.id)
       assert sessions == [s1]
     end
 
     test "delete_session/1 deletes a session" do
-      {_, provider, provider_key} = @session_tuple
-      other_bot_id = "c29f9476-af63-4830-96a0-2e8188003a97"
-      s1 = Session.new({other_bot_id, provider, provider_key}) |> Session.save
-      s2 = Session.new(@session_tuple) |> Session.save
+      bot = bot_fixture()
+      other_bot = bot_fixture()
+      s1 = Session.new({bot.id, @provider, @provider_key}) |> Session.save
+      s2 = Session.new({other_bot.id, @provider, @provider_key}) |> Session.save
 
       Session.delete(s1.id)
       assert Session.get(s1.id) == nil
@@ -161,7 +215,8 @@ defmodule Aida.DBTest do
     end
 
     test "create_or_update_skill_usage/1 updates existing skill usage with the proper last_usage" do
-      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       session_id = "facebook/123456789/987654321"
       session_id_2 = "facebook/0123456789/0987654321"
       skill_id = "language_detector"
@@ -178,8 +233,9 @@ defmodule Aida.DBTest do
     end
 
     test "skill_usages_per_user_bot_and_period/2 returns the count for each skill" do
-      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
-      bot_id_2 = "13aaf183-9c29-42ee-946c-138701dbdee8"
+      {:ok, bot1} = DB.create_bot(%{manifest: %{}})
+      {:ok, bot2} = DB.create_bot(%{manifest: %{}})
+      {bot_id, bot_id_2} = {bot1.id, bot2.id}
       session_id = "facebook/123456789/987654321"
       session_id_2 = "facebook/123456789/0987654321"
       session_id_3 = "facebook/123456789/1111111111"
@@ -260,8 +316,9 @@ defmodule Aida.DBTest do
     end
 
     test "active_users_per_bot_and_period/2 returns the active users for a bot" do
-      bot_id = "fc6af4c2-bc8e-4fe1-86f1-6b93ff611537"
-      bot_id_2 = "13aaf183-9c29-42ee-946c-138701dbdee8"
+      {:ok, bot1} = DB.create_bot(%{manifest: %{}})
+      {:ok, bot2} = DB.create_bot(%{manifest: %{}})
+      {bot_id, bot_id_2} = {bot1.id, bot2.id}
       session_id = "facebook/123456789/987654321"
       session_id_2 = "facebook/123456789/0987654321"
       session_id_3 = "facebook/123456789/1111111111"
@@ -344,7 +401,8 @@ defmodule Aida.DBTest do
 
 
     test "create_or_update_messages_per_day_received/1 increments existing messages_per_day with the proper count" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, received_messages: 1}
@@ -371,7 +429,8 @@ defmodule Aida.DBTest do
 
 
     test "create_or_update_messages_per_day_sent/1 increments existing messages_per_day with the proper count" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}
@@ -399,7 +458,8 @@ defmodule Aida.DBTest do
 
 
     test "get_bot_messages_per_day_for_period/3 returns the proper count for a bot in a certain period" do
-      bot_id = "d465b43e-e4fa-4255-8bca-1484f062bb12"
+      {:ok, bot} = DB.create_bot(%{manifest: %{}})
+      bot_id = bot.id
       today = Date.utc_today()
 
       changeset_1 = %{bot_id: bot_id, day: today, sent_messages: 1}

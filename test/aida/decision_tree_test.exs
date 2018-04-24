@@ -1,10 +1,8 @@
 defmodule Aida.DecisionTreeTest do
-  alias Aida.{Bot, BotParser, Message}
+  alias Aida.{Bot, DB, BotParser, Message}
   alias Aida.Skill.DecisionTree
   alias Aida.DB.{Session}
   use Aida.DataCase
-
-  @bot_id "c4cf6a74-d154-4e2f-9945-ba999b06f8bd"
 
   @basic_answer %{"answer" =>
                   %{"en" => "Go with an ice cream",
@@ -99,9 +97,10 @@ defmodule Aida.DecisionTreeTest do
         |> Poison.decode!
         |> Map.put("languages", ["en"])
 
-      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(db_bot.id, manifest)
 
-      session = Session.new({@bot_id, "facebook", "1234567890/0987654321"})
+      session = Session.new({bot.id, "facebook", "1234567890/0987654321"})
         |> Session.save
 
       %{bot: bot, session: session}

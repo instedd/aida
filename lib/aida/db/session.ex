@@ -3,12 +3,11 @@ defmodule Aida.DB.Session do
   import Ecto.Changeset
   import Ecto.Query
   alias Aida.Ecto.Type.JSON
-  alias Aida.DB.MessageLog
   alias Aida.Repo
   alias Aida.Crypto
   alias __MODULE__
 
-  @primary_key {:id, :binary_id, autogenerate: false}
+  @primary_key {:id, :binary_id, autogenerate: true}
   schema "sessions" do
     field :data, JSON, default: %{}
     field :bot_id, :binary_id
@@ -31,9 +30,6 @@ defmodule Aida.DB.Session do
     is_new?: boolean
   }
 
-
-  def new(id \\ Ecto.UUID.generate)
-
   @spec new({String.t, String.t, String.t}) :: t
   def new({bot_id, provider, provider_key}) do
     %Session{
@@ -42,24 +38,7 @@ defmodule Aida.DB.Session do
       provider: provider,
       provider_key: provider_key,
       is_new?: true
-    }
-  end
-
-  @spec new(String.t) :: t
-  def new(id) when is_binary(id) do
-    %Session{
-      id: id,
-      is_new?: true
-    }
-  end
-
-  @spec new({String.t, data}) :: t
-  def new({id, values})
-      when is_binary(id) and is_map(values) do
-    %Session{
-      id: id,
-      data: values
-    }
+    } |> save
   end
 
   # @spec load(String.t) :: Session
@@ -106,7 +85,7 @@ defmodule Aida.DB.Session do
 
   def save(%Session{} = session) do
     session
-      |> Session.changeset(%{is_new?: false})
+      |> Session.changeset(%{})
       |> Repo.insert!(on_conflict: :replace_all, conflict_target: :id)
   end
 

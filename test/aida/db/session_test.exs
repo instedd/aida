@@ -1,18 +1,23 @@
 defmodule Aida.DB.SessionTest do
   use Aida.DataCase
-  alias Aida.DB.Session
-  alias Aida.Repo
+  use Aida.SessionHelper
+  alias Aida.{Repo, DB}
+  alias Aida.DB.{Session, MessageLog, Image}
 
   @session_id Ecto.UUID.generate
-  @bot_id Ecto.UUID.generate
   @provider "facebook"
   @provider_key "1234/5678"
 
-  test "can insert and retrieve sessions" do
+  setup do
+    {:ok, bot} = DB.create_bot(%{manifest: %{}})
+    [bot_id: bot.id]
+  end
+
+  test "can insert and retrieve sessions", %{bot_id: bot_id} do
     data = %{"foo" => 1, "bar" => 2}
 
     %Session{}
-      |> Session.changeset(%{id: @session_id, bot_id: @bot_id, provider: @provider, provider_key: @provider_key, data: data})
+      |> Session.changeset(%{id: @session_id, bot_id: bot_id, provider: @provider, provider_key: @provider_key, data: data})
       |> Repo.insert!
 
     [session] = Session |> Repo.all
@@ -20,21 +25,48 @@ defmodule Aida.DB.SessionTest do
     assert session.data == data
     assert session.provider == @provider
     assert session.provider_key == @provider_key
-    assert session.bot_id == @bot_id
+    assert session.bot_id == bot_id
   end
 
-  test "cannot insert two sessions with same id" do
+  test "cannot insert two sessions with same id", %{bot_id: bot_id} do
     %Session{}
-      |> Session.changeset(%{id: @session_id, bot_id: @bot_id, provider: @provider, provider_key: @provider_key})
+      |> Session.changeset(%{id: @session_id, bot_id: bot_id, provider: @provider, provider_key: @provider_key})
       |> Repo.insert!
 
     assert_raise Ecto.ConstraintError, fn ->
       %Session{}
-        |> Session.changeset(%{id: @session_id, bot_id: @bot_id, provider: "ws", provider_key: @provider_key})
+        |> Session.changeset(%{id: @session_id, bot_id: bot_id, provider: "ws", provider_key: @provider_key})
         |> Repo.insert!
     end
   end
 
+  describe "on delete" do
+    test "deletes message logs of that session", %{bot_id: bot_id} do
+      id1 = Ecto.UUID.generate
+      id2 = Ecto.UUID.generate
+      new_session(id1, %{}, bot_id) |> Session.save
+      new_session(id2, %{}, bot_id) |> Session.save
+      MessageLog.create(%{bot_id: bot_id, session_id: id1, direction: "incoming", content_type: "text", content: "Hello"})
+      MessageLog.create(%{bot_id: bot_id, session_id: id2, direction: "incoming", content_type: "text", content: "Hello"})
+
+      Session.delete(id1)
+
+      assert MessageLog |> Repo.all |> Enum.count == 1
+    end
+
+    test "deletes images of that session", %{bot_id: bot_id} do
+      id1 = Ecto.UUID.generate
+      id2 = Ecto.UUID.generate
+      new_session(id1, %{}, bot_id) |> Session.save
+      new_session(id2, %{}, bot_id) |> Session.save
+      %Image{} |> Image.changeset(%{binary: <<0,1>>, binary_type: "image/jpeg", source_url: "foo", bot_id: bot_id, session_id: id1}) |> Repo.insert
+      %Image{} |> Image.changeset(%{binary: <<0,1>>, binary_type: "image/jpeg", source_url: "foo", bot_id: bot_id, session_id: id2}) |> Repo.insert
+
+      Session.delete(id1)
+
+      assert Image |> Repo.all |> Enum.count == 1
+    end
+  end
   # TODO: This should work
   # test "cannot insert two sessions with same uuid" do
   #   %Session{}
