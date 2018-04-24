@@ -2,7 +2,7 @@ defmodule Aida.Message do
   alias Aida.{Message, Bot}
   alias Aida.DB.{Session}
   alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content, SystemContent, InvalidImageContent}
-  require Logger
+  use Aida.ErrorLog
 
   @type t :: %__MODULE__{
     session: Session.t,
@@ -190,7 +190,14 @@ defmodule Aida.Message do
         if var_name in resolved_vars do
           "..."
         else
-          lookup_var(message, var_name) |> display_var
+          case lookup_var(message, var_name) do
+            :not_found ->
+              ErrorLog.write("Variable '#{var_name}' was not found")
+              ""
+
+            value ->
+              display_var(value)
+           end
         end
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
       text_before <> interpolate_vars(message, var_value, [var_name | resolved_vars]) <> text_after
@@ -209,7 +216,9 @@ defmodule Aida.Message do
           |> Aida.Expr.eval(message |> expr_context(lookup_raises: true))
           |> display_var
         rescue
-          error -> "[ERROR: #{Exception.message(error)}]"
+          error ->
+            ErrorLog.write(Exception.message(error))
+            "[ERROR: #{Exception.message(error)}]"
         end
 
       <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
