@@ -16,6 +16,7 @@ defmodule Aida.Bot do
 
   alias __MODULE__
   require Logger
+  use Aida.ErrorLog
 
   @type message :: map
 
@@ -70,14 +71,16 @@ defmodule Aida.Bot do
     end
   end
   def chat(%Message{} = message) do
-    message
-    |> reset_language_if_invalid()
-    |> choose_language_for_single_language_bot()
-    |> handle()
-    |> greet_if_no_response_and_language_was_set(message)
-    |> unset_session_new
-    |> log_incoming
-    |> log_outgoing
+    ErrorLog.context(bot_id: message.bot.id, session_id: message.session.id) do
+      message
+      |> reset_language_if_invalid()
+      |> choose_language_for_single_language_bot()
+      |> handle()
+      |> greet_if_no_response_and_language_was_set(message)
+      |> unset_session_new
+      |> log_incoming
+      |> log_outgoing
+    end
   end
 
   defp log_incoming(%{bot: %{public_keys: public_keys} = bot} = message) do
@@ -182,7 +185,9 @@ defmodule Aida.Bot do
         end
 
         if threshold(message.bot) <= difference do
-          Skill.respond(higher_confidence_skill.skill, message)
+          ErrorLog.context(skill_id: Skill.id(higher_confidence_skill.skill)) do
+            Skill.respond(higher_confidence_skill.skill, message)
+          end
         else
           message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
         end

@@ -9,6 +9,7 @@ defmodule Aida.BotTest do
     Crypto,
     DataTable,
     DB,
+    ErrorLog,
     FrontDesk,
     Message,
     Skill.KeywordResponder,
@@ -634,6 +635,39 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "I'm not sure exactly what you need."
       ]
+    end
+  end
+
+  describe "log errors" do
+    setup :create_manifest_bot
+    setup :generate_session_for_test_channel
+
+    test "when there is a missing variable", %{bot: bot, session: session} do
+      bot = Updater.update(bot, [:skills, 0, :explanation], "foo: ${foo}")
+      ld_skill = bot.skills |> Enum.at(0)
+
+      Message.new("Hi!", bot, session)
+      |> Bot.chat()
+
+      assert [error_log] = ErrorLog |> Repo.all()
+      assert error_log.bot_id == bot.id
+      assert error_log.session_id == session.id
+      assert error_log.skill_id == ld_skill |> Aida.Skill.id()
+      assert error_log.message == "Variable 'foo' was not found"
+    end
+
+    test "when the expression contains an error", %{bot: bot, session: session} do
+      bot = Updater.update(bot, [:skills, 0, :explanation], "foo: {{ bar }}")
+      ld_skill = bot.skills |> Enum.at(0)
+
+      Message.new("Hi!", bot, session)
+      |> Bot.chat()
+
+      assert [error_log] = ErrorLog |> Repo.all()
+      assert error_log.bot_id == bot.id
+      assert error_log.session_id == session.id
+      assert error_log.skill_id == ld_skill |> Aida.Skill.id()
+      assert error_log.message == "Could not find attribute named 'bar'"
     end
   end
 
