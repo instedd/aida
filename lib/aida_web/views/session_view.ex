@@ -13,6 +13,17 @@ defmodule AidaWeb.SessionView do
     }
   end
 
+  def render("session_data_full.json", %{sessions: sessions}) do
+    %{data: render_many(sessions, SessionView, "session_full.json")}
+  end
+
+  def render("session_full.json", %{session: session}) do
+    %{
+      id: session.id,
+      data: session.data
+    }
+  end
+
   def render("index.json", %{sessions: sessions}) do
     %{data: render_many(sessions, SessionView, "session_index.json")}
   end

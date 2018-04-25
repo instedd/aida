@@ -189,6 +189,19 @@ defmodule AidaWeb.SessionControllerTest do
         }
       ]
     end
+
+    test "include variables starting with dot if requested", %{conn: conn, bot: bot, session: session} do
+      data = %{"foo" => 1, "bar" => 2, ".internal" => %{"state" => 1}}
+      session = session |> Session.merge(data) |> Session.save
+
+      conn = get conn, bot_session_path(conn, :session_data, bot.id, include_internal: true)
+      assert json_response(conn, 200)["data"] == [
+        %{
+          "id" => session.id,
+          "data" => data
+        }
+      ]
+    end
   end
 
   describe "log" do
