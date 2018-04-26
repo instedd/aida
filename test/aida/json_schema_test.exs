@@ -124,12 +124,12 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "message": #{@valid_localized_string}
   })
-  @valid_note_question ~s({
+  @valid_note ~s({
     "type": "note",
     "name": "a",
     "message": #{@valid_localized_string}
   })
-  @valid_note_question_with_relevant ~s({
+  @valid_note_with_relevant ~s({
     "type": "note",
     "name": "a",
     "relevant": "true",
@@ -147,7 +147,7 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "schedule": "2017-12-10T01:40:13.000-03:00",
     "keywords": #{@valid_localized_keywords},
-    "questions": [#{@valid_input_question}, #{@valid_note_question}, #{@valid_select_question}, #{@valid_encrypted_input_question}, #{@valid_encrypted_select_question}, #{@valid_note_question_with_relevant}],
+    "questions": [#{@valid_input_question}, #{@valid_note}, #{@valid_select_question}, #{@valid_encrypted_input_question}, #{@valid_encrypted_select_question}, #{@valid_note_with_relevant}],
     "choice_lists": []
   })
 
@@ -667,9 +667,9 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:select_question)
   end
 
-  test "note_question" do
-    @valid_note_question
-    |> assert_valid(:note_question)
+  test "survey note" do
+    @valid_note
+    |> assert_valid(:note)
   end
 
   test "choice" do

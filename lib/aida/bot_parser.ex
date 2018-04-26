@@ -216,6 +216,7 @@ defmodule Aida.BotParser do
       "text" -> :text
       "select_one" -> :select_one
       "select_many" -> :select_many
+      "note" -> :note
     end
     parse_survey_question(question_type, question, choice_lists)
   end
@@ -230,6 +231,15 @@ defmodule Aida.BotParser do
       message: question["message"],
       constraint_message: question["constraint_message"],
       choice_filter: parse_expr(question["choice_filter"])
+    }
+  end
+
+  defp parse_survey_question(question_type, question, _) when question_type == :note do
+    %Survey.Note{
+      type: question_type,
+      name: question["name"],
+      relevant: parse_expr(question["relevant"]),
+      message: question["message"]
     }
   end
 

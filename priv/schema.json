@@ -336,7 +336,7 @@
       "oneOf": [
         {"$ref": "#/definitions/select_question"},
         {"$ref": "#/definitions/input_question"},
-        {"$ref": "#/definitions/note_question"}
+        {"$ref": "#/definitions/note"}
       ]
     },
 
@@ -356,7 +356,7 @@
       "required": ["type", "name", "choices", "message"]
     },
 
-    "note_question": {
+    "note": {
       "type": "object",
       "properties": {
         "type": {"enum": ["note"]},
