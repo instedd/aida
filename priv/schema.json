@@ -335,7 +335,8 @@
     "question": {
       "oneOf": [
         {"$ref": "#/definitions/select_question"},
-        {"$ref": "#/definitions/input_question"}
+        {"$ref": "#/definitions/input_question"},
+        {"$ref": "#/definitions/note_question"}
       ]
     },
 
@@ -353,6 +354,18 @@
       },
       "additionalProperties": false,
       "required": ["type", "name", "choices", "message"]
+    },
+
+    "note_question": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["note"]},
+        "name": {"$ref": "#/definitions/non_empty_string"},
+        "message": {"$ref": "#/definitions/localized_string"},
+        "relevant": {"$ref": "#/definitions/non_empty_string"}
+      },
+      "additionalProperties": false,
+      "required": ["type", "name", "message"]
     },
 
     "input_question": {
