@@ -1,5 +1,5 @@
 defmodule Aida.Skill.Survey.InputQuestion do
-  alias Aida.{Expr, Message, Message.ImageContent, Message}
+  alias Aida.{Expr, Message, Message.ImageContent}
 
   @type t :: %__MODULE__{
     type: :decimal | :integer | :text | :image,

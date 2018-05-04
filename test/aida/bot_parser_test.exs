@@ -181,6 +181,14 @@ defmodule Aida.BotParserTest do
           schedule: ~N[2117-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
           keywords: %{"en" => ["food preferences", "food survey", "survey"], "es" => ["preferencias alimentarias", "encuesta alimentaria"]},
           questions: [
+            %Aida.Skill.Survey.Note{
+              type: :note,
+              name: "introduction",
+              message: %{
+                "en" => "I would like to ask you a few questions to better cater for your food preferences.",
+                "es" => "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida."
+              }
+            },
             %SelectQuestion{
               name: "opt_in",
               type: :select_one,
@@ -201,8 +209,8 @@ defmodule Aida.BotParserTest do
                 }
               ],
               message: %{
-                "en" => "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
-                "es" => "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+                "en" => "May I ask you now?",
+                "es" => "Puedo preguntarte ahora?"
               }
             },
             %InputQuestion{
@@ -291,6 +299,11 @@ defmodule Aida.BotParserTest do
                 "es" => "Podemos ver tu casa?"
               }
             },
+            %Aida.Skill.Survey.Note{
+              type: :note,
+              name: "nice",
+              message: %{"en" => "Nice!", "es" => "Muy linda!"}
+            },
             %InputQuestion{
               name: "request",
               type: :text,
@@ -298,6 +311,11 @@ defmodule Aida.BotParserTest do
                 "en" => "Any particular requests for your dinner?",
                 "es" => "Algún pedido especial para tu cena?"
               }
+            },
+            %Aida.Skill.Survey.Note{
+              type: :note,
+              name: "thanks",
+              message: %{"en" => "Thank you!", "es" => "Gracias!"}
             }
           ]
         },

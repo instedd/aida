@@ -52,9 +52,16 @@ defmodule Aida.Skill.Survey do
     answer(survey, message)
   end
 
-  def answer(survey, message) do
+   def answer(survey, message) do
     case current_question(survey, message) do
-      nil -> message
+      nil ->
+        message
+
+      %{type: :note} = question ->
+        message = message |> Message.respond(question.message)
+        message = move_to_next_question(survey, message)
+        answer(survey, message)
+
       question ->
         message |> Message.respond(question.message)
     end

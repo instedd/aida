@@ -178,12 +178,20 @@
       },
       "questions": [
         {
+          "type": "note",
+          "name": "introduction",
+          "message": {
+            "en": "I would like to ask you a few questions to better cater for your food preferences.",
+            "es": "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida."
+          }
+        },
+        {
           "type": "select_one",
           "choices": "yes_no",
           "name": "opt_in",
           "message": {
-            "en": "I would like to ask you a few questions to better cater for your food preferences. Is that ok?",
-            "es": "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida. Puede ser?"
+            "en": "May I ask you now?",
+            "es": "Puedo preguntarte ahora?"
           }
         },
         {
@@ -232,11 +240,27 @@
           }
         },
         {
+          "type": "note",
+          "name": "nice",
+          "message": {
+            "en": "Nice!",
+            "es": "Muy linda!"
+          }
+        },
+        {
           "type": "text",
           "name": "request",
           "message": {
             "en": "Any particular requests for your dinner?",
             "es": "Algún pedido especial para tu cena?"
+          }
+        },
+        {
+          "type": "note",
+          "name": "thanks",
+          "message": {
+            "en": "Thank you!",
+            "es": "Gracias!"
           }
         }
       ],

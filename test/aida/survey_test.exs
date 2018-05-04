@@ -59,10 +59,10 @@ defmodule Aida.SurveyTest do
 
         Bot.wake_up(bot, "food_preferences")
 
-        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"], ^session_id}
+        assert_received {:send_message, ["I would like to ask you a few questions to better cater for your food preferences.", "May I ask you now?"], ^session_id}
 
         session = Session.get(session_id)
-        assert session |> Session.get_value(".survey/food_preferences") == %{"step" => 0}
+        assert session |> Session.get_value(".survey/food_preferences") == %{"step" => 1}
       end
     end
 
@@ -107,51 +107,51 @@ defmodule Aida.SurveyTest do
       message = Message.new("survey", bot, session)
       message = Bot.chat(message)
 
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 0}
-      assert message.reply == ["I would like to ask you a few questions to better cater for your food preferences. Is that ok?"]
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
+      assert message.reply == ["I would like to ask you a few questions to better cater for your food preferences.", "May I ask you now?"]
     end
 
     test "accept user reply", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 0}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 1}})
         |> Session.save
 
       message = Message.new("Yes", bot, session)
       message = Bot.chat(message)
 
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
       assert message.reply == ["How old are you?"]
       assert message |> Message.get_session("survey/food_preferences/opt_in") == "yes"
     end
 
     test "accept user reply case insensitive", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 0}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 1}})
         |> Session.save
 
       message = Message.new("yes", bot, session)
       message = Bot.chat(message)
 
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
       assert message.reply == ["How old are you?"]
       assert message |> Message.get_session("survey/food_preferences/opt_in") == "yes"
     end
 
     test "invalid reply should retry the question", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 2}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 3}})
         |> Session.save
 
       message = Message.new("bananas", bot, session)
       message = Bot.chat(message)
 
       assert message.reply == ["Invalid temperature", "At what temperature do your like red wine the best?"]
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 3}
     end
 
     test "unknown content should retry the question", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 4}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 5}})
         |> Session.save
 
       message = Message.new_unknown(bot, session)
@@ -174,75 +174,76 @@ defmodule Aida.SurveyTest do
 
     test "accept user reply on select_many", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 3}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 4}})
         |> Session.save
 
       message = Message.new("merlot, syrah", bot, session)
       message = Bot.chat(message)
 
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 5}
       assert message.reply == ["Can we see your home?"]
       assert message |> Message.get_session("survey/food_preferences/wine_grapes") == ["merlot", "syrah"]
     end
 
     test "clears the store to end the survey", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 5}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 7}})
         |> Session.save
 
       message = Message.new("No, thanks!", bot, session)
       message = Bot.chat(message)
+      assert message.reply == ["Thank you!"]
 
       assert message |> Message.get_session(".survey/food_preferences") == nil
     end
 
     test "skip questions when the relevant attribute evaluates to false", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 1}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 2}})
         |> Session.save
 
       message = Message.new("15", bot, session)
       message = Bot.chat(message)
 
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 5}
       assert message.reply == ["Can we see your home?"]
     end
 
-    test "do not skip questions when the relevant attribute evaluates to false", %{bot: bot, session: session} do
+    test "do not skip questions when the relevant attribute evaluates to true", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 1}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 2}})
         |> Session.save
 
       message = Message.new("20", bot, session)
       message = Bot.chat(message)
 
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 3}
       assert message.reply == ["At what temperature do your like red wine the best?"]
     end
 
     test "validate input responses and continue if the value is valid", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 2}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 3}})
         |> Session.save
 
       message = Message.new("20", bot, session)
       message = Bot.chat(message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == 20.0
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 3}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 4}
       assert message.reply == ["What are your favorite wine grapes?"]
     end
 
     test "validate input responses and return constraint message when the value is invalid", %{bot: bot, session: session} do
       session = session
-        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 2}})
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 3}})
         |> Session.save
 
       message = Message.new("200", bot, session)
       message = Bot.chat(message)
 
       assert message |> Message.get_session("survey/food_preferences/wine_temp") == nil
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 3}
       assert message.reply == [
         "Invalid temperature",
         "At what temperature do your like red wine the best?"
