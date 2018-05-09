@@ -76,10 +76,6 @@ const apiPostJSON = (url, body) => {
   return apiPutOrPostJSON(url, 'POST', body)
 }
 
-const apiPutJSON = (url, body) => {
-  return apiPutOrPostJSON(url, 'PUT', body)
-}
-
 const apiDelete = (url) => {
   return apiFetch(url, {method: 'DELETE'})
 }
@@ -111,8 +107,4 @@ export const createBot = (manifest) => {
 
 export const deleteBot = (bot) => {
   return apiDelete(`bots/${bot.id}`)
-}
-
-export const updateBot = (bot, manifest) => {
-  return apiPutJSON(`bots/${bot.id}`, {manifest: {manifest}})
 }
