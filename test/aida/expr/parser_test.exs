@@ -57,6 +57,10 @@ defmodule Aida.Expr.ParserTest do
       assert parse("${Foo}") == var("Foo")
     end
 
+    test "variables with slash scope separators" do
+      assert parse("${foo/bar}") == var("foo/bar")
+    end
+
     test "variables with uppercase in any position" do
       assert parse("${fOo}") == var("fOo")
     end
@@ -103,6 +107,12 @@ defmodule Aida.Expr.ParserTest do
     test "error when variable starts with digit" do
       assert_raise ParseError, "Invalid expression: '${1foo}'", fn ->
         parse("${1foo}")
+      end
+    end
+
+    test "error when variable starts with slash" do
+      assert_raise ParseError, "Invalid expression: '${/foo}'", fn ->
+        parse("${/foo}")
       end
     end
   end
