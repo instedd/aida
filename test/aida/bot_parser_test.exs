@@ -178,7 +178,7 @@ defmodule Aida.BotParserTest do
           id: "food_preferences",
           bot_id: @uuid,
           name: "Food Preferences",
-          schedule: ~N[2117-12-10 01:40:13] |> DateTime.from_naive!("Etc/UTC"),
+          schedule: nil,
           keywords: %{"en" => ["food preferences", "food survey", "survey"], "es" => ["preferencias alimentarias", "encuesta alimentaria"]},
           questions: [
             %Aida.Skill.Survey.Note{

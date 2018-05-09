@@ -80,19 +80,6 @@ const apiDelete = (url) => {
   return apiFetch(url, {method: 'DELETE'})
 }
 
-// const apiPostFile = (url, file) => {
-//   return apiFetchJSON(url, {
-//     method: 'POST',
-//     body: newFormData(file)
-//   })
-// }
-
-// const newFormData = (file) => {
-//   const formData = new FormData()
-//   formData.append('file', file)
-//   return formData
-// }
-
 export const fetchBots = () => {
   return apiFetchJSON(`bots`)
 }
