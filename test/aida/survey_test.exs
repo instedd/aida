@@ -42,6 +42,16 @@ defmodule Aida.SurveyTest do
     end
   end
 
+  test "init doesn't schedule wake_up if the survey doesn't have schedule" do
+    bot = %Bot{id: @bot_id}
+    skill = %Survey{id: @skill_id, schedule: nil}
+
+    with_mock BotManager, [schedule_wake_up: fn(_bot, _skill, _ts) -> :ok end] do
+      skill |> Skill.init(bot)
+      refute called BotManager.schedule_wake_up(:_, :_, :_)
+    end
+  end
+
   describe "wake_up" do
     setup :load_manifest_bot
 
