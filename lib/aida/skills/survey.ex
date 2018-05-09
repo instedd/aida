@@ -18,7 +18,7 @@ defmodule Aida.Skill.Survey do
   defstruct id: "",
             bot_id: "",
             name: "",
-            schedule: DateTime.utc_now,
+            schedule: nil,
             relevant: nil,
             keywords: nil,
             questions: []
@@ -113,6 +113,8 @@ defmodule Aida.Skill.Survey do
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
+    def init(%{schedule: nil} = skill, _), do: skill
+
     def init(skill, bot) do
       if DateTime.compare(skill.schedule, DateTime.utc_now) == :gt do
         BotManager.schedule_wake_up(bot, skill, skill.schedule)

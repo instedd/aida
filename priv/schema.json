@@ -290,7 +290,7 @@
         }
       },
       "additionalProperties": false,
-      "required": ["type", "id", "name", "schedule", "questions", "choice_lists"]
+      "required": ["type", "id", "name", "questions", "choice_lists"]
     },
 
     "decision_tree": {

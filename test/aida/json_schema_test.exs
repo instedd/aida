@@ -584,7 +584,6 @@ defmodule Aida.JsonSchemaTest do
     assert_enum("type", "foo", :survey)
     assert_valid_enum("type", "survey", :survey)
     assert_required("type", :survey)
-    assert_required("schedule", :survey)
     assert_required("name", :survey)
     assert_non_empty_string("name", :survey)
     assert_required("id", :survey)
