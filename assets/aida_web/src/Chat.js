@@ -33,14 +33,16 @@ class Chat extends Component {
 
     channel.on('btu_msg', payload => {
       console.log(`[${Date()}] ${payload.text}`)
-      const { messages } = this.state
+      const { messages, sessionId } = this.state
 
-      this.setState({
-        messages: [
-          ...messages,
-          payload.text
-        ]
-      })
+      if (sessionId === payload.session) {
+        this.setState({
+          messages: [
+            ...messages,
+            payload.text
+          ]
+        })
+      }
     })
 
     this.setState({ channel: channel })
