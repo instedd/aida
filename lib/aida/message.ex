@@ -1,7 +1,8 @@
 defmodule Aida.Message do
   alias Aida.{Message, Bot}
   alias Aida.DB.{Session}
-  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content}
+  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content, SystemContent}
+  require Logger
 
   @type t :: %__MODULE__{
     session: Session.t,
@@ -41,6 +42,15 @@ defmodule Aida.Message do
       session: session,
       bot: bot,
       content: %UnknownContent{}
+    }
+  end
+
+  # @spec new_system(text :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  def new_system(text, %Bot{} = bot, session) do
+    %Message{
+      session: session,
+      bot: bot,
+      content: SystemContent.new(text)
     }
   end
 

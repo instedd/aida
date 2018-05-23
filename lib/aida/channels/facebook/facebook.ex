@@ -6,6 +6,7 @@ defmodule Aida.Channel.Facebook do
   alias Aida.Message
   alias Aida.DB.Session
   import Aida.ErrorHandler
+  require Logger
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
@@ -114,39 +115,39 @@ defmodule Aida.Channel.Facebook do
 
         session = Session.find_or_create(channel.bot_id, "facebook", "#{recipient_id}/#{sender_id}")
 
-        case text do
-          "##RESET" ->
-            Session.delete(session.id)
-            send_message(channel, ["Session was reset"], session)
+        if String.slice(text, 0..1) == "##" do
+          handle_by_message_type(channel, session, sender_id, :system, text)
+        else
+          case text do
+            nil ->
+              attachment = if message["message"]["attachments"] do
+                Enum.at(message["message"]["attachments"], 0)
+              else
+                %{}
+              end
 
-          nil ->
-            attachment = if message["message"]["attachments"] do
-              Enum.at(message["message"]["attachments"], 0)
-            else
-              %{}
-            end
-
-            case attachment["type"] do
-              "image" ->
-                source_url =
-                  if (attachment["payload"] && attachment["payload"]["url"]) do
-                    attachment["payload"]["url"]
-                  else
-                    ""
+              case attachment["type"] do
+                "image" ->
+                  source_url =
+                    if (attachment["payload"] && attachment["payload"]["url"]) do
+                      attachment["payload"]["url"]
+                    else
+                      ""
+                    end
+                  try do
+                    handle_by_message_type(channel, session, sender_id, :image, source_url)
+                  rescue
+                    _ ->
+                      :ok
                   end
-                try do
-                  handle_by_message_type(channel, session, sender_id, :image, source_url)
-                rescue
-                  _ ->
-                    :ok
-                end
-              nil -> :ok
-              _ ->
-                handle_by_message_type(channel, session, sender_id, :unknown, "")
-            end
+                nil -> :ok
+                _ ->
+                  handle_by_message_type(channel, session, sender_id, :unknown, "")
+              end
 
-          _ ->
-            handle_by_message_type(channel, session, sender_id, :text, text)
+            _ ->
+              handle_by_message_type(channel, session, sender_id, :text, text)
+          end
         end
       rescue
         error ->
@@ -163,6 +164,7 @@ defmodule Aida.Channel.Facebook do
         case message_type do
           :text -> Message.new(message_string, bot, session)
           :image -> Message.new_from_image(message_string, bot, session)
+          :system -> Message.new_system(message_string, bot, session)
           :unknown -> Message.new_unknown(bot, session)
         end
         |> pull_profile(channel, sender_id)
