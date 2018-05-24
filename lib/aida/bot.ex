@@ -56,7 +56,7 @@ defmodule Aida.Bot do
   end
 
   @spec chat(message :: Message.t) :: Message.t
-  def chat(%Message{ content: %SystemContent{text: text}, session: session } = message) do
+  def chat(%Message{ content: %SystemContent{text: text}, session: session, bot: bot } = message) do
     case text do
       "##RESET" ->
         Session.delete(session.id)
@@ -64,6 +64,9 @@ defmodule Aida.Bot do
 
       "##SESSION" ->
         Message.respond(message, String.slice(session.id, -7..-1))
+
+      _ ->
+        Bot.chat(Message.new(text, bot, session))
     end
   end
   def chat(%Message{} = message) do
