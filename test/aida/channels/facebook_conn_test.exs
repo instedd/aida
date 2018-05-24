@@ -34,6 +34,75 @@ defmodule Aida.Channel.FacebookConnTest do
     "provider" => "facebook"
   }
 
+  @incoming_session_id_message %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "message" => %{
+              "mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5",
+              "seq" => 493,
+              "text" => "##SESSION"
+            },
+            "recipient" => %{"id" => "1234567890"},
+            "sender" => %{"id" => "1234"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
+
+  @incoming_reset_message %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "message" => %{
+              "mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5",
+              "seq" => 493,
+              "text" => "##RESET"
+            },
+            "recipient" => %{"id" => "1234567890"},
+            "sender" => %{"id" => "1234"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
+
+  @incoming_hash_but_not_system_message %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "message" => %{
+              "mid" => "mid.$cAAaHH1ei9DNl7dw2H1fvJcC5-hi5",
+              "seq" => 493,
+              "text" => "##FOO"
+            },
+            "recipient" => %{"id" => "1234567890"},
+            "sender" => %{"id" => "1234"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
+
   setup do
     ChannelRegistry.start_link
     BotManager.start_link
@@ -62,6 +131,46 @@ defmodule Aida.Channel.FacebookConnTest do
     test "incoming facebook message" do
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
         conn = build_conn(:post, "/callback/facebook", @incoming_message)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        assert_message_sent("Hello, I'm a Restaurant bot")
+        assert_message_sent("I can do a number of things")
+        assert_message_sent("I can give you information about our menu")
+        assert_message_sent("I can give you information about our opening hours")
+      end
+    end
+
+    test "incoming system session id message", %{bot: bot} do
+      recipient_id = Session.encrypt_id("1234", bot.id)
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_session_id_message)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        session = Session.find_or_create(bot.id, "facebook", "1234567890/#{recipient_id}")
+        assert_message_sent(String.slice(session.id, -7..-1))
+      end
+    end
+
+    test "incoming system reset message", %{bot: bot} do
+      recipient_id = Session.encrypt_id("1234", bot.id)
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_reset_message)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        assert_message_sent("Session was reset")
+      end
+    end
+
+    test "incoming non system trick message", %{bot: bot} do
+      recipient_id = Session.encrypt_id("1234", bot.id)
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_hash_but_not_system_message)
           |> Facebook.callback()
 
         assert response(conn, 200) == "ok"

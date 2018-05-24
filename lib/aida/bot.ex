@@ -11,6 +11,7 @@ defmodule Aida.Bot do
     Skill,
     Variable
   }
+  alias Aida.Message.SystemContent
   alias Aida.DB.Session
 
   alias __MODULE__
@@ -55,6 +56,19 @@ defmodule Aida.Bot do
   end
 
   @spec chat(message :: Message.t) :: Message.t
+  def chat(%Message{ content: %SystemContent{text: text}, session: session, bot: bot } = message) do
+    case text do
+      "##RESET" ->
+        Session.delete(session.id)
+        Message.respond(message, "Session was reset")
+
+      "##SESSION" ->
+        Message.respond(message, String.slice(session.id, -7..-1))
+
+      _ ->
+        Bot.chat(Message.new(text, bot, session))
+    end
+  end
   def chat(%Message{} = message) do
     message
     |> reset_language_if_invalid()
