@@ -310,12 +310,17 @@
     },
 
     "tree_question":{
-      "question": {"$ref": "#/definitions/localized_string"},
-      "responses": {
-        "type": "array",
-        "minItems": 1,
-        "items": {"$ref": "#/definitions/tree_response"}
-      }
+      "type": "object",
+      "properties": {
+        "question": {"$ref": "#/definitions/localized_string"},
+        "responses": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/definitions/tree_response"}
+        }
+      },
+      "additionalProperties": true,
+      "required": ["question"]
     },
 
     "tree_response":{
