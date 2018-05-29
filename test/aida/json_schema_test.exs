@@ -159,22 +159,26 @@ defmodule Aida.JsonSchemaTest do
     "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
     "tree": {
+      "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
       "question": #{@valid_localized_string},
       "responses": [
         {
           "keywords": #{@valid_localized_keywords},
           "next": {
+            "id": "3d5d6819-ae31-45b6-b8f6-13d62b092735",
             "question": #{@valid_localized_string},
             "responses": [
               {
                 "keywords":#{@valid_localized_keywords},
                 "next": {
+                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092733",
                   "answer": #{@valid_localized_string}
                 }
               },
               {
                 "keywords": #{@valid_localized_keywords},
                 "next": {
+                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092734",
                   "answer": #{@valid_localized_string}
                 }
               }
@@ -189,23 +193,27 @@ defmodule Aida.JsonSchemaTest do
               {
                 "keywords": #{@valid_localized_keywords},
                 "next": {
+                  "id": "031d9a25-f457-4b21-b83b-13e00ece6cc0",
                   "answer": #{@valid_localized_string}
                 }
               },
               {
                 "keywords": #{@valid_localized_keywords},
                 "next": {
+                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092730",
                   "question": #{@valid_localized_string},
                   "responses": [
                     {
                       "keywords": #{@valid_localized_keywords},
                       "next": {
+                        "id": "3d5d6819-ae31-45b6-b8f6-13d62b092732",
                         "answer": #{@valid_localized_string}
                       }
                     },
                     {
                       "keywords": #{@valid_localized_keywords},
                       "next": {
+                        "id": "3d5d6819-ae31-45b6-b8f6-13d62b092731",
                         "answer": #{@valid_localized_string}
                       }
                     }

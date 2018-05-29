@@ -312,6 +312,7 @@
     "tree_question":{
       "type": "object",
       "properties": {
+        "id": {"$ref": "#/definitions/non_empty_string"},
         "question": {"$ref": "#/definitions/localized_string"},
         "responses": {
           "type": "array",
@@ -319,8 +320,8 @@
           "items": {"$ref": "#/definitions/tree_response"}
         }
       },
-      "additionalProperties": true,
-      "required": ["question"]
+      "additionalProperties": false,
+      "required": ["question", "id"]
     },
 
     "tree_response":{

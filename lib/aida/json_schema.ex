@@ -72,8 +72,6 @@ defmodule Aida.JsonSchema do
   defp get_validation_errors(object, type, schema) do
     type_string = type |> to_string
     type_schema = schema.schema["definitions"][type_string]
-    require Logger
-    Logger.debug("SCHEMA #{inspect type_schema}")
 
     not_a_struct = case object do
       %{__struct__: _} -> Map.from_struct(object)
