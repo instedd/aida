@@ -169,6 +169,11 @@ defmodule Aida.Channel.Facebook do
 
       reply = Bot.chat(message)
       reply.session |> Session.save
+      require Logger
+      Logger.debug("FACEBOOOOK")
+      Logger.debug(inspect reply.session)
+
+
 
       send_message(channel, reply.reply, session)
     end

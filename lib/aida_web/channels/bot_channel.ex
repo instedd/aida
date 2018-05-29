@@ -14,14 +14,22 @@ defmodule AidaWeb.BotChannel do
   end
 
   def handle_in("new_session", attrs, socket) do
+    require Logger
+    Logger.debug("new session")
+    Logger.debug(1)
     data = case attrs do
       %{"data" => %{} = data} -> data
       _ -> %{}
     end
+    Logger.debug(2)
 
     session = Session.new({socket.assigns.bot_id, "ws", Ecto.UUID.generate})
       |> Session.merge(data)
-      |> Session.save
+      # |> Session.save
+    Logger.debug(3)
+    Logger.debug(session.is_new?)
+    Logger.debug(session.id)
+    Logger.debug(inspect session)
 
     {:reply, {:ok, %{session: session.id}}, socket}
   end
@@ -44,6 +52,10 @@ defmodule AidaWeb.BotChannel do
       :not_found -> {:stop, :not_found, socket}
       bot ->
         session = Session.get(session_id)
+        require Logger
+        Logger.debug("BOT CHANNEL")
+        Logger.debug(inspect session)
+
         reply = Bot.chat(Message.new(text, bot, session))
         reply.session |> Session.save
 

@@ -73,6 +73,8 @@ defmodule Aida.DB.Session do
   Returns the session for the given id. If the session does not exist, it returns `nil`.
   """
   def get(id) do
+    require Logger
+    Logger.debug(inspect(Session |> Repo.get(id)))
     Session |> Repo.get(id)
   end
 
