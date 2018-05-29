@@ -159,22 +159,26 @@ defmodule Aida.JsonSchemaTest do
     "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
     "tree": {
+      "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
       "question": #{@valid_localized_string},
       "responses": [
         {
           "keywords": #{@valid_localized_keywords},
           "next": {
+            "id": "3d5d6819-ae31-45b6-b8f6-13d62b092735",
             "question": #{@valid_localized_string},
             "responses": [
               {
                 "keywords":#{@valid_localized_keywords},
                 "next": {
+                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092733",
                   "answer": #{@valid_localized_string}
                 }
               },
               {
                 "keywords": #{@valid_localized_keywords},
                 "next": {
+                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092734",
                   "answer": #{@valid_localized_string}
                 }
               }
@@ -189,23 +193,27 @@ defmodule Aida.JsonSchemaTest do
               {
                 "keywords": #{@valid_localized_keywords},
                 "next": {
+                  "id": "031d9a25-f457-4b21-b83b-13e00ece6cc0",
                   "answer": #{@valid_localized_string}
                 }
               },
               {
                 "keywords": #{@valid_localized_keywords},
                 "next": {
+                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092730",
                   "question": #{@valid_localized_string},
                   "responses": [
                     {
                       "keywords": #{@valid_localized_keywords},
                       "next": {
+                        "id": "3d5d6819-ae31-45b6-b8f6-13d62b092732",
                         "answer": #{@valid_localized_string}
                       }
                     },
                     {
                       "keywords": #{@valid_localized_keywords},
                       "next": {
+                        "id": "3d5d6819-ae31-45b6-b8f6-13d62b092731",
                         "answer": #{@valid_localized_string}
                       }
                     }
@@ -213,6 +221,59 @@ defmodule Aida.JsonSchemaTest do
                 }
               }
             ]
+          }
+        }
+      ]
+    }
+  })
+
+  @valid_multi_lang_decision_tree ~s({
+    "type": "decision_tree",
+    "id": "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+    "name": "Food menu",
+    "explanation": {
+      "en": "I can help you choose a meal that fits your dietary restrictions",
+      "es": "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+    },
+    "clarification": {
+      "en": "To get a meal recommendation write 'meal recommendation'",
+      "es": "Para recibir una recomendación escribe 'recomendación'"
+    },
+    "keywords": {
+      "en": ["meal recommendation","recommendation "],
+      "es": ["recomendación","recomendacion"]
+    },
+    "tree": {
+      "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
+      "question": {
+        "en": "Do you want to eat a main course or a dessert?",
+        "es": "Querés comer un primer plato o un postre?"
+      },
+      "responses": [
+        {
+          "keywords": {
+            "en": ["main course", "Main"],
+            "es": ["primer plato"]
+          },
+          "next": {
+            "id": "031d9a25-f457-4b21-b83b-13e00ece6cc0",
+            "answer": {
+              "en": "Go with Risotto",
+              "es": "Clavate un risotto"
+            }
+          }
+        },
+        {
+          "keywords": {
+            "en": ["dessert"],
+            "es": ["postre"]
+          },
+          "next": {
+            "id": "3d5d6819-ae31-45b6-b8f6-13d62b092730",
+            "answer": {
+              "en": "Go with a carrot cake",
+              "es": "Come una torta de zanahoria"
+            }
           }
         }
       ]
@@ -614,8 +675,12 @@ defmodule Aida.JsonSchemaTest do
     assert_required("clarification", :decision_tree)
     assert_required("keywords", :decision_tree)
     assert_optional("relevant", "${age} > 18", :decision_tree)
+    assert_required("question", :tree_question)
 
     @valid_decision_tree
+    |> assert_valid(:decision_tree)
+
+    @valid_multi_lang_decision_tree
     |> assert_valid(:decision_tree)
   end
 
