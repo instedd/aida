@@ -25,9 +25,9 @@ defmodule AidaWeb.BotChannel do
 
     session = Session.new({socket.assigns.bot_id, "ws", Ecto.UUID.generate})
       |> Session.merge(data)
-      # |> Session.save
+      |> Session.save
     Logger.debug(3)
-    Logger.debug(session.is_new?)
+    Logger.debug(session.is_new)
     Logger.debug(session.id)
     Logger.debug(inspect session)
 

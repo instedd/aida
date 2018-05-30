@@ -16,7 +16,7 @@ defmodule Aida.SessionTest do
       bot_id: ^bot_id,
       provider: @provider,
       provider_key: @provider_key,
-      is_new?: true,
+      is_new: true,
       data: %{}
     } = session
   end
@@ -41,7 +41,7 @@ defmodule Aida.SessionTest do
         bot_id: ^bot_id,
         provider: @provider,
         provider_key: @provider_key,
-        is_new?: true,
+        is_new: true,
         data: %{}
       } = loaded_session
     end
@@ -56,7 +56,7 @@ defmodule Aida.SessionTest do
         bot_id: ^bot_id,
         provider: @provider,
         provider_key: @provider_key,
-        is_new?: false,
+        is_new: true,
         data: %{"foo" => "bar"}
       } = loaded_session
     end
