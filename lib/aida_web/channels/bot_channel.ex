@@ -14,22 +14,14 @@ defmodule AidaWeb.BotChannel do
   end
 
   def handle_in("new_session", attrs, socket) do
-    require Logger
-    Logger.debug("new session")
-    Logger.debug(1)
     data = case attrs do
       %{"data" => %{} = data} -> data
       _ -> %{}
     end
-    Logger.debug(2)
 
     session = Session.new({socket.assigns.bot_id, "ws", Ecto.UUID.generate})
       |> Session.merge(data)
       |> Session.save
-    Logger.debug(3)
-    Logger.debug(session.is_new)
-    Logger.debug(session.id)
-    Logger.debug(inspect session)
 
     {:reply, {:ok, %{session: session.id}}, socket}
   end
