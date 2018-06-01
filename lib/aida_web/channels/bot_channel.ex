@@ -44,10 +44,6 @@ defmodule AidaWeb.BotChannel do
       :not_found -> {:stop, :not_found, socket}
       bot ->
         session = Session.get(session_id)
-        require Logger
-        Logger.debug("BOT CHANNEL")
-        Logger.debug(inspect session)
-
         reply = Bot.chat(Message.new(text, bot, session))
         reply.session |> Session.save
 
