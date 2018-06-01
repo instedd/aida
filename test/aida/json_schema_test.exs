@@ -150,136 +150,51 @@ defmodule Aida.JsonSchemaTest do
     "questions": [#{@valid_input_question}, #{@valid_note}, #{@valid_select_question}, #{@valid_encrypted_input_question}, #{@valid_encrypted_select_question}, #{@valid_note_with_relevant}],
     "choice_lists": []
   })
-
+  @valid_answer ~s({
+    "id": "a1",
+    "answer": #{@valid_localized_string}
+  })
+  @valid_response1 ~s({
+    "keywords":#{@valid_localized_keywords},
+    "next": #{@valid_answer}
+  })
+  @valid_tree_question1 ~s({
+    "id": "q1",
+    "question": #{@valid_localized_string},
+    "responses": [#{@valid_response1}]
+  })
+  @valid_response3 ~s({
+    "keywords": #{@valid_localized_keywords},
+    "next": #{@valid_tree_question1}
+  })
+  @valid_tree_question2 ~s({
+    "id": "q2",
+    "question": #{@valid_localized_string},
+    "responses": [
+      #{@valid_response1},
+      #{@valid_response3}
+    ]
+  })
+  @valid_response2 ~s({
+    "keywords": #{@valid_localized_keywords},
+    "next": #{@valid_tree_question2}
+  })
+  @valid_tree_question3 ~s({
+    "id": "q3",
+    "question": #{@valid_localized_string},
+    "responses": [
+      #{@valid_response2}
+    ]
+  })
   @valid_decision_tree ~s({
     "type": "decision_tree",
-    "id": "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
-    "name": "Food menu",
+    "id": "t",
+    "name": "n",
     "explanation": #{@valid_empty_localized_string},
     "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
-    "tree": {
-      "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
-      "question": #{@valid_localized_string},
-      "responses": [
-        {
-          "keywords": #{@valid_localized_keywords},
-          "next": {
-            "id": "3d5d6819-ae31-45b6-b8f6-13d62b092735",
-            "question": #{@valid_localized_string},
-            "responses": [
-              {
-                "keywords":#{@valid_localized_keywords},
-                "next": {
-                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092733",
-                  "answer": #{@valid_localized_string}
-                }
-              },
-              {
-                "keywords": #{@valid_localized_keywords},
-                "next": {
-                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092734",
-                  "answer": #{@valid_localized_string}
-                }
-              }
-            ]
-          }
-        },
-        {
-          "keywords": #{@valid_localized_keywords},
-          "next": {
-            "question": #{@valid_localized_string},
-            "responses": [
-              {
-                "keywords": #{@valid_localized_keywords},
-                "next": {
-                  "id": "031d9a25-f457-4b21-b83b-13e00ece6cc0",
-                  "answer": #{@valid_localized_string}
-                }
-              },
-              {
-                "keywords": #{@valid_localized_keywords},
-                "next": {
-                  "id": "3d5d6819-ae31-45b6-b8f6-13d62b092730",
-                  "question": #{@valid_localized_string},
-                  "responses": [
-                    {
-                      "keywords": #{@valid_localized_keywords},
-                      "next": {
-                        "id": "3d5d6819-ae31-45b6-b8f6-13d62b092732",
-                        "answer": #{@valid_localized_string}
-                      }
-                    },
-                    {
-                      "keywords": #{@valid_localized_keywords},
-                      "next": {
-                        "id": "3d5d6819-ae31-45b6-b8f6-13d62b092731",
-                        "answer": #{@valid_localized_string}
-                      }
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      ]
-    }
+    "tree": #{@valid_tree_question1}
   })
-
-  @valid_multi_lang_decision_tree ~s({
-    "type": "decision_tree",
-    "id": "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
-    "name": "Food menu",
-    "explanation": {
-      "en": "I can help you choose a meal that fits your dietary restrictions",
-      "es": "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
-    },
-    "clarification": {
-      "en": "To get a meal recommendation write 'meal recommendation'",
-      "es": "Para recibir una recomendación escribe 'recomendación'"
-    },
-    "keywords": {
-      "en": ["meal recommendation","recommendation "],
-      "es": ["recomendación","recomendacion"]
-    },
-    "tree": {
-      "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
-      "question": {
-        "en": "Do you want to eat a main course or a dessert?",
-        "es": "Querés comer un primer plato o un postre?"
-      },
-      "responses": [
-        {
-          "keywords": {
-            "en": ["main course", "Main"],
-            "es": ["primer plato"]
-          },
-          "next": {
-            "id": "031d9a25-f457-4b21-b83b-13e00ece6cc0",
-            "answer": {
-              "en": "Go with Risotto",
-              "es": "Clavate un risotto"
-            }
-          }
-        },
-        {
-          "keywords": {
-            "en": ["dessert"],
-            "es": ["postre"]
-          },
-          "next": {
-            "id": "3d5d6819-ae31-45b6-b8f6-13d62b092730",
-            "answer": {
-              "en": "Go with a carrot cake",
-              "es": "Come una torta de zanahoria"
-            }
-          }
-        }
-      ]
-    }
-  })
-
   @valid_variable ~s({
     "name": "a",
     "values": {
@@ -661,6 +576,55 @@ defmodule Aida.JsonSchemaTest do
     |> assert_valid(:survey)
   end
 
+  test "tree_response" do
+    assert_required("keywords", :tree_response)
+    assert_required("next", :tree_response)
+
+    @valid_response1
+    |> assert_valid(:tree_response)
+
+    @valid_response2
+    |> assert_valid(:tree_response)
+
+    @valid_response3
+    |> assert_valid(:tree_response)
+  end
+
+  test "next_tree" do
+    @valid_tree_question1
+    |> assert_valid(:next_tree)
+
+    @valid_answer
+    |> assert_valid(:next_tree)
+
+    ~s({})
+    |> reject_sub_type(:next_tree)
+  end
+
+  test "answer" do
+    assert_required("answer", :answer)
+    assert_required("id", :answer)
+
+    @valid_answer
+    |> assert_valid(:answer)
+  end
+
+  test "tree_question" do
+    assert_required("question", :tree_question)
+    assert_required("responses", :tree_question)
+    assert_required("id", :tree_question)
+
+    reject_empty_array("responses", :tree_question)
+
+    @valid_tree_question1
+    |> assert_valid(:tree_question)
+
+    @valid_tree_question2
+    |> assert_valid(:tree_question)
+
+    @valid_tree_question3
+    |> assert_valid(:tree_question)
+  end
 
   test "decision_tree" do
     assert_enum("type", "foo", :decision_tree)
@@ -675,12 +639,8 @@ defmodule Aida.JsonSchemaTest do
     assert_required("clarification", :decision_tree)
     assert_required("keywords", :decision_tree)
     assert_optional("relevant", "${age} > 18", :decision_tree)
-    assert_required("question", :tree_question)
 
     @valid_decision_tree
-    |> assert_valid(:decision_tree)
-
-    @valid_multi_lang_decision_tree
     |> assert_valid(:decision_tree)
   end
 

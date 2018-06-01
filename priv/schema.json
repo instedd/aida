@@ -306,7 +306,7 @@
         "tree": {"$ref": "#/definitions/tree_question"}
       },
       "additionalProperties": false,
-      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "tree" ]
+      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "tree"]
     },
 
     "tree_question":{
@@ -321,21 +321,34 @@
         }
       },
       "additionalProperties": false,
-      "required": ["question", "id"]
+      "required": ["question", "id", "responses"]
     },
 
-    "tree_response":{
-      "keywords": {"$ref": "#/definitions/localized_keywords"},
-      "next": {
-          "oneOf": [
-          {"$ref": "#/definitions/tree_question"},
-          {"$ref": "#/definitions/answer"}
-        ]
-      }
+    "tree_response": {
+      "type": "object",
+      "properties": {
+        "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "next": {"$ref": "#/definitions/next_tree"}
+      },
+      "additionalProperties": false,
+      "required": ["keywords", "next"]
     },
 
-    "answer":  {
-      "$ref": "#/definitions/localized_string"
+    "next_tree": {
+      "oneOf": [
+        {"$ref": "#/definitions/tree_question"},
+        {"$ref": "#/definitions/answer"}
+      ]
+    },
+
+    "answer": {
+      "type": "object",
+      "properties": {
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "answer": {"$ref": "#/definitions/localized_string"}
+      },
+      "additionalProperties": false,
+      "required": ["id", "answer"]
     },
 
     "question": {
