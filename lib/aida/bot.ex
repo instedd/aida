@@ -129,7 +129,7 @@ defmodule Aida.Bot do
   end
 
   defp unset_session_new(message) do
-    %{message | session: %{message.session | is_new?: false}}
+    %{message | session: %{message.session | is_new: false}}
   end
 
   defp greet_if_no_response_and_language_was_set(message, original_message) do

@@ -1,6 +1,6 @@
 defmodule Aida.FrontDesk do
   alias __MODULE__
-  alias Aida.{Bot, Message, Skill, DB.SkillUsage}
+  alias Aida.{Bot, Message, Skill, DB.SkillUsage, DB.Session}
 
   @type t :: %__MODULE__{
     threshold: float,
@@ -23,6 +23,8 @@ defmodule Aida.FrontDesk do
   @spec greet(message :: Message.t) :: Message.t
   def greet(%Message{} = message) do
     log_usage(message.bot.id, message.session.id)
+
+    %{message.session | is_new: false} |> Session.save
 
     message
       |> Message.respond(message.bot.front_desk.greeting)

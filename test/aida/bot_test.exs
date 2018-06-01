@@ -12,7 +12,8 @@ defmodule Aida.BotTest do
     FrontDesk,
     Message,
     Skill.KeywordResponder,
-    TestSkill
+    TestSkill,
+    Repo
   }
 
   alias Aida.DB.{MessageLog, Session}
@@ -77,7 +78,9 @@ defmodule Aida.BotTest do
         |> Map.put("languages", ["en"])
       {:ok, bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(bot.id, manifest)
-      initial_session = Session.new({bot.id, @provider, @provider_key})
+      s = Session.new({bot.id, @provider, @provider_key})
+      initial_session = Repo.get(Session, s.id)
+
 
       %{bot: bot, initial_session: initial_session}
     end
@@ -263,6 +266,7 @@ defmodule Aida.BotTest do
       {:ok, bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(bot.id, manifest)
       initial_session = Session.new({bot.id, @provider, @provider_key})
+      %{initial_session | is_new: false} |> Session.save
 
       %{bot: bot, initial_session: initial_session}
     end

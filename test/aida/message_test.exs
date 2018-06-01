@@ -16,7 +16,7 @@ defmodule Aida.MessageTest do
   test "create new incoming message with new session", %{initial_session: initial_session} do
     message = Message.new("Hi!", @bot, initial_session)
     assert %Message{
-      session: %Session{is_new?: true},
+      session: %Session{is_new: true},
       content: %TextContent{text: "Hi!"},
       reply: []
     } = message

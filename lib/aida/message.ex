@@ -128,7 +128,7 @@ defmodule Aida.Message do
 
   @spec new_session?(message :: t) :: boolean
   def new_session?(%{session: session}) do
-    session.is_new?
+    session.is_new
   end
 
   @spec language(message :: t) :: Session.value
