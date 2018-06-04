@@ -108,46 +108,44 @@ defmodule Aida.Channel.Facebook do
       sender_id = message["sender"]["id"]
 
       try do
-        text = message["message"]["text"]
-
         sender_id = Session.encrypt_id(sender_id, channel.bot_id)
         recipient_id = message["recipient"]["id"]
 
         session = Session.find_or_create(channel.bot_id, "facebook", "#{recipient_id}/#{sender_id}")
 
-        if String.slice(text, 0..1) == "##" do
-          handle_by_message_type(channel, session, sender_id, :system, text)
-        else
-          case text do
-            nil ->
-              attachment = if message["message"]["attachments"] do
-                Enum.at(message["message"]["attachments"], 0)
-              else
-                %{}
-              end
+        case message["message"]["text"] do
+          nil ->
+            attachment = if message["message"]["attachments"] do
+              Enum.at(message["message"]["attachments"], 0)
+            else
+              %{}
+            end
 
-              case attachment["type"] do
-                "image" ->
-                  source_url =
-                    if (attachment["payload"] && attachment["payload"]["url"]) do
-                      attachment["payload"]["url"]
-                    else
-                      ""
-                    end
-                  try do
-                    handle_by_message_type(channel, session, sender_id, :image, source_url)
-                  rescue
-                    _ ->
-                      :ok
+            case attachment["type"] do
+              "image" ->
+                source_url =
+                  if (attachment["payload"] && attachment["payload"]["url"]) do
+                    attachment["payload"]["url"]
+                  else
+                    ""
                   end
-                nil -> :ok
-                _ ->
-                  handle_by_message_type(channel, session, sender_id, :unknown, "")
-              end
+                try do
+                  handle_by_message_type(channel, session, sender_id, :image, source_url)
+                rescue
+                  _ ->
+                    :ok
+                end
+              nil -> :ok
+              _ ->
+                handle_by_message_type(channel, session, sender_id, :unknown, "")
+            end
 
-            _ ->
+          text ->
+            if String.slice(text, 0..1) == "##" do
+              handle_by_message_type(channel, session, sender_id, :system, text)
+            else
               handle_by_message_type(channel, session, sender_id, :text, text)
-          end
+            end
         end
       rescue
         error ->
@@ -156,7 +154,7 @@ defmodule Aida.Channel.Facebook do
       end
     end
 
-    @spec handle_by_message_type(Aida.Channel.t, Session.t, String.t, :text | :image | :unknown, String.t) :: :ok
+    @spec handle_by_message_type(Aida.Channel.t, Session.t, String.t, :text | :image | :unknown | :system, String.t) :: :ok
     defp handle_by_message_type(channel, session, sender_id, message_type, message_string) do
       bot = BotManager.find(channel.bot_id)
 

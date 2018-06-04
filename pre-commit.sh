@@ -1,54 +1,36 @@
 #!/bin/sh
 NC='\033[0m'
 GREEN='\033[0;32m'
+RED='\033[0;31m'
 
-echo "----==== Running Mix tests ====----"
-MIX_TESTS="$(docker-compose run --rm app mix test)"
+echo "${GREEN}----==== Running Mix tests ====----${NC}"
+docker-compose run --rm -e MIX_ENV=test app mix do compile --force --warnings-as-errors, test
+MIX=$?
 
-if [ $? -eq 0 ]; then
+if [ $MIX -eq 0 ]; then
   echo "${GREEN}OK${NC}";
-else
-  echo "${MIX_TESTS}"
 fi
 
-echo "----==== Running JS tests ====----"
-JS_TESTS="$(docker-compose run --rm -e CI=true node yarn test)"
+echo "${GREEN}----==== Running Dialyzer ====----${NC}"
+DIALYZER="$(docker-compose run --rm app mix dialyzer)"
+echo "${DIALYZER}"
 
-if [ $? -eq 0 ]; then
+if [[ $DIALYZER == *"done (passed successfully)"* ]]; then
   echo "${GREEN}OK${NC}";
-else
-  echo "${JS_TESTS}"
 fi
 
-echo "----==== Running Flow tests ====----"
-if hash flow 2>/dev/null; then
-  FLOW_TESTS="$(flow check)"
+if [ $MIX -eq 0 ] && [[ $DIALYZER == *"done (passed successfully)"* ]]; then
+  echo "${GREEN}----==== Good to go! ====----${NC}"
 else
-  FLOW_TESTS="$(./assets/aida_web/node_modules/.bin/flow check)"
+  echo "${RED}----==== Oops! ====----${NC}"
+
+  if [ $MIX -ne 0 ]; then
+  echo "${RED}Mix tests failed${NC}";
+  fi
+
+  if [[ $DIALYZER != *"done (passed successfully)"* ]]; then
+    echo "${GREEN}OK${NC}";
+  fi
+
+  echo "${RED}----==== Oops! ====----${NC}"
 fi
-
-if [ $? -eq 0 ]; then
-  echo "${GREEN}OK${NC}";
-else
-  echo "${FLOW_TESTS}"
-fi
-
-echo "----==== Running Eslint tests ====----"
-ESLINT_TESTS="$(docker-compose run --rm node yarn eslint)"
-
-if [ $? -eq 0 ]; then
-  echo "${GREEN}OK${NC}";
-else
-  echo "${ESLINT_TESTS}"
-fi
-
-echo "----==== Running Dialyzer ====----"
-
-DIALYZER_TESTS="$(docker-compose run --rm app mix dialyzer)"
-
-if [[ $DIALYZER_TESTS == *"done (passed successfully)"* ]]; then
-  echo "${GREEN}OK${NC}";
-else
-  echo "${DIALYZER_TESTS}"
-fi
-

@@ -7,7 +7,7 @@ defmodule Aida.Message do
   @type t :: %__MODULE__{
     session: Session.t,
     bot: Bot.t,
-    content: TextContent.t | ImageContent.t | UnknownContent.t,
+    content: TextContent.t | ImageContent.t | UnknownContent.t | SystemContent.t,
     sensitive: boolean,
     reply: [String.t]
   }
