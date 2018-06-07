@@ -88,7 +88,7 @@ defmodule Aida.BotParser do
     %LanguageDetector{
       explanation: skill["explanation"],
       bot_id: bot_id,
-      languages: skill["languages"],
+      languages: parse_string_list_map(skill["languages"]),
       reply_to_unsupported_language: skill["reply_to_unsupported_language"] == true
     }
   end
@@ -317,7 +317,7 @@ defmodule Aida.BotParser do
 
   defp parse_string_list(string_list) do
     string_list
-    |> Enum.map(&String.trim/1)
+    |> Enum.map(&(&1 |> String.trim |> String.downcase))
   end
 
   defp validate(bot) do

@@ -196,15 +196,15 @@ defmodule Aida.BotParserTest do
                 %Choice{
                   name: "yes",
                   labels: %{
-                    "en" => ["Yes", "Sure", "Ok"],
-                    "es" => ["Si", "OK", "Dale"]
+                    "en" => ["yes", "sure", "ok"],
+                    "es" => ["si", "ok", "dale"]
                   }
                 },
                 %Choice{
                   name: "no",
                   labels: %{
-                    "en" => ["No", "Nope", "Later"],
-                    "es" => ["No", "Luego", "Nop"]
+                    "en" => ["no", "nope", "later"],
+                    "es" => ["no", "luego", "nop"]
                   }
                 }
               ],
@@ -625,15 +625,15 @@ defmodule Aida.BotParserTest do
                 %Choice{
                   name: "yes",
                   labels: %{
-                    "en" => ["Yes", "Sure", "Ok"],
-                    "es" => ["Si", "OK", "Dale"]
+                    "en" => ["yes", "sure", "ok"],
+                    "es" => ["si", "ok", "dale"]
                   }
                 },
                 %Choice{
                   name: "no",
                   labels: %{
-                    "en" => ["No", "Nope", "Later"],
-                    "es" => ["No", "Luego", "Nop"]
+                    "en" => ["no", "nope", "later"],
+                    "es" => ["no", "luego", "nop"]
                   }
                 }
               ],
@@ -924,15 +924,15 @@ defmodule Aida.BotParserTest do
                 %{
                   "name" => "yes",
                   "labels" => %{
-                    "en" => ["Yes", "Sure", "Ok"],
-                    "es" => ["Si", "OK", "Dale"]
+                    "en" => ["yes", "sure", "ok"],
+                    "es" => ["si", "ok", "dale"]
                   }
                 },
                 %{
                   "name" => "no",
                   "labels" => %{
-                    "en" => ["No", "Nope", "Later"],
-                    "es" => ["No", "Luego", "Nop"]
+                    "en" => ["no", "nope", "later"],
+                    "es" => ["no", "luego", "nop"]
                   }
                 }
               ]

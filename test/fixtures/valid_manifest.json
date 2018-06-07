@@ -33,8 +33,8 @@
       "type": "language_detector",
       "explanation": "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
       "languages": {
-        "en": ["english", "inglés"],
-        "es": ["español", "spanish"]
+        "en": ["English", "inglés"],
+        "es": ["Español", "spanish"]
       },
       "reply_to_unsupported_language": true
     },
@@ -51,8 +51,8 @@
         "es": "Para información sobre nuestro menu, escribe 'menu'"
       },
       "keywords": {
-        "en": ["menu","food "],
-        "es": ["menu"," comida"]
+        "en": ["Menu","food "],
+        "es": ["menu"," Comida"]
       },
       "response": {
         "en": "We have ${food_options}",
@@ -172,8 +172,8 @@
       "id": "food_preferences",
       "name": "Food Preferences",
       "keywords": {
-        "en": ["food preferences","food survey ", "survey"],
-        "es": ["preferencias alimentarias","encuesta alimentaria"]
+        "en": ["food preferences","food survey ", "SURVEY"],
+        "es": ["preFerencias alimentarias","encuesta alimentaria"]
       },
       "questions": [
         {
@@ -343,8 +343,8 @@
         "es": "Para recibir una recomendación escribe 'recomendación'"
       },
       "keywords": {
-        "en": ["meal recommendation","recommendation "],
-        "es": ["recomendación","recomendacion"]
+        "en": ["meal Recommendation","recommendation "],
+        "es": ["recomendación","Recomendacion"]
       },
       "tree": {
         "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
@@ -380,7 +380,7 @@
                 },
                 {
                   "keywords": {
-                    "en": ["no"],
+                    "en": ["No"],
                     "es": ["no"]
                   },
                   "next": {
