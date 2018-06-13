@@ -18,6 +18,6 @@ defmodule Aida.DB.Image do
   def changeset(%Image{} = image, attrs) do
     image
     |> cast(attrs, [:binary, :binary_type, :source_url, :bot_id, :session_id])
-    |> validate_required([:binary, :binary_type, :source_url, :bot_id, :session_id])
+    |> validate_required([:binary, :binary_type, :bot_id, :session_id])
   end
 end

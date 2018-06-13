@@ -51,6 +51,8 @@ defmodule AidaWeb.SessionView do
     }
   end
 
+  def render("attachment.json", %{attachment_id: attachment_id}), do: %{id: attachment_id}
+
   defp hide_internal_data(data) do
     internal_keys =
       data
