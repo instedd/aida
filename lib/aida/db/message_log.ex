@@ -51,5 +51,4 @@ defmodule Aida.DB.MessageLog do
       |> select([m], %{timestamp: m.inserted_at, direction: m.direction, content: m.content, content_type: m.content_type})
       |> Repo.all
   end
-
 end
