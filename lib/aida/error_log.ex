@@ -1,6 +1,7 @@
 defmodule Aida.ErrorLog do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query
   alias __MODULE__
   alias Aida.{DB, Repo}
 
@@ -50,6 +51,12 @@ defmodule Aida.ErrorLog do
 
   def set_context(vars) do
     Process.put(@context_key, Map.new(vars))
+  end
+
+  def by_bot(bot_id) do
+    ErrorLog
+    |> where([log], log.bot_id == ^bot_id)
+    |> Repo.all()
   end
 
   defmacro context(vars, do: block) do

@@ -19,6 +19,7 @@ defmodule AidaWeb.Router do
         post "/send_message", SessionController, :send_message
         post "/attachment", SessionController, :attachment
       end
+      resources "/error_logs", ErrorLogController, only: [:index]
       get "/stats/usage_summary", SkillUsageController, :usage_summary
       get "/stats/users_per_skill", SkillUsageController, :users_per_skill
     end
