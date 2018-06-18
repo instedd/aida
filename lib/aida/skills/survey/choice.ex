@@ -1,6 +1,7 @@
 defmodule Aida.Skill.Survey.Choice do
   alias Aida.Message
   alias __MODULE__
+  use Aida.ErrorLog
 
   @type t :: %__MODULE__{
     name: String.t(),
@@ -27,9 +28,9 @@ defmodule Aida.Skill.Survey.Choice do
     try do
       filter |> Aida.Expr.eval(context)
     rescue
-      Aida.Expr.UnknownVariableError -> false
-      Aida.Expr.UnknownAttributeError -> false
-      Aida.Expr.UnknownFunctionError -> false
+      error ->
+        ErrorLog.write(Exception.message(error))
+        false
     end
   end
 

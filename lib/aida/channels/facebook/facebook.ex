@@ -132,7 +132,8 @@ defmodule Aida.Channel.Facebook do
                 try do
                   handle_by_message_type(channel, session, sender_id, :image, source_url)
                 rescue
-                  _ ->
+                  error ->
+                    capture_exception("Error obtaining Facebook image", error, bot_id: channel.bot_id, image: source_url)
                     :ok
                 end
               nil -> :ok
