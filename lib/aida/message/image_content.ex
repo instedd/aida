@@ -50,6 +50,10 @@ defmodule Aida.Message.ImageContent do
       :image
     end
 
+    def raw(%ImageContent{image_id: image_id, source_url: ""}) do
+      "image:#{image_id}"
+    end
+
     def raw(%ImageContent{source_url: source_url}) do
       source_url
     end

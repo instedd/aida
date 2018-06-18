@@ -1,6 +1,6 @@
 defmodule AidaWeb.Channel.WebSocketTest do
   alias AidaWeb.BotChannel
-  alias Aida.{BotManager, BotParser, ChannelRegistry, DB, DB.Session}
+  alias Aida.{BotManager, BotParser, ChannelRegistry, DB, DB.Session, DB.Image, Repo, DB.MessageLog}
   use AidaWeb.ChannelCase
 
   setup do
@@ -89,5 +89,54 @@ defmodule AidaWeb.Channel.WebSocketTest do
     socket |> push("utb_msg", %{"session" => session_id, "text" => "Hi!"})
 
     assert_push("btu_msg", %{session: ^session_id, text: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"}, 1000)
+  end
+
+  describe "images" do
+    setup do
+      manifest = File.read!("test/fixtures/valid_manifest_images.json") |> Poison.decode!()
+      {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+      {:ok, bot} = BotParser.parse(db_bot.id, manifest)
+      ChannelRegistry.start_link
+      BotManager.start_link
+      BotManager.start(bot)
+
+      socket = socket()
+      |> subscribe_and_join!(BotChannel, "bot:#{bot.id}", %{"access_token" => "qwertyuiopasdfghjklzxcvbnm"})
+      socket |> push("new_session")
+        |> assert_reply(:ok, %{session: session_id})
+      socket |> push("utb_msg", %{"session" => session_id, "text" => "survey"})
+      assert_push("btu_msg", %{session: ^session_id, text: "Can you send me a picture?"}, 1000)
+
+      {:ok, binary} = File.read("test/fixtures/file_upload_test.png")
+      image = %Image{} |> Image.changeset(%{binary: binary, binary_type: "image/jpeg", source_url: nil, bot_id: bot.id, session_id: session_id}) |> Repo.insert!
+
+      {:ok, image: image, socket: socket}
+    end
+
+    test "bot answers a utb image message", %{image: %{uuid: image_uuid, session_id: session_id}, socket: socket} do
+      socket |> push("utb_img", %{"session" => session_id, "image" => image_uuid})
+      assert_push("btu_msg", %{session: ^session_id, text: "Nice!"}, 1000)
+    end
+
+    test "bot answers a utb image message with no image", %{image: %{session_id: session_id}, socket: socket} do
+      socket |> push("utb_img", %{"session" => session_id, "image" => "BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB"})
+      assert_push("btu_msg", %{session: ^session_id, text: "Can you send me a picture?"}, 1000)
+      assert(MessageLog |> Repo.get_by!(content: "invalid_image:BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB"))
+    end
+
+    test "bot answers a utb image from a different session with no image", %{image: %{uuid: image_uuid}, socket: socket} do
+      socket
+      |> push("new_session")
+      |> assert_reply(:ok, %{session: new_session_id})
+      socket
+      |> push("utb_msg", %{"session" => new_session_id, "text" => "survey"})
+      assert_push("btu_msg", %{session: ^new_session_id, text: "Can you send me a picture?"}, 1000)
+
+      socket
+      |> push("utb_img", %{"session" => new_session_id, "image" => image_uuid})
+
+      assert_push("btu_msg", %{session: ^new_session_id, text: "Can you send me a picture?"}, 1000)
+      assert(MessageLog |> Repo.get_by!(content: "invalid_image:#{image_uuid}"))
+    end
   end
 end
