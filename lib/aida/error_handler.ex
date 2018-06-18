@@ -1,5 +1,6 @@
 defmodule Aida.ErrorHandler do
   require Logger
+  use Aida.ErrorLog
 
   def capture_exception(message, error, extra \\ []) do
     stacktrace = System.stacktrace()
@@ -12,6 +13,7 @@ defmodule Aida.ErrorHandler do
     )
 
     Logger.error("#{message}: #{Exception.format(:error, error, stacktrace)}")
+    ErrorLog.write("#{message}: #{Exception.message(error)}")
   end
 
   def capture_message(message, extra \\ []) do

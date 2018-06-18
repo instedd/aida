@@ -37,6 +37,7 @@ end
 
 defmodule Aida.Skill.Utils do
   alias Aida.{Skill, DB.SkillUsage, Message}
+  use Aida.ErrorLog
 
   def respond(skill, message) do
     SkillUsage.log_skill_usage(message.bot.id, Skill.id(skill), message.session.id)
@@ -52,9 +53,9 @@ defmodule Aida.Skill.Utils do
         try do
           Aida.Expr.eval(expr, message |> Message.expr_context(lookup_raises: true))
         rescue
-          Aida.Expr.UnknownVariableError -> false
-          Aida.Expr.UnknownAttributeError -> false
-          Aida.Expr.UnknownFunctionError -> false
+          error ->
+            ErrorLog.write(Exception.message(error))
+            false
         end
     end
   end

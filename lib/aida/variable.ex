@@ -1,5 +1,6 @@
 defmodule Aida.Variable do
   alias Aida.{Bot, Variable.Override, DB.Session, Message}
+  use Aida.ErrorLog
 
   @type t :: %__MODULE__{
     name: String.t,
@@ -28,7 +29,9 @@ defmodule Aida.Variable do
         try do
           override.relevant |> Aida.Expr.eval(message |> Message.expr_context(lookup_raises: true))
         rescue
-          Aida.Expr.UnknownVariableError -> false
+          error ->
+            ErrorLog.write(Exception.message(error))
+            false
         end
       end)
 
