@@ -29,7 +29,7 @@ else
   fi
 
   if [[ $DIALYZER != *"done (passed successfully)"* ]]; then
-    echo "${GREEN}OK${NC}";
+    echo "${RED}Dialyzer failed${NC}";
   fi
 
   echo "${RED}----==== Oops! ====----${NC}"
