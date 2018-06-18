@@ -1,6 +1,7 @@
 defmodule Aida.FrontDesk do
   alias __MODULE__
   alias Aida.{Bot, Message, Skill, DB.SkillUsage, DB.Session}
+  use Aida.ErrorLog
 
   @type t :: %__MODULE__{
     threshold: float,
@@ -40,7 +41,9 @@ defmodule Aida.FrontDesk do
 
     Bot.relevant_skills(message)
       |> Enum.reduce(message, fn(skill, message) ->
-        Skill.explain(skill, message)
+        ErrorLog.context(skill_id: Skill.id(skill)) do
+          Skill.explain(skill, message)
+        end
       end)
   end
 
@@ -52,7 +55,9 @@ defmodule Aida.FrontDesk do
 
     skills
       |> Enum.reduce(message, fn(skill, message) ->
-        Skill.clarify(skill, message)
+        ErrorLog.context(skill_id: Skill.id(skill)) do
+          Skill.clarify(skill, message)
+        end
       end)
   end
 

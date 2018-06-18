@@ -171,10 +171,12 @@ defmodule Aida.Bot do
 
     case skills_sorted do
       [] ->
-        if Message.new_session?(message) do
-          message |> FrontDesk.greet()
-        else
-          message |> FrontDesk.not_understood()
+        ErrorLog.context(skill_id: "front_desk") do
+          if Message.new_session?(message) do
+            message |> FrontDesk.greet()
+          else
+            message |> FrontDesk.not_understood()
+          end
         end
       skills ->
         higher_confidence_skill = Enum.at(skills, 0)
@@ -189,7 +191,9 @@ defmodule Aida.Bot do
             Skill.respond(higher_confidence_skill.skill, message)
           end
         else
-          message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
+          ErrorLog.context(skill_id: "front_desk") do
+            message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
+          end
         end
     end
   end
