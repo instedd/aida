@@ -30,5 +30,6 @@ defmodule AidaWeb.Router do
     get "/callback/:provider", CallbackController, :callback
     post "/callback/:provider", CallbackController, :callback
     get "/content/image/:uuid", ImageController, :image
+    post "/content/image/:bot_id/:session_id", SessionController, :attachment
   end
 end
