@@ -1,7 +1,7 @@
 defmodule Aida.Message do
   alias Aida.{Message, Bot}
   alias Aida.DB.{Session}
-  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content, SystemContent}
+  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content, SystemContent, InvalidImageContent}
   require Logger
 
   @type t :: %__MODULE__{
@@ -27,12 +27,29 @@ defmodule Aida.Message do
     }
   end
 
+  @spec new_from_image(image :: %{uuid: String.t}, bot :: Bot.t, session :: Session.t) :: t
+  def new_from_image(%{uuid: image_uuid}, %Bot{} = bot, session) do
+    %Message{
+      session: session,
+      bot: bot,
+      content: %ImageContent{image_id: image_uuid}
+    }
+  end
+
   @spec new_from_image(source_url :: String.t, bot :: Bot.t, session :: Session.t) :: t
   def new_from_image(source_url, %Bot{} = bot, session) do
     %Message{
       session: session,
       bot: bot,
       content: %ImageContent{source_url: source_url}
+    }
+  end
+
+  def invalid_image(%{uuid: image_uuid}, %Bot{} = bot, session) do
+    %Message{
+      session: session,
+      bot: bot,
+      content: %InvalidImageContent{image_id: image_uuid}
     }
   end
 

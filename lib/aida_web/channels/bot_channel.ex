@@ -1,7 +1,7 @@
 defmodule AidaWeb.BotChannel do
   use Phoenix.Channel
-  alias Aida.{BotManager, Bot, Message, Channel.WebSocket}
-  alias Aida.DB.{Session}
+  alias Aida.{BotManager, Bot, Message, Channel.WebSocket, DB}
+  alias Aida.DB.{Session, Image}
 
   def join("bot:" <> bot_id, %{"access_token" => access_token}, socket) do
     case WebSocket.find_channel_for_bot(bot_id) do
@@ -45,6 +45,27 @@ defmodule AidaWeb.BotChannel do
       bot ->
         session = Session.get(session_id)
         reply = Bot.chat(Message.new(text, bot, session))
+        reply.session |> Session.save
+
+        reply.reply |> Enum.each(fn message ->
+          push socket, "btu_msg", %{text: message, session: session_id}
+        end)
+        {:noreply, socket}
+    end
+  end
+
+  def handle_in("utb_img", %{"image" => image_uuid, "session" => session_id}, socket) do
+    bot_id = socket.assigns.bot_id
+    case BotManager.find(bot_id) do
+      :not_found -> {:stop, :not_found, socket}
+      bot ->
+        session = Session.get(session_id)
+        message = case DB.get_image(image_uuid) do
+          %Image{bot_id: ^bot_id, session_id: ^session_id} -> Message.new_from_image(%{uuid: image_uuid}, bot, session)
+          _ -> Message.invalid_image(%{uuid: image_uuid}, bot, session)
+        end
+
+        reply = Bot.chat(message)
         reply.session |> Session.save
 
         reply.reply |> Enum.each(fn message ->

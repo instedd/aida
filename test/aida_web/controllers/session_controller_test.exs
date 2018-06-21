@@ -266,6 +266,34 @@ defmodule AidaWeb.SessionControllerTest do
     end
   end
 
+  describe "attachment" do
+    test "sends an image to a session", %{conn: conn, bot: bot, session: session} do
+      upload = %Plug.Upload{content_type: "image/png", path: "test/fixtures/file_upload_test.png", filename: "file_upload_test.png"}
+      path = bot_session_session_path(conn, :attachment, bot.id, session.id)
+      conn = conn |> post(path, %{ :file => upload })
+
+      %{"id"=> attachment_id} = json_response(conn, 200)
+
+      assert DB.get_image(attachment_id)
+      {:ok, binary} = File.read("test/fixtures/file_upload_test.png")
+      assert DB.get_image(attachment_id).binary == binary
+      assert DB.get_image(attachment_id).bot_id == bot.id
+      assert DB.get_image(attachment_id).session_id == session.id
+      assert DB.get_image(attachment_id).binary_type == "image/png"
+      assert DB.get_image(attachment_id).source_url == nil
+    end
+
+    test "does not send other file types to a session", %{conn: conn, bot: bot, session: session} do
+      upload = %Plug.Upload{content_type: "text/plain", path: "test/fixtures/file_upload_test.txt", filename: "test_file_upload.txt"}
+      path = bot_session_session_path(conn, :attachment, bot.id, session.id)
+
+      conn = conn |> post(path, %{ :file => upload })
+
+      %{"errors"=> errors} = json_response(conn, 415)
+      assert errors == "Unsupported Media Type"
+    end
+  end
+
   defp create_bot(_context \\ nil) do
     manifest = File.read!("test/fixtures/valid_manifest.json")
                 |> Poison.decode!
