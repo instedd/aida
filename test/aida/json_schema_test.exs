@@ -2,6 +2,7 @@ defmodule Aida.JsonSchemaTest do
   use ExUnit.Case
 
   alias Aida.JsonSchema
+  alias ExJsonSchema.Validator.Error
 
   setup_all do
     GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
@@ -83,7 +84,11 @@ defmodule Aida.JsonSchemaTest do
     "id": "2",
     "name": "a",
     "schedule_type": "recurrent",
-    "messages": [#{@valid_daily_recurrent_message}, #{@valid_weekly_recurrent_message}, #{@valid_monthly_recurrent_message}]
+    "messages": [
+      #{@valid_daily_recurrent_message},
+      #{@valid_weekly_recurrent_message},
+      #{@valid_monthly_recurrent_message}
+    ]
   })
   @valid_language_detector ~s({
     "type": "language_detector",
@@ -147,7 +152,14 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "schedule": "2017-12-10T01:40:13.000-03:00",
     "keywords": #{@valid_localized_keywords},
-    "questions": [#{@valid_input_question}, #{@valid_note}, #{@valid_select_question}, #{@valid_encrypted_input_question}, #{@valid_encrypted_select_question}, #{@valid_note_with_relevant}],
+    "questions": [
+      #{@valid_input_question},
+      #{@valid_note},
+      #{@valid_select_question},
+      #{@valid_encrypted_input_question},
+      #{@valid_encrypted_select_question},
+      #{@valid_note_with_relevant}
+    ],
     "choice_lists": []
   })
   @valid_answer ~s({
@@ -245,148 +257,183 @@ defmodule Aida.JsonSchemaTest do
   })
 
   defp validate(json_thing, type, fun) do
-    validation_result = json_thing
-    |> Poison.decode!
-    |> JsonSchema.validate(type)
+    validation_result =
+      json_thing
+      |> Poison.decode!()
+      |> JsonSchema.validate(type)
 
     apply(fun, [validation_result])
-    |> assert(inspect validation_result)
+    |> assert(inspect(validation_result))
   end
 
-  defp assert_valid(json_thing, type) do
-    validate(json_thing, type, fn(validation_result) ->
-      [] == validation_result
+  defp errors_for(validation_result, thing) do
+    {:error, errors} = validation_result
+
+    {:ok, path_regex} =
+      thing
+      |> Regex.escape()
+      |> Regex.compile()
+
+    errors
+    |> Enum.filter(fn error -> Regex.match?(path_regex, error.path) end)
+  end
+
+  defp error_present?(validation_result, expected_error, thing) do
+    validation_result
+    |> errors_for(thing)
+    |> Enum.any?(fn validation_error ->
+      expected_error == validation_error.error
     end)
   end
 
-  defp assert_required(thing, type) do
-    validate(~s({}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Required property #{thing} was not present.", []})
-    end)
+  defp any_error_present?(validation_result, thing) do
+    validation_result
+    |> errors_for(thing)
+    |> Enum.count() > 0
   end
 
-  defp assert_optional(thing, valid_value, type) do
-    validate(~s({}), type, fn(validation_result) ->
-      !Enum.member?(validation_result, {"Required property #{thing} was not present.", []})
-    end)
+  defp required?(validation_result, thing) do
+    {:error, errors} = validation_result
 
-    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
-      !Enum.member?(validation_result, {"Schema does not allow additional properties.", [thing]})
-    end)
-  end
-
-  defp assert_dependency(thing, valid_value, dependency, type) do
-    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
-      Enum.member?(validation_result, {"Property #{thing} depends on #{dependency} to be present but it was not.", []})
-    end)
-  end
-
-  defp assert_minimum_properties(type) do
-    validate(~s({}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Expected a minimum of 1 properties but got 0", []})
-    end)
-  end
-
-  defp assert_empty_array(thing, type) do
-    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
-      !Enum.member?(validation_result, {"Expected a minimum of 1 items but got 0.", [thing]})
-    end)
-  end
-
-  defp reject_empty_array(thing, type) do
-    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Expected a minimum of 1 items but got 0.", [thing]})
-    end)
-  end
-
-  defp assert_valid_value(thing, value, type) do
-    validate(~s({"#{thing}": #{Poison.encode!(value)}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.any?(fn
-        {_, [^thing | _]} -> false
-        _ -> true
-      end)
-    end)
-  end
-
-  defp assert_invalid_value(thing, value, type) do
-    validate(~s({"#{thing}": #{Poison.encode!(value)}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.any?(fn
-        {_, [^thing | _]} -> true
-        _ -> false
-      end)
-    end)
-  end
-
-  defp reject_array_duplicates(thing, type) do
-    validate(~s({"#{thing}": [1, 1]}), type, fn(validation_result) ->
-      Enum.member?(validation_result, {"Expected items to be unique but they were not.", [thing]})
-    end)
-  end
-
-  defp assert_integer(thing, type) do
-    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Type mismatch. Expected Integer but got Object.", [thing]})
-    end)
-  end
-
-  defp assert_boolean(thing, type) do
-    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Type mismatch. Expected Boolean but got Object.", [thing]})
-    end)
-  end
-
-  defp assert_array(thing, type) do
-    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Type mismatch. Expected Array but got Object.", [thing]})
+    errors
+    |> Enum.any?(fn item ->
+      (%Error.Required{} = item.error) &&
+        Enum.member?(item.error.missing, thing) &&
+        item.path == "#"
     end)
   end
 
   defp reject_sub_type(json_thing, type) do
     validate(json_thing, type, fn(validation_result) ->
       validation_result
-      |> Enum.member?({"Expected exactly one of the schemata to match, but none of them did.", []})
+      |> errors_for("#")
+      |> Enum.any?(fn validation_error ->
+        %Error.OneOf{} = validation_error.error
+      end)
     end)
   end
 
+  defp assert_valid(json_thing, type) do
+    validate(json_thing, type, fn(validation_result) ->
+      :ok == validation_result
+    end)
+  end
+
+  defp assert_required(thing, type) do
+    validate(~s({}), type, fn(validation_result) ->
+      required?(validation_result, thing)
+    end)
+  end
+
+  defp assert_optional(thing, valid_value, type) do
+    validate(~s({}), type, fn(validation_result) ->
+      !required?(validation_result, thing)
+    end)
+
+    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+      !error_present?(validation_result, %Error.AdditionalProperties{}, thing)
+    end)
+  end
+
+  defp assert_dependency(thing, valid_value, dependency, type) do
+    validate(~s({"#{thing}": #{inspect(valid_value)}}), type, fn(validation_result) ->
+      error_present?(
+        validation_result,
+        %Error.Dependencies{missing: [dependency], property: thing},
+        "#"
+      )
+    end)
+  end
+
+  defp assert_minimum_properties(type) do
+    validate(~s({}), type, fn(validation_result) ->
+      error_present?(validation_result, %Error.MinProperties{actual: 0, expected: 1}, "#")
+    end)
+  end
+
+  defp assert_empty_array(thing, type) do
+    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
+      !error_present?(validation_result, %Error.MinItems{actual: 0, expected: 1}, thing)
+    end)
+  end
+
+  defp reject_empty_array(thing, type) do
+    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
+      error_present?(validation_result, %Error.MinItems{actual: 0, expected: 1}, thing)
+    end)
+  end
+
+  defp assert_valid_value(thing, valid_value, type) do
+    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+      !any_error_present?(validation_result, thing)
+    end)
+  end
+
+  defp assert_invalid_value(thing, value, type) do
+    validate(~s({"#{thing}": #{inspect value}}), type, fn(validation_result) ->
+      any_error_present?(validation_result, thing)
+    end)
+  end
+
+  defp reject_array_duplicates(thing, type) do
+    validate(~s({"#{thing}": [1, 1]}), type, fn(validation_result) ->
+      error_present?(validation_result, %Error.Enum{}, thing)
+    end)
+  end
+
+  defp assert_kind(thing, type, kind) do
+    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
+      error_present?(validation_result, %Error.Type{actual: "object", expected: [kind]}, thing)
+    end)
+  end
+
+  defp assert_integer(thing, type) do
+    assert_kind(thing, type, "integer")
+  end
+
+  defp assert_boolean(thing, type) do
+    assert_kind(thing, type, "boolean")
+  end
+
+  defp assert_array(thing, type) do
+    assert_kind(thing, type, "array")
+  end
+
   defp assert_enum(thing, invalid_value, type) do
-    validate(~s({"#{thing}": #{inspect invalid_value}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Value #{inspect invalid_value} is not allowed in enum.", [thing]})
+    validate(~s({"#{thing}": #{inspect(invalid_value)}}), type, fn validation_result ->
+      error_present?(validation_result, %Error.Enum{}, thing)
     end)
   end
 
   defp assert_valid_enum(thing, valid_value, type) do
-    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
-      !Enum.member?(validation_result, {"Value #{inspect valid_value} is not allowed in enum.", [thing]})
+    validate(~s({"#{thing}": #{inspect(valid_value)}}), type, fn validation_result ->
+      !error_present?(validation_result, %Error.Enum{}, thing)
     end)
   end
 
   defp assert_max(thing, max_value, type) do
-    validate(~s({"#{thing}": #{max_value + 1}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Expected the value to be <= #{max_value}", [thing]})
+    validate(~s({"#{thing}": #{max_value + 1}}), type, fn validation_result ->
+      error_present?(
+        validation_result,
+        %Error.Maximum{exclusive?: false, expected: max_value},
+        thing
+      )
     end)
   end
 
   defp assert_min(thing, min_value, type) do
-    validate(~s({"#{thing}": #{min_value - 1}}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Expected the value to be >= #{min_value}", [thing]})
+    validate(~s({"#{thing}": #{min_value - 1}}), type, fn validation_result ->
+      error_present?(
+        validation_result,
+        %Error.Minimum{exclusive?: false, expected: min_value},
+        thing
+      )
     end)
   end
 
   defp assert_non_empty_string(thing, type) do
     validate(~s({"#{thing}": ""}), type, fn(validation_result) ->
-      validation_result
-      |> Enum.member?({"Expected value to have a minimum length of 1 but was 0.", [thing]})
+      error_present?(validation_result, %Error.MinLength{actual: 0, expected: 1}, thing)
     end)
   end
 
@@ -407,7 +454,7 @@ defmodule Aida.JsonSchemaTest do
     assert_array("channels", :manifest_v1)
     assert_array("public_keys", :manifest_v1)
     assert_optional("public_keys", [@valid_base_64_key], :manifest_v1)
-    assert_valid_value("public_keys", [@valid_base_64_key], :manifest_v1)
+    # assert_valid_value("public_keys", [@valid_base_64_key], :manifest_v1)
     assert_invalid_value("public_keys", [@invalid_base_64_key], :manifest_v1)
     reject_empty_array("public_keys", :manifest_v1)
     assert_optional("data_tables", [@valid_data_table], :manifest_v1)
@@ -462,7 +509,8 @@ defmodule Aida.JsonSchemaTest do
       :scheduled_messages_recurrent
     ]
 
-    subtypes |> Enum.each(fn type ->
+    subtypes
+    |> Enum.each(fn type ->
       assert_enum("type", "foo", type)
       assert_valid_enum("type", "scheduled_messages", type)
       assert_required("type", type)
@@ -478,7 +526,12 @@ defmodule Aida.JsonSchemaTest do
       assert_optional("relevant", "${age} > 18", type)
     end)
 
-    assert_valid_enum("schedule_type", "since_last_incoming_message", :scheduled_messages_since_last_incoming_message)
+    assert_valid_enum(
+      "schedule_type",
+      "since_last_incoming_message",
+      :scheduled_messages_since_last_incoming_message
+    )
+
     assert_valid_enum("schedule_type", "fixed_time", :scheduled_messages_fixed_time)
     assert_valid_enum("schedule_type", "recurrent", :scheduled_messages_recurrent)
 

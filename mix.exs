@@ -48,7 +48,7 @@ defmodule Aida.Mixfile do
       {:mock, "~> 0.2.0", only: :test},
       {:cowboy, "~> 1.0"},
       {:dialyxir, "~> 0.5.1", only: [:dev], runtime: false},
-      {:ex_json_schema, "~> 0.5.5"},
+      {:ex_json_schema, github: "manastech/ex_json_schema", branch: "validation-errors"},
       {:cors_plug, "~> 1.4"},
       {:timex, "~> 3.0", override: true},
       {:sentry, "~> 6.0"},

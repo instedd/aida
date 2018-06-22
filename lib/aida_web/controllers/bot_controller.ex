@@ -53,19 +53,18 @@ defmodule AidaWeb.BotController do
       manifest
     end
     case JsonSchema.validate(manifest, :manifest_v1) do
-      [] ->
+      :ok ->
         case BotParser.parse("", manifest) do
           {:ok, _} ->
             conn
           {:error, err} ->
             capture_message("Error while parsing manifest: #{err}")
-            conn |> put_status(422) |> json(%{error: err}) |> halt
+            conn |> put_status(422) |> json(%{errors: [err]}) |> halt
         end
-      errors ->
-        json_errors = errors |> JsonSchema.errors_to_json
-        capture_message("Error while validating manifest", json_errors: json_errors, manifest: manifest)
+      {:error, errors} ->
+        capture_message("Error while validating manifest", json_errors: errors, manifest: manifest)
 
-        conn |> put_status(422) |> json(%{errors: json_errors}) |> halt
+        conn |> put_status(422) |> json(%{errors: errors}) |> halt
     end
   end
 end

@@ -106,7 +106,7 @@ defmodule AidaWeb.BotControllerTest do
 
       without_logging do
         conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
-        assert json_response(conn, 422)["error"] == "Invalid expression: '${4age} >= 18'"
+        assert json_response(conn, 422)["errors"] == ["Invalid expression: '${4age} >= 18'"]
       end
     end
 
