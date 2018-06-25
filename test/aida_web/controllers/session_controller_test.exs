@@ -282,16 +282,6 @@ defmodule AidaWeb.SessionControllerTest do
       assert DB.get_image(attachment_id).binary_type == "image/png"
       assert DB.get_image(attachment_id).source_url == nil
     end
-
-    test "does not send other file types to a session", %{conn: conn, bot: bot, session: session} do
-      upload = %Plug.Upload{content_type: "text/plain", path: "test/fixtures/file_upload_test.txt", filename: "test_file_upload.txt"}
-      path = bot_session_session_path(conn, :attachment, bot.id, session.id)
-
-      conn = conn |> post(path, %{ :file => upload })
-
-      %{"errors"=> errors} = json_response(conn, 415)
-      assert errors == "Unsupported Media Type"
-    end
   end
 
   defp create_bot(_context \\ nil) do

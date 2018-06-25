@@ -22,7 +22,8 @@ defmodule AidaWeb.Endpoint do
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    json_decoder: Poison
+    json_decoder: Poison,
+    length: 25 * 1024 * 1024
 
   plug Plug.MethodOverride
   plug Plug.Head
