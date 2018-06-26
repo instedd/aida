@@ -24,17 +24,13 @@ defmodule Aida.Skill.LanguageDetector do
             reply_to_unsupported_language: false
 
   defimpl Aida.Skill, for: __MODULE__ do
-    def init(skill, _bot) do
-      skill
-    end
+    def init(skill, _bot), do: skill
 
-    def wake_up(_skill, _bot, _data) do
-      :ok
-    end
+    def clear_state(_skill, message), do: message
 
-    def explain(_, message) do
-      message
-    end
+    def wake_up(_skill, _bot, _data), do: :ok
+
+    def explain(_, message), do: message
 
     def clarify(%{explanation: explanation}, message) do
       message |> Message.respond(explanation)

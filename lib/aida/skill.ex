@@ -4,6 +4,9 @@ defprotocol Aida.Skill do
   @spec explain(skill :: t, message :: Message.t) :: Message.t
   def explain(skill, message)
 
+  @spec clear_state(skill :: t, message :: Message.t) :: Message.t
+  def clear_state(skill, message)
+
   @spec clarify(skill :: t, message :: Message.t) :: Message.t
   def clarify(skill, message)
 

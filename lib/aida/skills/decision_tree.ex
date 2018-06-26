@@ -152,12 +152,12 @@ defmodule Aida.Skill.DecisionTree do
   end
 
   defimpl Aida.Skill, for: __MODULE__ do
-    def init(skill, _bot) do
-      skill
-    end
+    def init(skill, _bot), do: skill
 
-    def wake_up(_skill, _bot, _data) do
-      :ok
+    def wake_up(_skill, _bot, _data), do: :ok
+
+    def clear_state(decision_tree, message) do
+      Message.put_session(message, DecisionTree.state_key(decision_tree), nil)
     end
 
     def explain(%{explanation: explanation}, message) do

@@ -137,6 +137,10 @@ defmodule Aida.Skill.Survey do
       message
     end
 
+    def clear_state(survey, message) do
+      Message.put_session(message, Survey.state_key(survey), nil)
+    end
+
     def put_response(survey, message) do
       question = Survey.current_question(survey, message)
 

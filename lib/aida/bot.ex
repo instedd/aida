@@ -194,6 +194,10 @@ defmodule Aida.Bot do
 
         if threshold(message.bot) <= difference do
           ErrorLog.context(skill_id: Skill.id(higher_confidence_skill.skill)) do
+            message =
+              Enum.reject(message.bot.skills, fn skill -> skill == higher_confidence_skill.skill end)
+              |> Enum.reduce(message, fn skill, message -> Skill.clear_state(skill, message) end)
+
             Skill.respond(higher_confidence_skill.skill, message)
           end
         else

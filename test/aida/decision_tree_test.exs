@@ -154,5 +154,38 @@ defmodule Aida.DecisionTreeTest do
       assert message.reply == ["Go with a carrot cake"]
       assert message.session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
     end
+
+    test "clears the session when another skill takes over", %{bot: bot, session: session} do
+      session =
+        session
+        |> Session.merge(%{"language" => "en", ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f" => %{"question" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b"}})
+        |> Session.save()
+
+      message = Message.new("menu", bot, session)
+      message = Bot.chat(message)
+      assert message.reply == ["We have barbecue and pasta"]
+
+      assert message |> Message.get_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+    end
+
+    test "each decision tree only clears its own session key but only if another skill is triggered", %{bot: bot, session: session} do
+      session =
+        session
+        |> Session.merge(%{
+          "language" => "en",
+          ".decision_tree/foo" => %{"question" => "bar"},
+          ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f" => %{
+            "question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
+          }
+        })
+        |> Session.save()
+
+      message = Message.new("yes", bot, session)
+      message = Bot.chat(message)
+
+      assert message.reply == ["Do you want to eat a main course or a dessert?"]
+      assert message |> Message.get_session(".decision_tree/foo") == %{"question" => "bar"}
+      assert message |> Message.get_session(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == %{"question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"}
+    end
   end
 end
