@@ -11,15 +11,19 @@ defmodule AidaWeb.Router do
     plug Plug.Parsers,
       parsers: [:urlencoded, :multipart, :json],
       pass: ["*/*"],
-      json_decoder: Poison,
-      length: 8 * 1024 * 1024
+      json_decoder: Poison
+  end
+
+  pipeline :browser do
+    plug Plug.Parsers,
+      parsers: [:urlencoded, :multipart, :json],
+      pass: ["*/*"],
+      json_decoder: Poison
   end
 
   pipeline :attachment do
     plug Plug.Parsers,
-      parsers: [:urlencoded, :multipart, :json],
-      pass: ["image/*"],
-      json_decoder: Poison,
+      parsers: [:multipart],
       length: 25 * 1024 * 1024
   end
 
@@ -41,6 +45,7 @@ defmodule AidaWeb.Router do
   end
 
   scope "/", AidaWeb do
+    pipe_through :browser
     get "/callback/:provider", CallbackController, :callback
     post "/callback/:provider", CallbackController, :callback
     get "/content/image/:uuid", ImageController, :image

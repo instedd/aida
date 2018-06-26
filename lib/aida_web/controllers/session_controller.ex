@@ -33,14 +33,18 @@ defmodule AidaWeb.SessionController do
   end
 
   def attachment(conn, %{"bot_id" => bot_id, "session_id" => session_id, "file" => file}) do
-    {:ok, binary} = File.read(file.path)
-    image_attrs = %{
-      binary: binary,
-      binary_type: file.content_type,
-      bot_id: bot_id,
-      session_id: session_id
-    }
-    {:ok, image} = DB.create_image(image_attrs)
-    render(conn, "attachment.json", attachment_id: image.uuid)
+    if (String.starts_with? file.content_type, "image/") do
+      {:ok, binary} = File.read(file.path)
+      image_attrs = %{
+        binary: binary,
+        binary_type: file.content_type,
+        bot_id: bot_id,
+        session_id: session_id
+      }
+      {:ok, image} = DB.create_image(image_attrs)
+      render(conn, "attachment.json", attachment_id: image.uuid)
+    else
+      conn |> put_status(415) |> json(%{errors: "Unsupported Media Type"}) |> halt
+    end
   end
 end
