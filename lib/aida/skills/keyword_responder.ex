@@ -22,13 +22,11 @@ defmodule Aida.Skill.KeywordResponder do
             relevant: nil
 
   defimpl Aida.Skill, for: __MODULE__ do
-    def init(skill, _bot) do
-      skill
-    end
+    def init(skill, _bot), do: skill
 
-    def wake_up(_skill, _bot, _data) do
-      :ok
-    end
+    def clear_state(_skill, message), do: message
+
+    def wake_up(_skill, _bot, _data), do: :ok
 
     def explain(%{explanation: explanation}, message) do
       message |> Message.respond(explanation)

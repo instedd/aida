@@ -10,6 +10,8 @@ defmodule Aida.TestSkill do
 
     def explain(_skill, msg), do: msg
 
+    def clear_state(_skill, msg), do: msg
+
     def clarify(_skill, msg), do: msg
 
     def confidence(_skill, _msg), do: :threshold

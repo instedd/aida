@@ -100,6 +100,8 @@ defmodule Aida.Skill.ScheduledMessages do
 
     def init(skill, _bot), do: skill
 
+    def clear_state(_skill, message), do: message
+
     defp send_message(skill, bot, session_id, content) do
       session = Session.get(session_id)
       message = Message.new("", bot, session)

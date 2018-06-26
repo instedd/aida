@@ -211,6 +211,10 @@ defmodule Aida.BotParserTest do
               message: %{
                 "en" => "May I ask you now?",
                 "es" => "Puedo preguntarte ahora?"
+              },
+              constraint_message: %{
+                "en" => "Please answer 'yes' or 'no'",
+                "es" => "Por favor responda 'si' o 'no'"
               }
             },
             %InputQuestion{

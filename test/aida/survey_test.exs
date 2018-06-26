@@ -179,7 +179,7 @@ defmodule Aida.SurveyTest do
       message = Bot.chat(message)
 
       assert message.reply == ["We are open every day from 7pm to 11pm"]
-      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
+      assert message |> Message.get_session(".survey/food_preferences") == nil
     end
 
     test "accept user reply on select_many", %{bot: bot, session: session} do
@@ -258,6 +258,61 @@ defmodule Aida.SurveyTest do
         "Invalid temperature",
         "At what temperature do your like red wine the best?"
       ]
+    end
+  end
+
+  describe "dual stateful skills" do
+    setup :load_manifest_bot
+    setup :create_encrypted_survey
+    setup :create_dual_survey_bot
+
+    test "clears the session when another skill takes over", %{bot: bot, session: session} do
+      session =
+        session
+        |> Session.merge(%{"language" => "en", ".survey/food_preferences" => %{"step" => 1}})
+        |> Session.save()
+
+      message = Message.new("menu", bot, session)
+      message = Bot.chat(message)
+      assert message.reply == ["We have barbecue and pasta"]
+
+      assert message |> Message.get_session(".survey/food_preferences") == nil
+    end
+
+    test "each survey only clears its own session key", %{bot: bot, session: session} do
+      session =
+        session
+        |> Session.merge(%{
+          "language" => "en",
+          ".survey/foo" => %{"step" => 5},
+          ".survey/food_preferences" => %{"step" => 1}
+        })
+        |> Session.save()
+
+      message = Message.new("yes", bot, session)
+      message = Bot.chat(message)
+
+      assert message.reply == ["How old are you?"]
+      assert message |> Message.get_session(".survey/foo") == %{"step" => 5}
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 2}
+    end
+
+    test "does not clear its own session key", %{bot: bot, session: session} do
+      session =
+        session
+        |> Session.merge(%{
+          "language" => "en",
+          ".survey/encrypted_question" => %{"step" => 5},
+          ".survey/food_preferences" => %{"step" => 1}
+        })
+        |> Session.save()
+
+      message = Message.new("survey", bot, session)
+      message = Bot.chat(message)
+
+      assert message.reply == ["Please answer 'yes' or 'no'", "May I ask you now?"]
+      assert message |> Message.get_session(".survey/encrypted_question") == nil
+      assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
     end
   end
 
@@ -353,6 +408,14 @@ defmodule Aida.SurveyTest do
     {private, public} = Kcl.generate_key_pair()
 
     bot = %{bot | skills: [ survey ], public_keys: [public]}
+
+    [bot: bot, private: private]
+  end
+
+  defp create_dual_survey_bot(%{bot: bot, survey: survey}) do
+    {private, public} = Kcl.generate_key_pair()
+
+    bot = %{bot | skills: [ survey | bot.skills ], public_keys: [public]}
 
     [bot: bot, private: private]
   end
