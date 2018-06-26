@@ -63,7 +63,5 @@
       "type": "websocket",
       "access_token": "qwertyuiopasdfghjklzxcvbnm"
     }
-  ],
-  "public_keys": [],
-  "data_tables": []
+  ]
 }

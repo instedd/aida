@@ -468,6 +468,9 @@ defmodule Aida.JsonSchemaTest do
     File.read!("test/fixtures/valid_manifest_with_skill_relevances.json")
     |> assert_valid(:manifest_v1)
 
+    File.read!("test/fixtures/valid_manifest_images.json")
+    |> assert_valid(:manifest_v1)
+
     File.read!("test/fixtures/valid_manifest.json")
     |> assert_valid(:manifest_v1)
   end
