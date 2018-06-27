@@ -30,6 +30,7 @@ defmodule Aida.Skill.Survey do
     if Skill.is_relevant?(survey, message) do
 
       if session |> Session.get_value("language") do
+        message = Message.clear_state(message)
         message = start_survey(survey, message)
 
         try do

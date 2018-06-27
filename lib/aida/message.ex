@@ -148,6 +148,10 @@ defmodule Aida.Message do
     session.is_new
   end
 
+  def clear_state(%{bot: bot} = message) do
+    Bot.clear_state(bot, message)
+  end
+
   @spec language(message :: t) :: Session.value
   def language(message) do
     get_session(message, "language")
