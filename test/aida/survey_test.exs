@@ -314,6 +314,45 @@ defmodule Aida.SurveyTest do
       assert message |> Message.get_session(".survey/encrypted_question") == nil
       assert message |> Message.get_session(".survey/food_preferences") == %{"step" => 1}
     end
+
+    test "clears active skills when started from schedule", %{bot: bot, session: session} do
+      channel = TestChannel.new()
+
+      with_mock ChannelProvider, [find_channel: fn(_session_id) -> channel end] do
+        bot = %{bot | channels: [channel]}
+
+        session =
+          session
+          |> Session.merge(%{
+            "language" => "en",
+            ".survey/encrypted_question" => %{"step" => 1},
+            ".survey/food_preferences" => %{"step" => 3},
+            ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f" => %{
+              "question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
+            }
+          })
+          |> Session.save()
+
+        session_id = session.id
+
+        Bot.wake_up(bot, "food_preferences")
+
+        assert_received {
+          :send_message,
+          [
+            "I would like to ask you a few questions to better cater for your food preferences.",
+            "May I ask you now?"
+          ],
+          ^session_id
+        }
+
+        session = Session.get(session_id)
+
+        assert session |> Session.get_value(".survey/food_preferences") == %{"step" => 1}
+        assert session |> Session.get_value(".survey/encrypted_question") == nil
+        assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+      end
+    end
   end
 
   describe "encryption" do
