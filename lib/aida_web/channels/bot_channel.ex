@@ -44,7 +44,14 @@ defmodule AidaWeb.BotChannel do
       :not_found -> {:stop, :not_found, socket}
       bot ->
         session = Session.get(session_id)
-        reply = Bot.chat(Message.new(text, bot, session))
+        message =
+          if text == "##SESSION" do
+            Message.new_system(text, bot, session)
+          else
+            Message.new(text, bot, session)
+          end
+
+        reply = Bot.chat(message)
 
         reply.reply |> Enum.each(fn message ->
           push socket, "btu_msg", %{text: message, session: session_id}
