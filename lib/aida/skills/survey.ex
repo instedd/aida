@@ -38,9 +38,6 @@ defmodule Aida.Skill.Survey do
         rescue
           error ->
             capture_exception("Error starting survey", error, bot_id: bot.id, skill_id: survey.id, session_id: session.id)
-        else
-          _ ->
-          message.session |> Session.save
         end
       end
     end

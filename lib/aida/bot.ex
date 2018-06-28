@@ -284,6 +284,8 @@ defmodule Aida.Bot do
   end
 
   def send_message(%{session: session} = message) do
+    session |> Session.save()
+
     log_outgoing(message)
 
     channel = ChannelProvider.find_channel(session)
