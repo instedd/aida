@@ -2,6 +2,7 @@ defmodule Aida.Skill.ScheduledMessages do
   alias Aida.{Message, Skill, BotManager, Recurrence, Bot}
   alias Aida.DB.{Session, SkillUsage, MessageLog}
   alias __MODULE__
+  import Aida.ErrorHandler
 
   defmodule DelayedMessage do
     @type t :: %__MODULE__{
@@ -107,8 +108,17 @@ defmodule Aida.Skill.ScheduledMessages do
       message = Message.new("", bot, session)
 
       if Message.language(message) && Skill.is_relevant?(skill, message) do
-        message = Message.respond(message, content)
-        Bot.send_message(message)
+        message =
+          message
+          |> Message.clear_state()
+          |> Message.respond(content)
+
+        try do
+          Bot.send_message(message)
+        rescue
+          error ->
+            capture_exception("Error sending scheduled message", error, bot_id: bot.id, skill_id: skill.id, session_id: session_id)
+        end
 
         SkillUsage.log_skill_usage(bot.id, Skill.id(skill), session_id, false)
       end

@@ -1,5 +1,5 @@
 defmodule Aida.ScheduledMessagesTest do
-  alias Aida.{Skill.ScheduledMessages, DB, Message, Bot, Skill, BotManager, Recurrence}
+  alias Aida.{Skill.ScheduledMessages, DB, Message, BotParser, Skill, BotManager, Recurrence}
   alias Aida.DB.{Session, MessageLog}
   alias Aida.Skill.ScheduledMessages.{DelayedMessage, FixedTimeMessage, RecurrentMessage}
   alias Aida.Scheduler
@@ -31,7 +31,7 @@ defmodule Aida.ScheduledMessagesTest do
       assert_in_delta DateTime.diff(ts, within(hours: 10)), 0, 60
     end
 
-    test "init doesn't schedule wake_up if the survey is scheduled in the past", %{bot: bot} do
+    test "init doesn't schedule wake_up if the message is scheduled in the past", %{bot: bot} do
       message = %FixedTimeMessage{schedule: within(days: -1)}
       skill = %ScheduledMessages{id: @skill_id, schedule_type: :fixed_time, messages: [message]}
 
@@ -57,6 +57,29 @@ defmodule Aida.ScheduledMessagesTest do
         skill |> Skill.wake_up(bot, nil)
         refute_received _
       end
+    end
+
+    test "wake up clears active skills", %{bot: bot, skill: skill, session: %{id: session_id} = session} do
+      session
+      |> Session.merge(%{
+        ".survey/food_preferences" => %{"step" => 3},
+        ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f" => %{
+          "question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
+        }
+      })
+      |> Session.save()
+
+      ts = within(hours: 10)
+
+      time_travel(ts) do
+        skill |> Skill.wake_up(bot, nil)
+        assert_received {:send_message, ["Hello"], ^session_id}
+      end
+
+      session = Session.get(session_id)
+
+      assert session |> Session.get_value(".survey/food_preferences") == nil
+      assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
     end
   end
 
@@ -177,6 +200,41 @@ defmodule Aida.ScheduledMessagesTest do
       refute_received _
       assert [] = Scheduler.Task.load
     end
+
+    test "wake up clears active skills", %{
+      bot: bot,
+      skill: skill,
+      session: %{id: session_id} = session
+    } do
+      session
+      |> Session.merge(%{
+        ".survey/food_preferences" => %{"step" => 3},
+        ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f" => %{
+          "question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
+        }
+      })
+      |> Session.save()
+
+      MessageLog.create(%{
+        bot_id: bot.id,
+        session_id: session_id,
+        direction: "incoming",
+        content: "Hi",
+        content_type: "text"
+      })
+
+      wake_up_ts = within(minutes: 60)
+
+      time_travel(wake_up_ts) do
+        skill |> Skill.wake_up(bot, session_id)
+        assert_received {:send_message, ["Are you there?"], ^session_id}
+      end
+
+      session = Session.get(session_id)
+
+      assert Session.get_value(session, ".survey/food_preferences") == nil
+      assert Session.get_value(session, ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+    end
   end
 
   describe "scheduled messages with recurrence" do
@@ -210,6 +268,27 @@ defmodule Aida.ScheduledMessagesTest do
       expected_ts = Timex.shift(start, days: 2)
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^expected_ts, handler: BotManager} = task
     end
+
+    test "wake up clears active skills", %{bot: bot, skill: skill, session: %{id: session_id} = session, start: start} do
+      session
+      |> Session.merge(%{
+        ".survey/food_preferences" => %{"step" => 3},
+        ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f" => %{
+          "question" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8"
+        }
+      })
+      |> Session.save()
+
+      time_travel(start) do
+        skill |> Skill.wake_up(bot, "0")
+        assert_received {:send_message, ["Hello"], ^session_id}
+      end
+
+      session = Session.get(session_id)
+
+      assert session |> Session.get_value(".survey/food_preferences") == nil
+      assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+    end
   end
 
   defp create_session_for_test_channel(%{bot: bot}) do
@@ -220,11 +299,18 @@ defmodule Aida.ScheduledMessagesTest do
       |> Session.merge(%{"language" => "en"})
       |> Session.save
 
-    [session: session, session_id: session.id]
+    [session: session, session_id: session.id, session: session]
   end
 
   defp create_bot(_context) do
-    {:ok, db_bot} = DB.create_bot(%{manifest: %{}})
-    [bot: %Bot{id: db_bot.id}]
+    manifest =
+      File.read!("test/fixtures/valid_manifest.json")
+      |> Poison.decode!()
+      |> Map.put("languages", ["en"])
+
+    {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
+    {:ok, bot} = BotParser.parse(db_bot.id, manifest)
+
+    [bot: bot]
   end
 end
