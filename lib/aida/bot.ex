@@ -80,6 +80,7 @@ defmodule Aida.Bot do
       |> unset_session_new
       |> log_incoming
       |> log_outgoing
+      |> save_session
     end
   end
 
@@ -128,6 +129,11 @@ defmodule Aida.Bot do
 
     MessagesPerDay.log_sent_message(message.bot.id)
 
+    message
+  end
+
+  defp save_session(message) do
+    message.session |> Session.save
     message
   end
 
