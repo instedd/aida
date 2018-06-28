@@ -24,7 +24,8 @@ defmodule Aida.BotTest do
     "I can do a number of things",
     "I can give you information about our menu",
     "I can give you information about our opening hours",
-    "I can help you choose a meal that fits your dietary restrictions"
+    "I can help you choose a meal that fits your dietary restrictions",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @english_not_understood [
@@ -32,21 +33,24 @@ defmodule Aida.BotTest do
     "I can do a number of things",
     "I can give you information about our menu",
     "I can give you information about our opening hours",
-    "I can help you choose a meal that fits your dietary restrictions"
+    "I can help you choose a meal that fits your dietary restrictions",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @english_single_lang_restaurant_greet [
     "Hello, I'm a Restaurant bot",
     "I can do a number of things",
     "I can give you information about our menu",
-    "I can give you information about our opening hours"
+    "I can give you information about our opening hours",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @english_single_lang_not_understood [
     "Sorry, I didn't understand that",
     "I can do a number of things",
     "I can give you information about our menu",
-    "I can give you information about our opening hours"
+    "I can give you information about our opening hours",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @spanish_not_understood [
@@ -54,7 +58,8 @@ defmodule Aida.BotTest do
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
     "Te puedo dar información sobre nuestro horario",
-    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias",
+    "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
   ]
 
   @spanish_restaurant_greet [
@@ -62,7 +67,8 @@ defmodule Aida.BotTest do
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
     "Te puedo dar información sobre nuestro horario",
-    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias",
+    "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
   ]
 
   @language_selection_text "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
@@ -280,7 +286,8 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "Sorry, I didn't understand that",
         "I can do a number of things",
-        "I can give you information about our opening hours"
+        "I can give you information about our opening hours",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
 
@@ -293,7 +300,8 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "Sorry, I didn't understand that",
         "I can do a number of things",
-        "I can give you information about our opening hours"
+        "I can give you information about our opening hours",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
 
@@ -305,7 +313,8 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "Sorry, I didn't understand that",
         "I can do a number of things",
-        "I can give you information about our opening hours"
+        "I can give you information about our opening hours",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
   end
@@ -584,7 +593,8 @@ defmodule Aida.BotTest do
           greeting: %{ "en" => "Hello, I'm a Restaurant bot" },
           introduction: %{ "en" => "I can do a number of things" },
           not_understood: %{ "en" => "Sorry, I didn't understand that" },
-          clarification: %{ "en" => "I'm not sure exactly what you need." }
+          clarification: %{ "en" => "I'm not sure exactly what you need." },
+          unsubscribe: %{ "en" => "Send UNSUBSCRIBE to stop receiving messages" }
         },
         skills: [
           %KeywordResponder{
@@ -625,7 +635,8 @@ defmodule Aida.BotTest do
       output = Bot.chat(Message.new("foobar", bot, response.session))
       assert output.reply == [
         "Sorry, I didn't understand that",
-        "I can do a number of things"
+        "I can do a number of things",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
 

@@ -81,10 +81,11 @@
         "introduction": {"$ref": "#/definitions/message"},
         "not_understood": {"$ref": "#/definitions/message"},
         "clarification": {"$ref": "#/definitions/message"},
+        "unsubscribe": {"$ref": "#/definitions/message"},
         "threshold": { "maximum": 0.5, "minimum": 0 }
       },
       "additionalProperties": false,
-      "required": ["greeting", "introduction", "not_understood", "clarification", "threshold"]
+      "required": ["greeting", "introduction", "not_understood", "clarification", "unsubscribe", "threshold"]
     },
 
     "message": {

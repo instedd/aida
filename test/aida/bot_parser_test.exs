@@ -47,6 +47,10 @@ defmodule Aida.BotParserTest do
         clarification: %{
           "en" => "I'm not sure exactly what you need.",
           "es" => "Perdón, no estoy seguro de lo que necesitás."
+        },
+        unsubscribe: %{
+          "en" => "Send UNSUBSCRIBE to stop receiving messages",
+          "es" => "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
         }
       },
       skills: [
@@ -525,6 +529,10 @@ defmodule Aida.BotParserTest do
         clarification: %{
           "en" => "I'm not sure exactly what you need.",
           "es" => "Perdón, no estoy seguro de lo que necesitás."
+        },
+        unsubscribe: %{
+          "en" => "Send UNSUBSCRIBE to stop receiving messages",
+          "es" => "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
         }
       },
       skills: [

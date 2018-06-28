@@ -22,6 +22,11 @@
         "en": "I'm not sure exactly what you need."
       }
     },
+    "unsubscribe": {
+      "message": {
+        "en": "Send UNSUBSCRIBE to stop receiving messages"
+      }
+    },
     "threshold": 0.2
   },
   "skills": [

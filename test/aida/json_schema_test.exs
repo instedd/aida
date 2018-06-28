@@ -19,6 +19,7 @@ defmodule Aida.JsonSchemaTest do
     "introduction": #{@valid_message},
     "not_understood": #{@valid_message},
     "clarification": #{@valid_message},
+    "unsubscribe": #{@valid_message},
     "threshold": 0.1
   })
   @valid_localized_keywords ~s({"en": ["a"]})
@@ -807,6 +808,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("not_understood", :front_desk)
     assert_required("clarification", :front_desk)
     assert_required("threshold", :front_desk)
+    assert_required("unsubscribe", :front_desk)
     assert_max("threshold", 0.5, :front_desk)
     assert_min("threshold", 0, :front_desk)
 

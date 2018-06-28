@@ -9,13 +9,15 @@ defmodule Aida.FrontDesk do
     introduction: Bot.message,
     not_understood: Bot.message,
     clarification: Bot.message,
+    unsubscribe: Bot.message
   }
 
   defstruct threshold: 0.5,
             greeting: %{},
             introduction: %{},
             not_understood: %{},
-            clarification: %{}
+            clarification: %{},
+            unsubscribe: %{}
 
   def threshold(%FrontDesk{threshold: threshold}) do
     threshold
@@ -30,7 +32,8 @@ defmodule Aida.FrontDesk do
     message
       |> Message.respond(message.bot.front_desk.greeting)
       |> introduction()
-  end
+
+    end
 
   @spec introduction(message :: Message.t) :: Message.t
   def introduction(message) do
@@ -45,6 +48,7 @@ defmodule Aida.FrontDesk do
           Skill.explain(skill, message)
         end
       end)
+      |> unsubscribe()
   end
 
   def clarification(message, skills) do
@@ -67,6 +71,14 @@ defmodule Aida.FrontDesk do
     message
       |> Message.respond(message.bot.front_desk.not_understood)
       |> introduction()
+  end
+
+  @spec unsubscribe(message :: Message.t) :: Message.t
+  def unsubscribe(message) do
+    log_usage(message.bot.id, message.session.id)
+
+    message
+      |> Message.respond(message.bot.front_desk.unsubscribe)
   end
 
   defp log_usage(bot_id, session_id) do

@@ -26,6 +26,12 @@
         "es": "Perdón, no estoy seguro de lo que necesitás."
       }
     },
+    "unsubscribe": {
+      "message": {
+        "en": "Send UNSUBSCRIBE to stop receiving messages",
+        "es": "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
+      }
+    },
     "threshold": 0.3
   },
   "skills": [

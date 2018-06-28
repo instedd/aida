@@ -48,7 +48,8 @@ defmodule Aida.BotParser do
       greeting: front_desk["greeting"]["message"],
       introduction: front_desk["introduction"]["message"],
       not_understood: front_desk["not_understood"]["message"],
-      clarification: front_desk["clarification"]["message"]
+      clarification: front_desk["clarification"]["message"],
+      unsubscribe: front_desk["unsubscribe"]["message"]
     }
   end
 
