@@ -45,7 +45,6 @@ defmodule AidaWeb.BotChannel do
       bot ->
         session = Session.get(session_id)
         reply = Bot.chat(Message.new(text, bot, session))
-        reply.session |> Session.save
 
         reply.reply |> Enum.each(fn message ->
           push socket, "btu_msg", %{text: message, session: session_id}
