@@ -50,9 +50,12 @@ defmodule Aida.BotParserTest do
         },
         unsubscribe: %{
           "en" => "Send UNSUBSCRIBE to stop receiving messages",
-          "es" => "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
-        }
-      },
+          "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+        },
+        unsubscribe_keyword: %{
+          "en" => "UNSUBSCRIBE",
+          "es" => "DESUSCRIBIR"
+        }      },
       skills: [
         %LanguageDetector{
           explanation: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
@@ -532,7 +535,11 @@ defmodule Aida.BotParserTest do
         },
         unsubscribe: %{
           "en" => "Send UNSUBSCRIBE to stop receiving messages",
-          "es" => "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
+          "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+        },
+        unsubscribe_keyword: %{
+          "en" => "UNSUBSCRIBE",
+          "es" => "DESUSCRIBIR"
         }
       },
       skills: [

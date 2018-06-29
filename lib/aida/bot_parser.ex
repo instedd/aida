@@ -49,7 +49,8 @@ defmodule Aida.BotParser do
       introduction: front_desk["introduction"]["message"],
       not_understood: front_desk["not_understood"]["message"],
       clarification: front_desk["clarification"]["message"],
-      unsubscribe: front_desk["unsubscribe"]["message"]
+      unsubscribe: front_desk["unsubscribe"]["message"],
+      unsubscribe_keyword: front_desk["unsubscribe_keyword"]["message"]
     }
   end
 

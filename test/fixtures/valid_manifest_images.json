@@ -27,6 +27,11 @@
         "en": "Send UNSUBSCRIBE to stop receiving messages"
       }
     },
+    "unsubscribe_keyword": {
+      "message": {
+        "en": "UNSUBSCRIBE"
+      }
+    },
     "threshold": 0.3
   },
   "skills": [

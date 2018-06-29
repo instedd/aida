@@ -9,7 +9,8 @@ defmodule Aida.FrontDesk do
     introduction: Bot.message,
     not_understood: Bot.message,
     clarification: Bot.message,
-    unsubscribe: Bot.message
+    unsubscribe: Bot.message,
+    unsubscribe_keyword: Bot.message
   }
 
   defstruct threshold: 0.5,
@@ -17,7 +18,8 @@ defmodule Aida.FrontDesk do
             introduction: %{},
             not_understood: %{},
             clarification: %{},
-            unsubscribe: %{}
+            unsubscribe: %{},
+            unsubscribe_keyword: %{}
 
   def threshold(%FrontDesk{threshold: threshold}) do
     threshold

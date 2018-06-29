@@ -59,7 +59,7 @@ defmodule Aida.BotTest do
     "Te puedo dar información sobre nuestro menu",
     "Te puedo dar información sobre nuestro horario",
     "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias",
-    "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
+    "Enviá DESUSCRIBIR para dejar de recibir mensajes"
   ]
 
   @spanish_restaurant_greet [
@@ -68,7 +68,7 @@ defmodule Aida.BotTest do
     "Te puedo dar información sobre nuestro menu",
     "Te puedo dar información sobre nuestro horario",
     "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias",
-    "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
+    "Enviá DESUSCRIBIR para dejar de recibir mensajes"
   ]
 
   @language_selection_text "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
@@ -594,7 +594,8 @@ defmodule Aida.BotTest do
           introduction: %{ "en" => "I can do a number of things" },
           not_understood: %{ "en" => "Sorry, I didn't understand that" },
           clarification: %{ "en" => "I'm not sure exactly what you need." },
-          unsubscribe: %{ "en" => "Send UNSUBSCRIBE to stop receiving messages" }
+          unsubscribe: %{ "en" => "Send UNSUBSCRIBE to stop receiving messages" },
+          unsubscribe_keyword: %{ "en" => "UNSUBSCRIBE" }
         },
         skills: [
           %KeywordResponder{

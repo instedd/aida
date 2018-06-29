@@ -29,7 +29,13 @@
     "unsubscribe": {
       "message": {
         "en": "Send UNSUBSCRIBE to stop receiving messages",
-        "es": "Enviá UNSUBSCRIBE para dejar de recibir mensajes"
+        "es": "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+      }
+    },
+    "unsubscribe_keyword": {
+      "message": {
+        "en": "UNSUBSCRIBE",
+        "es": "DESUSCRIBIR"
       }
     },
     "threshold": 0.3

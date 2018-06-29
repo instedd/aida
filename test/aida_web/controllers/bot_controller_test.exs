@@ -13,6 +13,7 @@ defmodule AidaWeb.BotControllerTest do
     "not_understood" => @valid_message,
     "clarification" => @valid_message,
     "unsubscribe" => @valid_message,
+    "unsubscribe_keyword" => @valid_message,
     "threshold" => 0.1
   }
   @valid_localized_keywords %{"en" => ["a"]}
