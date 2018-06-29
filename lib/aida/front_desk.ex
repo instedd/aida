@@ -25,30 +25,31 @@ defmodule Aida.FrontDesk do
 
   @spec greet(message :: Message.t) :: Message.t
   def greet(%Message{} = message) do
-    log_usage(message.bot.id, message.session.id)
-
     %{message.session | is_new: false} |> Session.save
 
     message
       |> Message.respond(message.bot.front_desk.greeting)
       |> introduction()
-
     end
 
   @spec introduction(message :: Message.t) :: Message.t
   def introduction(message) do
-    message = message
-      |> Message.respond(message.bot.front_desk.introduction)
-
     log_usage(message.bot.id, message.session.id)
 
+    message
+      |> Message.respond(message.bot.front_desk.introduction)
+      |> skills_intro
+      |> Message.respond(message.bot.front_desk.unsubscribe)
+  end
+
+  @spec skills_intro(message :: Message.t) :: Message.t
+  defp skills_intro(message) do
     Bot.relevant_skills(message)
       |> Enum.reduce(message, fn(skill, message) ->
         ErrorLog.context(skill_id: Skill.id(skill)) do
           Skill.explain(skill, message)
         end
       end)
-      |> unsubscribe()
   end
 
   def clarification(message, skills) do
@@ -66,19 +67,9 @@ defmodule Aida.FrontDesk do
   end
 
   def not_understood(message) do
-    log_usage(message.bot.id, message.session.id)
-
     message
       |> Message.respond(message.bot.front_desk.not_understood)
       |> introduction()
-  end
-
-  @spec unsubscribe(message :: Message.t) :: Message.t
-  def unsubscribe(message) do
-    log_usage(message.bot.id, message.session.id)
-
-    message
-      |> Message.respond(message.bot.front_desk.unsubscribe)
   end
 
   defp log_usage(bot_id, session_id) do
