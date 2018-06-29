@@ -683,6 +683,41 @@ defmodule Aida.BotTest do
     end
   end
 
+  describe "do not disturb session" do
+    setup :create_manifest_bot
+    setup :generate_do_not_disturb_session
+
+    test "does not send messages", %{bot: bot, session: session} do
+      message =
+        Message.new("", bot, session)
+        |> Message.respond("howdy!")
+
+      Bot.send_message(message)
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() == 0
+    end
+
+    test "logs outgoing message as not sent", %{bot: bot, session: session} do
+      message =
+        Message.new("", bot, session)
+        |> Message.respond("howdy!")
+
+      Bot.send_message(message)
+
+      [outgoing_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "not sent (do not disturb)"))
+
+      assert outgoing_message_log.session_id == session.id
+      assert outgoing_message_log.bot_id == bot.id
+      assert outgoing_message_log.content == "howdy!"
+    end
+  end
+
   defp create_manifest_bot(_context) do
     manifest =
       File.read!("test/fixtures/valid_manifest.json")
@@ -703,4 +738,14 @@ defmodule Aida.BotTest do
     [session: session]
   end
 
+  defp generate_do_not_disturb_session(%{bot: bot}) do
+    pid = System.unique_integer([:positive])
+    Process.register(self(), "#{pid}" |> String.to_atom())
+
+    session =
+      %{Session.new({bot.id, "test", "#{pid}"}) | do_not_disturb: true}
+      |> Session.save()
+
+    [session: session]
+  end
 end

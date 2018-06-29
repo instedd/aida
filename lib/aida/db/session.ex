@@ -14,6 +14,7 @@ defmodule Aida.DB.Session do
     field :provider, :string
     field :provider_key, :string
     field :is_new, :boolean, default: true
+    field :do_not_disturb, :boolean, default: false
 
     timestamps()
   end
@@ -27,7 +28,8 @@ defmodule Aida.DB.Session do
     bot_id: String.t,
     provider: String.t,
     provider_key: String.t,
-    is_new: boolean
+    is_new: boolean,
+    do_not_disturb: boolean
   }
 
   @spec new({String.t, String.t, String.t}) :: t
@@ -37,7 +39,8 @@ defmodule Aida.DB.Session do
       bot_id: bot_id,
       provider: provider,
       provider_key: provider_key,
-      is_new: true
+      is_new: true,
+      do_not_disturb: false
     } |> save
   end
 

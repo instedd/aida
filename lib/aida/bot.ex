@@ -115,6 +115,20 @@ defmodule Aida.Bot do
     message
   end
 
+  defp log_not_sent_do_not_disturb(message) do
+    Enum.each(message.reply, fn reply ->
+      MessageLog.create(%{
+        bot_id: message.bot.id,
+        session_id: message.session.id,
+        content: reply,
+        content_type: "text",
+        direction: "not sent (do not disturb)"
+      })
+    end)
+
+    message
+  end
+
   defp log_outgoing(message) do
     Enum.each(message.reply, fn reply ->
       MessageLog.create(%{
@@ -260,6 +274,10 @@ defmodule Aida.Bot do
 
   def encrypt(%Bot{public_keys: public_keys}, data) do
     Crypto.encrypt(data, public_keys)
+  end
+
+  def send_message(%{session: %{do_not_disturb: do_not_disturb}} = message) when do_not_disturb do
+    log_not_sent_do_not_disturb(message)
   end
 
   def send_message(%{session: session} = message) do
