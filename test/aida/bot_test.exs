@@ -718,6 +718,91 @@ defmodule Aida.BotTest do
     end
   end
 
+  describe "unsubscribe keyword" do
+    setup :create_manifest_bot
+    setup :generate_session_for_test_channel
+
+    test "sets session as do not disturb", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("UNSUBSCRIBE", bot, session)
+      |> Bot.chat()
+
+      assert Session.get(session.id).do_not_disturb
+    end
+
+    test "sets session as do not disturb for other language", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "es"})
+
+      Message.new("DESUSCRIBIR", bot, session)
+      |> Bot.chat()
+
+      assert Session.get(session.id).do_not_disturb
+    end
+
+    test "does not set session as do not disturb for a not unsubscribe keyword", %{
+      bot: bot,
+      session: session
+    } do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("not unsubscribe keyword", bot, session)
+      |> Bot.chat()
+
+      assert !Session.get(session.id).do_not_disturb
+    end
+
+    test "does not have any reply", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("UNSUBSCRIBE", bot, session)
+      |> Bot.chat()
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() == 0
+    end
+
+    test "has a reply for a not unsubscribe keyword", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("not unsubscribe keyword", bot, session)
+      |> Bot.chat()
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() > 0
+    end
+  end
+
+  describe "not unsubscribe keyword" do
+    setup :create_manifest_bot
+    setup :generate_do_not_disturb_session
+
+    test "unsets a do not disturb session", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("not unsubscribe keyword", bot, session)
+      |> Bot.chat()
+
+      assert !Session.get(session.id).do_not_disturb
+    end
+
+    test "has a reply on a do not disturb session", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("not unsubscribe keyword", bot, session)
+      |> Bot.chat()
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() > 0
+    end
+  end
+
   defp create_manifest_bot(_context) do
     manifest =
       File.read!("test/fixtures/valid_manifest.json")

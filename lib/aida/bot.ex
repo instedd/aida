@@ -75,10 +75,12 @@ defmodule Aida.Bot do
       message
       |> reset_language_if_invalid()
       |> choose_language_for_single_language_bot()
+      |> set_session_do_not_disturb()
       |> handle()
       |> greet_if_no_response_and_language_was_set(message)
       |> unset_session_new
       |> log_incoming
+      |> clean_reply_if_do_not_disturb
       |> log_outgoing
     end
   end
@@ -285,5 +287,17 @@ defmodule Aida.Bot do
 
     channel = ChannelProvider.find_channel(session)
     channel |> Channel.send_message(message.reply, session)
+  end
+
+  def set_session_do_not_disturb(message) do
+    %{message | session: %{message.session | do_not_disturb: Message.is_unsubscribe_keyword(message)}}
+  end
+
+  def clean_reply_if_do_not_disturb(%{session: %{do_not_disturb: do_not_disturb}} = message) when do_not_disturb do
+    %{message | reply: []}
+  end
+
+  def clean_reply_if_do_not_disturb(message) do
+      message
   end
 end

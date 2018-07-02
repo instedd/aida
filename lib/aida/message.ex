@@ -258,4 +258,8 @@ defmodule Aida.Message do
   def mark_sensitive(message) do
     %{message | sensitive: true}
   end
+
+  def is_unsubscribe_keyword(message) do
+    text_content(message) == message.bot.front_desk.unsubscribe_keyword[language(message)]
+  end
 end
