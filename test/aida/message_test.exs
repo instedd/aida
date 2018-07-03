@@ -1,5 +1,5 @@
 defmodule Aida.MessageTest do
-  alias Aida.{Message, Message.TextContent, Bot}
+  alias Aida.{Message, Message.TextContent, Bot, Variable}
   alias Aida.DB.{Session}
   use ExUnit.Case
   use Aida.SessionHelper
@@ -82,7 +82,7 @@ defmodule Aida.MessageTest do
 
     test "interpolate breaks infinite loops" do
       session = new_session(@session_id, %{"language" => "en"})
-      devil_var = %Aida.Variable{
+      devil_var = %Variable{
         name: "loop_var",
         values: %{
           "en" => "[${loop_var}]"
@@ -92,6 +92,36 @@ defmodule Aida.MessageTest do
       message = Message.new("Hi!", bot, session)
         |> Message.respond("loop_var: ${loop_var}")
       assert message.reply == ["loop_var: [...]"]
+    end
+
+    test "interpolate breaks infinite loops on variable overrides" do
+      session = new_session(@session_id, %{"language" => "en"})
+      devil_var = %Variable{
+        name: "title",
+        values: %{
+          "en" => ""
+        },
+        overrides: [
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${title} = 'male'"),
+            values: %{
+              "en" => "Mr.",
+              "es" => "Sr."
+            }
+          },
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${title} = 'female'"),
+            values: %{
+              "en" => "Ms.",
+              "es" => "Sra."
+            }
+          }
+        ]
+      }
+      bot = %{@bot | variables: [devil_var | @bot.variables]}
+      message = Message.new("Hi!", bot, session)
+        |> Message.respond("loop_var: ${title}")
+      assert message.reply == ["loop_var: "]
     end
 
     test "interpolates correctly a multiple choice variable with two options" do

@@ -20,6 +20,15 @@ defmodule Aida.Expr.UnknownVariableError do
   end
 end
 
+defmodule Aida.Expr.RecursiveVariableDefinitionError do
+  defexception [:message]
+
+  def exception(var_name) do
+    %__MODULE__{message: "Variable '#{var_name}' has a recursive definition"}
+  end
+end
+
+
 defmodule Aida.Expr.UnknownFunctionError do
   defexception [:message]
 
