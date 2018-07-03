@@ -14,6 +14,7 @@ defmodule Aida.BotTest do
     Message,
     Skill.KeywordResponder,
     TestSkill,
+    Variable,
     Repo
   }
 
@@ -380,6 +381,63 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "We will deliver "
       ]
+    end
+
+    test "recursive var lookup raises stack overflow and returns without crashing", %{initial_session: initial_session, bot: bot} do
+      bot = %Bot{
+        id: bot.id,
+        languages: ["en"],
+        skills: [
+          %KeywordResponder{
+            explanation: %{ "en" => "" },
+            clarification: %{ "en" => "" },
+            id: "id",
+            bot_id: bot.id,
+            name: "Mr or Ms",
+            keywords: %{
+              "en" => ["hi"]
+            },
+            response: %{
+              "en" => "I'll call you ${title}"
+            }
+          }
+        ],
+        variables: [
+          %Variable{
+            name: "title",
+            values: %{
+              "en" => "",
+              "es" => ""
+            },
+            overrides: [
+              %Variable.Override{
+                relevant: Aida.Expr.parse("${title} = 'male'"),
+                values: %{
+                  "en" => "Mr.",
+                  "es" => "Sr."
+                }
+              },
+              %Variable.Override{
+                relevant: Aida.Expr.parse("${title} = 'female'"),
+                values: %{
+                  "en" => "Ms.",
+                  "es" => "Sra."
+                }
+              }
+            ]
+          }
+        ]
+      }
+
+      Process.info(self(), :current_stacktrace)
+
+      output = Bot.chat(Message.new("hi", bot, initial_session))
+      assert output.reply == [
+        "I'll call you "
+      ]
+
+      log = ErrorLog |> Repo.all |> hd()
+      assert log.message == "Variable 'title' has a recursive definition"
     end
   end
 

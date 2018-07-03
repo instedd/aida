@@ -228,16 +228,30 @@ defmodule Aida.Message do
 
   def expr_context(message, options \\ []) do
     lookup_raises = options[:lookup_raises]
+
     var_lookup = fn name ->
-      case Message.lookup_var(message, name) do
+      vars = Process.get("lookup_variables", [])
+
+      if Enum.member?(vars, name) do
+        raise Aida.Expr.RecursiveVariableDefinitionError.exception(name)
+      else
+        Process.put("lookup_variables", [name | vars])
+      end
+
+      value = case Message.lookup_var(message, name) do
         :not_found ->
           if lookup_raises do
             raise Aida.Expr.UnknownVariableError.exception(name)
           else
             nil
           end
-        value -> value
+        value ->
+          value
       end
+
+      Process.put("lookup_variables", vars)
+
+      value
     end
 
     context = options
