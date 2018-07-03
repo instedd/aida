@@ -12,7 +12,8 @@ defmodule Aida.BotParser do
     Variable,
     Channel.Facebook,
     Channel.WebSocket,
-    Recurrence
+    Recurrence,
+    Unsubscribe
   }
 
   @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
@@ -49,8 +50,16 @@ defmodule Aida.BotParser do
       introduction: front_desk["introduction"]["message"],
       not_understood: front_desk["not_understood"]["message"],
       clarification: front_desk["clarification"]["message"],
-      unsubscribe: front_desk["unsubscribe"]["message"],
-      unsubscribe_keyword: front_desk["unsubscribe_keyword"]["message"]
+      unsubscribe: parse_unsubscribe(front_desk["unsubscribe"])
+    }
+  end
+
+  @spec parse_unsubscribe(unsubscribe :: map) :: Unsubscribe.t
+  defp parse_unsubscribe(unsubscribe) do
+    %Unsubscribe{
+      introduction_message: unsubscribe["introduction_message"]["message"],
+      keywords: unsubscribe["keywords"],
+      acknowledge_message: unsubscribe["acknowledge_message"]["message"]
     }
   end
 

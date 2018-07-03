@@ -7,16 +7,20 @@ defmodule AidaWeb.BotControllerTest do
 
   @valid_localized_string %{"en" => "a"}
   @valid_message %{"message" => @valid_localized_string}
+  @valid_localized_keywords %{"en" => ["a"]}
+  @valid_unsubscribe %{
+    "introduction_message" => @valid_message,
+    "keywords" => @valid_localized_keywords,
+    "acknowledge_message" => @valid_message
+  }
   @valid_front_desk %{
     "greeting" => @valid_message,
     "introduction" => @valid_message,
     "not_understood" => @valid_message,
     "clarification" => @valid_message,
-    "unsubscribe" => @valid_message,
-    "unsubscribe_keyword" => @valid_message,
+    "unsubscribe" => @valid_unsubscribe,
     "threshold" => 0.1
   }
-  @valid_localized_keywords %{"en" => ["a"]}
   @valid_keyword_responder %{
     "type" => "keyword_responder",
     "id" => "1",

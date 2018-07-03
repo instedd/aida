@@ -594,8 +594,20 @@ defmodule Aida.BotTest do
           introduction: %{ "en" => "I can do a number of things" },
           not_understood: %{ "en" => "Sorry, I didn't understand that" },
           clarification: %{ "en" => "I'm not sure exactly what you need." },
-          unsubscribe: %{ "en" => "Send UNSUBSCRIBE to stop receiving messages" },
-          unsubscribe_keyword: %{ "en" => "UNSUBSCRIBE" }
+          unsubscribe: %{
+            introduction_message: %{
+              "en" => "Send UNSUBSCRIBE to stop receiving messages",
+              "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+            },
+            keywords: %{
+              "en" => ["UNSUBSCRIBE"],
+              "es" => ["DESUSCRIBIR"]
+            },
+            acknowledge_message: %{
+              "en" => "I won't send you any further messages",
+              "es" => "No te enviaré más mensajes"
+            }
+          }
         },
         skills: [
           %KeywordResponder{
@@ -752,16 +764,26 @@ defmodule Aida.BotTest do
       assert !Session.get(session.id).do_not_disturb
     end
 
-    test "does not have any reply", %{bot: bot, session: session} do
+    test "replies unsubscribe acknowledge message", %{bot: bot, session: session} do
       session = session |> Session.merge(%{"language" => "en"})
 
-      Message.new("UNSUBSCRIBE", bot, session)
+      output = Message.new("UNSUBSCRIBE", bot, session)
       |> Bot.chat()
 
-      assert MessageLog
-             |> Repo.all()
-             |> Enum.filter(&(&1.direction == "outgoing"))
-             |> Enum.count() == 0
+      assert output.reply == [
+        "I won't send you any further messages"
+      ]
+    end
+
+    test "replies unsubscribe acknowledge message for other language", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "es"})
+
+      output = Message.new("DESUSCRIBIR", bot, session)
+      |> Bot.chat()
+
+      assert output.reply == [
+        "No te enviaré más mensajes"
+      ]
     end
 
     test "has a reply for a not unsubscribe keyword", %{bot: bot, session: session} do

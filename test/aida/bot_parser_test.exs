@@ -17,7 +17,8 @@ defmodule Aida.BotParserTest do
     Skill.Survey.Choice,
     Skill.DecisionTree,
     Variable,
-    Recurrence
+    Recurrence,
+    Unsubscribe
   }
   alias Aida.Channel.{Facebook, WebSocket}
 
@@ -48,14 +49,21 @@ defmodule Aida.BotParserTest do
           "en" => "I'm not sure exactly what you need.",
           "es" => "Perdón, no estoy seguro de lo que necesitás."
         },
-        unsubscribe: %{
-          "en" => "Send UNSUBSCRIBE to stop receiving messages",
-          "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
-        },
-        unsubscribe_keyword: %{
-          "en" => "UNSUBSCRIBE",
-          "es" => "DESUSCRIBIR"
-        }      },
+        unsubscribe: %Unsubscribe{
+          introduction_message: %{
+            "en" => "Send UNSUBSCRIBE to stop receiving messages",
+            "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+          },
+          keywords: %{
+            "en" => ["UNSUBSCRIBE"],
+            "es" => ["DESUSCRIBIR"]
+          },
+          acknowledge_message: %{
+            "en" => "I won't send you any further messages",
+            "es" => "No te enviaré más mensajes"
+          }
+        }
+      },
       skills: [
         %LanguageDetector{
           explanation: "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
@@ -533,13 +541,19 @@ defmodule Aida.BotParserTest do
           "en" => "I'm not sure exactly what you need.",
           "es" => "Perdón, no estoy seguro de lo que necesitás."
         },
-        unsubscribe: %{
-          "en" => "Send UNSUBSCRIBE to stop receiving messages",
-          "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
-        },
-        unsubscribe_keyword: %{
-          "en" => "UNSUBSCRIBE",
-          "es" => "DESUSCRIBIR"
+        unsubscribe: %Unsubscribe{
+          introduction_message: %{
+            "en" => "Send UNSUBSCRIBE to stop receiving messages",
+            "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+          },
+          keywords: %{
+            "en" => ["UNSUBSCRIBE"],
+            "es" => ["DESUSCRIBIR"]
+          },
+          acknowledge_message: %{
+            "en" => "I won't send you any further messages",
+            "es" => "No te enviaré más mensajes"
+          }
         }
       },
       skills: [

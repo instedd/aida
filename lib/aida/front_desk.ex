@@ -1,6 +1,6 @@
 defmodule Aida.FrontDesk do
   alias __MODULE__
-  alias Aida.{Bot, Message, Skill, DB.SkillUsage, DB.Session}
+  alias Aida.{Bot, Message, Skill, DB.SkillUsage, DB.Session, Unsubscribe}
   use Aida.ErrorLog
 
   @type t :: %__MODULE__{
@@ -9,8 +9,7 @@ defmodule Aida.FrontDesk do
     introduction: Bot.message,
     not_understood: Bot.message,
     clarification: Bot.message,
-    unsubscribe: Bot.message,
-    unsubscribe_keyword: Bot.message
+    unsubscribe: Unsubscribe.t
   }
 
   defstruct threshold: 0.5,
@@ -18,8 +17,7 @@ defmodule Aida.FrontDesk do
             introduction: %{},
             not_understood: %{},
             clarification: %{},
-            unsubscribe: %{},
-            unsubscribe_keyword: %{}
+            unsubscribe: %{}
 
   def threshold(%FrontDesk{threshold: threshold}) do
     threshold
@@ -32,7 +30,7 @@ defmodule Aida.FrontDesk do
     message
       |> Message.respond(message.bot.front_desk.greeting)
       |> introduction()
-    end
+  end
 
   @spec introduction(message :: Message.t) :: Message.t
   def introduction(message) do
@@ -41,7 +39,7 @@ defmodule Aida.FrontDesk do
     message
       |> Message.respond(message.bot.front_desk.introduction)
       |> skills_intro
-      |> Message.respond(message.bot.front_desk.unsubscribe)
+      |> Message.respond(message.bot.front_desk.unsubscribe.introduction_message)
   end
 
   @spec skills_intro(message :: Message.t) :: Message.t
@@ -72,6 +70,39 @@ defmodule Aida.FrontDesk do
     message
       |> Message.respond(message.bot.front_desk.not_understood)
       |> introduction()
+  end
+
+  def handle_unsubscribe(message) do
+    message = set_session_do_not_disturb(message)
+
+    if is_unsubscribe_keyword(message) do
+      Message.respond(message, message.bot.front_desk.unsubscribe.acknowledge_message)
+    else
+      message
+    end
+  end
+
+  defp set_session_do_not_disturb(message) do
+    %{
+      message
+      | session:
+          Session.save(%{message.session | do_not_disturb: is_unsubscribe_keyword(message)})
+    }
+  end
+
+  defp is_unsubscribe_keyword(message) do
+    cond do
+      Map.has_key?(message.bot.front_desk.unsubscribe, :keywords) &&
+        message.bot.front_desk.unsubscribe.keywords[Message.language(message)] &&
+          Enum.member?(
+            message.bot.front_desk.unsubscribe.keywords[Message.language(message)],
+            Message.text_content(message)
+          ) ->
+        true
+
+      true ->
+        false
+    end
   end
 
   defp log_usage(bot_id, session_id) do
