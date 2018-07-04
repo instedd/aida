@@ -82,13 +82,13 @@ defmodule Aida.MessageTest do
 
     test "interpolate breaks infinite loops" do
       session = new_session(@session_id, %{"language" => "en"})
-      devil_var = %Variable{
+      evil_var = %Variable{
         name: "loop_var",
         values: %{
           "en" => "[${loop_var}]"
         }
       }
-      bot = %{@bot | variables: [devil_var | @bot.variables]}
+      bot = %{@bot | variables: [evil_var | @bot.variables]}
       message = Message.new("Hi!", bot, session)
         |> Message.respond("loop_var: ${loop_var}")
       assert message.reply == ["loop_var: [...]"]
@@ -96,7 +96,7 @@ defmodule Aida.MessageTest do
 
     test "interpolate breaks infinite loops on variable overrides" do
       session = new_session(@session_id, %{"language" => "en"})
-      devil_var = %Variable{
+      evil_var = %Variable{
         name: "title",
         values: %{
           "en" => ""
@@ -118,10 +118,88 @@ defmodule Aida.MessageTest do
           }
         ]
       }
-      bot = %{@bot | variables: [devil_var | @bot.variables]}
+      bot = %{@bot | variables: [evil_var | @bot.variables]}
       message = Message.new("Hi!", bot, session)
         |> Message.respond("loop_var: ${title}")
       assert message.reply == ["loop_var: "]
+    end
+
+    test "interpolate breaks infinite loops on multiple variable overrides" do
+      session = new_session(@session_id, %{"language" => "en"})
+      evil_var = %Variable{
+        name: "evil_var",
+        values: %{
+          "en" => ""
+        },
+        overrides: [
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${evil_var2} = 'male'"),
+            values: %{
+              "en" => "Mr.",
+              "es" => "Sr."
+            }
+          },
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${evil_var2} = 'female'"),
+            values: %{
+              "en" => "Ms.",
+              "es" => "Sra."
+            }
+          }
+        ]
+      }
+
+      evil_var2 = %Variable{
+        name: "evil_var2",
+        values: %{
+          "en" => ""
+        },
+        overrides: [
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${evil_var} = 'male'"),
+            values: %{
+              "en" => "Mr.",
+              "es" => "Sr."
+            }
+          },
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${evil_var} = 'female'"),
+            values: %{
+              "en" => "Ms.",
+              "es" => "Sra."
+            }
+          }
+        ]
+      }
+      bot = %{@bot | variables: [evil_var, evil_var2 | @bot.variables]}
+      message = Message.new("Hi!", bot, session)
+        |> Message.respond("loop_var: ${title}")
+      assert message.reply == ["loop_var: "]
+    end
+
+    test "interpolate cleans recursive lookup even when variables are not found" do
+      session = new_session(@session_id, %{"language" => "en"})
+      foo = %Variable{
+        name: "foo",
+        values: %{
+          "en" => "a"
+        },
+        overrides: [
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${evil_var} = 'Mr.'"),
+            values: %{
+              "en" => "Mr."
+            }
+          }
+        ]
+      }
+
+      bot = %{@bot | variables: [foo | @bot.variables]}
+      message = Message.new("Hi!", bot, session)
+        |> Message.respond("foo: ${foo}")
+      assert message.reply == ["foo: a"]
+
+      assert Process.get("lookup_variables", []) == []
     end
 
     test "interpolates correctly a multiple choice variable with two options" do
