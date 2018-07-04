@@ -74,6 +74,7 @@ defmodule Aida.Bot do
   def chat(%Message{} = message) do
     ErrorLog.context(bot_id: message.bot.id, session_id: message.session.id) do
       message
+      |> Message.set_session_do_not_disturb!(false)
       |> reset_language_if_invalid()
       |> choose_language_for_single_language_bot()
       |> handle()
@@ -179,43 +180,37 @@ defmodule Aida.Bot do
   end
 
   defp handle(message) do
-    message = FrontDesk.handle_unsubscribe(message)
+    skills_sorted = [message.bot.front_desk | relevant_skills(message)]
+      |> Enum.map(&evaluate_confidence(&1, message))
+      |> Enum.reject(&is_nil/1)
+      |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
 
-    if Enum.count(message.reply) > 0 do
-      message
-    else
-      skills_sorted = relevant_skills(message)
-        |> Enum.map(&evaluate_confidence(&1, message))
-        |> Enum.reject(&is_nil/1)
-        |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
-
-      case skills_sorted do
-        [] ->
-          ErrorLog.context(skill_id: "front_desk") do
-            if Message.new_session?(message) do
-              message |> FrontDesk.greet()
-            else
-              message |> FrontDesk.not_understood()
-            end
-          end
-        skills ->
-          higher_confidence_skill = Enum.at(skills, 0)
-
-          difference = case Enum.count(skills) do
-            1 -> higher_confidence_skill.confidence
-            _ -> higher_confidence_skill.confidence - Enum.at(skills, 1).confidence
-          end
-
-          if threshold(message.bot) <= difference do
-            ErrorLog.context(skill_id: Skill.id(higher_confidence_skill.skill)) do
-              Skill.respond(higher_confidence_skill.skill, message)
-            end
+    case skills_sorted do
+      [] ->
+        ErrorLog.context(skill_id: "front_desk") do
+          if Message.new_session?(message) do
+            message |> FrontDesk.greet()
           else
-            ErrorLog.context(skill_id: "front_desk") do
-              message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
-            end
+            message |> FrontDesk.not_understood()
           end
-      end
+        end
+      skills ->
+        higher_confidence_skill = Enum.at(skills, 0)
+
+        difference = case Enum.count(skills) do
+          1 -> higher_confidence_skill.confidence
+          _ -> higher_confidence_skill.confidence - Enum.at(skills, 1).confidence
+        end
+
+        if threshold(message.bot) <= difference do
+          ErrorLog.context(skill_id: Skill.id(higher_confidence_skill.skill)) do
+            Skill.respond(higher_confidence_skill.skill, message)
+          end
+        else
+          ErrorLog.context(skill_id: "front_desk") do
+            message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
+          end
+        end
     end
   end
 
@@ -293,4 +288,5 @@ defmodule Aida.Bot do
     channel = ChannelProvider.find_channel(session)
     channel |> Channel.send_message(message.reply, session)
   end
+
 end

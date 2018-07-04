@@ -58,7 +58,7 @@ defmodule Aida.BotParser do
   defp parse_unsubscribe(unsubscribe) do
     %Unsubscribe{
       introduction_message: unsubscribe["introduction_message"]["message"],
-      keywords: unsubscribe["keywords"],
+      keywords: parse_string_list_map(unsubscribe["keywords"]),
       acknowledge_message: unsubscribe["acknowledge_message"]["message"]
     }
   end

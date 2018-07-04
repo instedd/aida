@@ -1,6 +1,6 @@
 defmodule Aida.FrontDesk do
   alias __MODULE__
-  alias Aida.{Bot, Message, Skill, DB.SkillUsage, DB.Session, Unsubscribe}
+  alias Aida.{Bot, Message, Message.TextContent, Skill, DB.SkillUsage, DB.Session, Unsubscribe, Skill.Utils}
   use Aida.ErrorLog
 
   @type t :: %__MODULE__{
@@ -72,40 +72,35 @@ defmodule Aida.FrontDesk do
       |> introduction()
   end
 
-  def handle_unsubscribe(message) do
-    message = set_session_do_not_disturb(message)
-
-    if is_unsubscribe_keyword(message) do
-      Message.respond(message, message.bot.front_desk.unsubscribe.acknowledge_message)
-    else
-      message
-    end
-  end
-
-  defp set_session_do_not_disturb(message) do
-    %{
-      message
-      | session:
-          Session.save(%{message.session | do_not_disturb: is_unsubscribe_keyword(message)})
-    }
-  end
-
-  defp is_unsubscribe_keyword(message) do
-    cond do
-      Map.has_key?(message.bot.front_desk.unsubscribe, :keywords) &&
-        message.bot.front_desk.unsubscribe.keywords[Message.language(message)] &&
-          Enum.member?(
-            message.bot.front_desk.unsubscribe.keywords[Message.language(message)],
-            Message.text_content(message)
-          ) ->
-        true
-
-      true ->
-        false
-    end
-  end
-
   defp log_usage(bot_id, session_id) do
     SkillUsage.log_skill_usage(bot_id, "front_desk", session_id)
+  end
+
+  defimpl Aida.Skill, for: __MODULE__ do
+    def init(skill, _bot), do: skill
+
+    def wake_up(_skill, _bot, _data), do: :ok
+
+    def explain(_explanation, message), do: message
+
+    def clarify(%{unsubscribe: %{introduction_message: introduction_message}}, message) do
+      message |> Message.respond(introduction_message)
+    end
+
+    def put_response(%{unsubscribe: %{acknowledge_message: acknowledge_message}}, message) do
+      message |> Message.set_session_do_not_disturb!(true) |> Message.respond(acknowledge_message)
+    end
+
+    def confidence(%{unsubscribe: %{keywords: keywords}}, %{content: %TextContent{}} = message) do
+      Utils.confidence_for_keywords(keywords, message)
+    end
+
+    def confidence(_, _), do: 0
+
+    def id(_), do: "front_desk"
+
+    def relevant(skill), do: skill.relevant
+
+    def uses_encryption?(_), do: false
   end
 end

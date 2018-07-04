@@ -259,4 +259,12 @@ defmodule Aida.Message do
     %{message | sensitive: true}
   end
 
+  def set_session_do_not_disturb!(message, do_not_disturb) do
+    %{
+      message
+      | session:
+          Session.save(%{message.session | do_not_disturb: do_not_disturb})
+    }
+  end
+
 end

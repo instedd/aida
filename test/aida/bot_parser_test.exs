@@ -55,8 +55,8 @@ defmodule Aida.BotParserTest do
             "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
           },
           keywords: %{
-            "en" => ["UNSUBSCRIBE"],
-            "es" => ["DESUSCRIBIR"]
+            "en" => ["unsubscribe"],
+            "es" => ["desuscribir"]
           },
           acknowledge_message: %{
             "en" => "I won't send you any further messages",
@@ -547,8 +547,8 @@ defmodule Aida.BotParserTest do
             "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
           },
           keywords: %{
-            "en" => ["UNSUBSCRIBE"],
-            "es" => ["DESUSCRIBIR"]
+            "en" => ["unsubscribe"],
+            "es" => ["desuscribir"]
           },
           acknowledge_message: %{
             "en" => "I won't send you any further messages",

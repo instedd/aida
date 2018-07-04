@@ -758,7 +758,7 @@ defmodule Aida.BotTest do
     } do
       session = session |> Session.merge(%{"language" => "en"})
 
-      Message.new("not unsubscribe keyword", bot, session)
+      Message.new("other keyword", bot, session)
       |> Bot.chat()
 
       assert !Session.get(session.id).do_not_disturb
@@ -789,7 +789,7 @@ defmodule Aida.BotTest do
     test "has a reply for a not unsubscribe keyword", %{bot: bot, session: session} do
       session = session |> Session.merge(%{"language" => "en"})
 
-      Message.new("not unsubscribe keyword", bot, session)
+      Message.new("other keyword", bot, session)
       |> Bot.chat()
 
       assert MessageLog
@@ -806,7 +806,7 @@ defmodule Aida.BotTest do
     test "unsets a do not disturb session", %{bot: bot, session: session} do
       session = session |> Session.merge(%{"language" => "en"})
 
-      Message.new("not unsubscribe keyword", bot, session)
+      Message.new("other keyword", bot, session)
       |> Bot.chat()
 
       assert !Session.get(session.id).do_not_disturb
@@ -815,7 +815,7 @@ defmodule Aida.BotTest do
     test "has a reply on a do not disturb session", %{bot: bot, session: session} do
       session = session |> Session.merge(%{"language" => "en"})
 
-      Message.new("not unsubscribe keyword", bot, session)
+      Message.new("other keyword", bot, session)
       |> Bot.chat()
 
       assert MessageLog
