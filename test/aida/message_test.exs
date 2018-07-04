@@ -124,6 +124,31 @@ defmodule Aida.MessageTest do
       assert message.reply == ["loop_var: "]
     end
 
+    test "interpolate cleans recursive lookup even when variables are not found" do
+      session = new_session(@session_id, %{"language" => "en"})
+      foo = %Variable{
+        name: "foo",
+        values: %{
+          "en" => "a"
+        },
+        overrides: [
+          %Variable.Override{
+            relevant: Aida.Expr.parse("${devil_var} = 'Mr.'"),
+            values: %{
+              "en" => "Mr."
+            }
+          }
+        ]
+      }
+
+      bot = %{@bot | variables: [foo | @bot.variables]}
+      message = Message.new("Hi!", bot, session)
+        |> Message.respond("foo: ${foo}")
+      assert message.reply == ["foo: a"]
+
+      assert Process.get("lookup_variables", []) == []
+    end
+
     test "interpolates correctly a multiple choice variable with two options" do
       session = new_session(@session_id, %{"pepe" => 3, "food" => ["barbecue", "pasta"]})
       message = Message.new("Hi!", @bot, session)

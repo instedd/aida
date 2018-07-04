@@ -238,20 +238,20 @@ defmodule Aida.Message do
         Process.put("lookup_variables", [name | vars])
       end
 
-      value = case Message.lookup_var(message, name) do
-        :not_found ->
-          if lookup_raises do
-            raise Aida.Expr.UnknownVariableError.exception(name)
-          else
-            nil
-          end
-        value ->
-          value
+      try do
+        case Message.lookup_var(message, name) do
+          :not_found ->
+            if lookup_raises do
+              raise Aida.Expr.UnknownVariableError.exception(name)
+            else
+              nil
+            end
+          value ->
+            value
+        end
+      after
+        Process.put("lookup_variables", vars)
       end
-
-      Process.put("lookup_variables", vars)
-
-      value
     end
 
     context = options
