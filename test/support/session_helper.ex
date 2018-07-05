@@ -9,6 +9,7 @@ defmodule Aida.SessionHelper do
           data: values,
           bot_id: bot_id,
           is_new: true,
+          do_not_disturb: false,
           provider: "facebook",
           provider_key: "1234/5678"
         }

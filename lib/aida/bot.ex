@@ -9,7 +9,8 @@ defmodule Aida.Bot do
     FrontDesk,
     Message,
     Skill,
-    Variable
+    Variable,
+    FrontDesk
   }
   alias Aida.Message.SystemContent
   alias Aida.DB.Session
@@ -73,6 +74,7 @@ defmodule Aida.Bot do
   def chat(%Message{} = message) do
     ErrorLog.context(bot_id: message.bot.id, session_id: message.session.id) do
       message
+      |> Message.set_session_do_not_disturb!(false)
       |> reset_language_if_invalid()
       |> choose_language_for_single_language_bot()
       |> handle()
@@ -113,6 +115,20 @@ defmodule Aida.Bot do
     })
 
     MessagesPerDay.log_received_message(bot.id)
+    message
+  end
+
+  defp log_not_sent_do_not_disturb(message) do
+    Enum.each(message.reply, fn reply ->
+      MessageLog.create(%{
+        bot_id: message.bot.id,
+        session_id: message.session.id,
+        content: reply,
+        content_type: "text",
+        direction: "not sent (do not disturb)"
+      })
+    end)
+
     message
   end
 
@@ -170,7 +186,7 @@ defmodule Aida.Bot do
   end
 
   defp handle(message) do
-    skills_sorted = relevant_skills(message)
+    skills_sorted = [message.bot.front_desk | relevant_skills(message)]
       |> Enum.map(&evaluate_confidence(&1, message))
       |> Enum.reject(&is_nil/1)
       |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
@@ -283,6 +299,10 @@ defmodule Aida.Bot do
     Crypto.encrypt(data, public_keys)
   end
 
+  def send_message(%{session: %{do_not_disturb: do_not_disturb}} = message) when do_not_disturb do
+    log_not_sent_do_not_disturb(message)
+  end
+
   def send_message(%{session: session} = message) do
     session |> Session.save()
 
@@ -291,4 +311,5 @@ defmodule Aida.Bot do
     channel = ChannelProvider.find_channel(session)
     channel |> Channel.send_message(message.reply, session)
   end
+
 end

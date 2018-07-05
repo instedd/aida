@@ -17,6 +17,7 @@ defmodule Aida.SessionTest do
       provider: @provider,
       provider_key: @provider_key,
       is_new: true,
+      do_not_disturb: false,
       data: %{}
     } = session
   end
@@ -42,6 +43,7 @@ defmodule Aida.SessionTest do
         provider: @provider,
         provider_key: @provider_key,
         is_new: true,
+        do_not_disturb: false,
         data: %{}
       } = loaded_session
     end
@@ -57,6 +59,7 @@ defmodule Aida.SessionTest do
         provider: @provider,
         provider_key: @provider_key,
         is_new: true,
+        do_not_disturb: false,
         data: %{"foo" => "bar"}
       } = loaded_session
     end

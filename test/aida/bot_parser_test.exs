@@ -17,7 +17,8 @@ defmodule Aida.BotParserTest do
     Skill.Survey.Choice,
     Skill.DecisionTree,
     Variable,
-    Recurrence
+    Recurrence,
+    Unsubscribe
   }
   alias Aida.Channel.{Facebook, WebSocket}
 
@@ -47,6 +48,20 @@ defmodule Aida.BotParserTest do
         clarification: %{
           "en" => "I'm not sure exactly what you need.",
           "es" => "Perdón, no estoy seguro de lo que necesitás."
+        },
+        unsubscribe: %Unsubscribe{
+          introduction_message: %{
+            "en" => "Send UNSUBSCRIBE to stop receiving messages",
+            "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+          },
+          keywords: %{
+            "en" => ["unsubscribe"],
+            "es" => ["desuscribir"]
+          },
+          acknowledge_message: %{
+            "en" => "I won't send you any further messages",
+            "es" => "No te enviaré más mensajes"
+          }
         }
       },
       skills: [
@@ -529,6 +544,20 @@ defmodule Aida.BotParserTest do
         clarification: %{
           "en" => "I'm not sure exactly what you need.",
           "es" => "Perdón, no estoy seguro de lo que necesitás."
+        },
+        unsubscribe: %Unsubscribe{
+          introduction_message: %{
+            "en" => "Send UNSUBSCRIBE to stop receiving messages",
+            "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+          },
+          keywords: %{
+            "en" => ["unsubscribe"],
+            "es" => ["desuscribir"]
+          },
+          acknowledge_message: %{
+            "en" => "I won't send you any further messages",
+            "es" => "No te enviaré más mensajes"
+          }
         }
       },
       skills: [

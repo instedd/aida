@@ -25,7 +25,8 @@ defmodule Aida.BotTest do
     "I can do a number of things",
     "I can give you information about our menu",
     "I can give you information about our opening hours",
-    "I can help you choose a meal that fits your dietary restrictions"
+    "I can help you choose a meal that fits your dietary restrictions",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @english_not_understood [
@@ -33,21 +34,24 @@ defmodule Aida.BotTest do
     "I can do a number of things",
     "I can give you information about our menu",
     "I can give you information about our opening hours",
-    "I can help you choose a meal that fits your dietary restrictions"
+    "I can help you choose a meal that fits your dietary restrictions",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @english_single_lang_restaurant_greet [
     "Hello, I'm a Restaurant bot",
     "I can do a number of things",
     "I can give you information about our menu",
-    "I can give you information about our opening hours"
+    "I can give you information about our opening hours",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @english_single_lang_not_understood [
     "Sorry, I didn't understand that",
     "I can do a number of things",
     "I can give you information about our menu",
-    "I can give you information about our opening hours"
+    "I can give you information about our opening hours",
+    "Send UNSUBSCRIBE to stop receiving messages"
   ]
 
   @spanish_not_understood [
@@ -55,7 +59,8 @@ defmodule Aida.BotTest do
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
     "Te puedo dar información sobre nuestro horario",
-    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias",
+    "Enviá DESUSCRIBIR para dejar de recibir mensajes"
   ]
 
   @spanish_restaurant_greet [
@@ -63,7 +68,8 @@ defmodule Aida.BotTest do
     "Puedo ayudarte con varias cosas",
     "Te puedo dar información sobre nuestro menu",
     "Te puedo dar información sobre nuestro horario",
-    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias",
+    "Enviá DESUSCRIBIR para dejar de recibir mensajes"
   ]
 
   @language_selection_text "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'"
@@ -281,7 +287,8 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "Sorry, I didn't understand that",
         "I can do a number of things",
-        "I can give you information about our opening hours"
+        "I can give you information about our opening hours",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
 
@@ -294,7 +301,8 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "Sorry, I didn't understand that",
         "I can do a number of things",
-        "I can give you information about our opening hours"
+        "I can give you information about our opening hours",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
 
@@ -306,7 +314,8 @@ defmodule Aida.BotTest do
       assert output.reply == [
         "Sorry, I didn't understand that",
         "I can do a number of things",
-        "I can give you information about our opening hours"
+        "I can give you information about our opening hours",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
   end
@@ -642,7 +651,21 @@ defmodule Aida.BotTest do
           greeting: %{ "en" => "Hello, I'm a Restaurant bot" },
           introduction: %{ "en" => "I can do a number of things" },
           not_understood: %{ "en" => "Sorry, I didn't understand that" },
-          clarification: %{ "en" => "I'm not sure exactly what you need." }
+          clarification: %{ "en" => "I'm not sure exactly what you need." },
+          unsubscribe: %{
+            introduction_message: %{
+              "en" => "Send UNSUBSCRIBE to stop receiving messages",
+              "es" => "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+            },
+            keywords: %{
+              "en" => ["UNSUBSCRIBE"],
+              "es" => ["DESUSCRIBIR"]
+            },
+            acknowledge_message: %{
+              "en" => "I won't send you any further messages",
+              "es" => "No te enviaré más mensajes"
+            }
+          }
         },
         skills: [
           %KeywordResponder{
@@ -683,7 +706,8 @@ defmodule Aida.BotTest do
       output = Bot.chat(Message.new("foobar", bot, response.session))
       assert output.reply == [
         "Sorry, I didn't understand that",
-        "I can do a number of things"
+        "I can do a number of things",
+        "Send UNSUBSCRIBE to stop receiving messages"
       ]
     end
 
@@ -729,6 +753,136 @@ defmodule Aida.BotTest do
     end
   end
 
+  describe "do not disturb session" do
+    setup :create_manifest_bot
+    setup :generate_do_not_disturb_session
+
+    test "does not send messages", %{bot: bot, session: session} do
+      message =
+        Message.new("", bot, session)
+        |> Message.respond("howdy!")
+
+      Bot.send_message(message)
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() == 0
+    end
+
+    test "logs outgoing message as not sent", %{bot: bot, session: session} do
+      message =
+        Message.new("", bot, session)
+        |> Message.respond("howdy!")
+
+      Bot.send_message(message)
+
+      [outgoing_message_log] =
+        MessageLog
+        |> Repo.all()
+        |> Enum.filter(&(&1.direction == "not sent (do not disturb)"))
+
+      assert outgoing_message_log.session_id == session.id
+      assert outgoing_message_log.bot_id == bot.id
+      assert outgoing_message_log.content == "howdy!"
+    end
+  end
+
+  describe "unsubscribe keyword" do
+    setup :create_manifest_bot
+    setup :generate_session_for_test_channel
+
+    test "sets session as do not disturb", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("UNSUBSCRIBE", bot, session)
+      |> Bot.chat()
+
+      assert Session.get(session.id).do_not_disturb
+    end
+
+    test "sets session as do not disturb for other language", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "es"})
+
+      Message.new("DESUSCRIBIR", bot, session)
+      |> Bot.chat()
+
+      assert Session.get(session.id).do_not_disturb
+    end
+
+    test "does not set session as do not disturb for a not unsubscribe keyword", %{
+      bot: bot,
+      session: session
+    } do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("other keyword", bot, session)
+      |> Bot.chat()
+
+      assert !Session.get(session.id).do_not_disturb
+    end
+
+    test "replies unsubscribe acknowledge message", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      output = Message.new("UNSUBSCRIBE", bot, session)
+      |> Bot.chat()
+
+      assert output.reply == [
+        "I won't send you any further messages"
+      ]
+    end
+
+    test "replies unsubscribe acknowledge message for other language", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "es"})
+
+      output = Message.new("DESUSCRIBIR", bot, session)
+      |> Bot.chat()
+
+      assert output.reply == [
+        "No te enviaré más mensajes"
+      ]
+    end
+
+    test "has a reply for a not unsubscribe keyword", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("other keyword", bot, session)
+      |> Bot.chat()
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() > 0
+    end
+  end
+
+  describe "not unsubscribe keyword" do
+    setup :create_manifest_bot
+    setup :generate_do_not_disturb_session
+
+    test "unsets a do not disturb session", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("other keyword", bot, session)
+      |> Bot.chat()
+
+      assert !Session.get(session.id).do_not_disturb
+    end
+
+    test "has a reply on a do not disturb session", %{bot: bot, session: session} do
+      session = session |> Session.merge(%{"language" => "en"})
+
+      Message.new("other keyword", bot, session)
+      |> Bot.chat()
+
+      assert MessageLog
+             |> Repo.all()
+             |> Enum.filter(&(&1.direction == "outgoing"))
+             |> Enum.count() > 0
+    end
+  end
+
   defp create_manifest_bot(_context) do
     manifest =
       File.read!("test/fixtures/valid_manifest.json")
@@ -749,4 +903,14 @@ defmodule Aida.BotTest do
     [session: session]
   end
 
+  defp generate_do_not_disturb_session(%{bot: bot}) do
+    pid = System.unique_integer([:positive])
+    Process.register(self(), "#{pid}" |> String.to_atom())
+
+    session =
+      %{Session.new({bot.id, "test", "#{pid}"}) | do_not_disturb: true}
+      |> Session.save()
+
+    [session: session]
+  end
 end

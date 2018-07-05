@@ -26,6 +26,24 @@
         "es": "Perdón, no estoy seguro de lo que necesitás."
       }
     },
+    "unsubscribe": {
+      "introduction_message": {
+        "message": {
+          "en": "Send UNSUBSCRIBE to stop receiving messages",
+          "es": "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+        }
+      },
+      "keywords": {
+        "en": ["UNSUBSCRIBE"],
+        "es": ["DESUSCRIBIR"]
+      },
+      "acknowledge_message": {
+        "message": {
+          "en": "I won't send you any further messages",
+          "es": "No te enviaré más mensajes"
+        }
+      }
+    },
     "threshold": 0.3
   },
   "skills": [
