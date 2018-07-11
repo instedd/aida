@@ -86,6 +86,22 @@ defmodule Aida.Bot do
     end
   end
 
+  defp policy_enforcement_message("block", %{"reason" => reason }) do
+    "Policy Enforcement Notification - Bot has been blocked.\n\n#{reason}"
+  end
+
+  defp policy_enforcement_message(action, data) do
+    "Policy Enforcement Notification - Unknown action: #{action}.\n\n#{Poison.encode!(data)}"
+  end
+
+  def notify(_bot, :policy_enforcement, %{"action" => "unblock"}), do: :ok
+
+  def notify(%{id: bot_id}, :policy_enforcement, %{"action" => action} = policy_enforcement_data) do
+    ErrorLog.context(bot_id: bot_id) do
+      ErrorLog.write(policy_enforcement_message(action, policy_enforcement_data))
+    end
+  end
+
   defp log_incoming(%{bot: %{public_keys: public_keys} = bot} = message) do
     {content, content_type} =
       if message.sensitive do

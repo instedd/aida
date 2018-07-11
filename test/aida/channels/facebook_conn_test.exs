@@ -3,7 +3,7 @@ defmodule Aida.Channel.FacebookConnTest do
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, DB, DB.Session}
+  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, DB, DB.Session, ErrorLog}
   alias Aida.Channel.Facebook
 
   @fb_api_mock [
@@ -93,6 +93,70 @@ defmodule Aida.Channel.FacebookConnTest do
             },
             "recipient" => %{"id" => "1234567890"},
             "sender" => %{"id" => "1234"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
+
+  @incoming_policy_enforcement_reason "The bot violated our Platform Policies (https://developers.facebook.com/policy/#messengerplatform). Common violations include sending out excessive spammy messages or being non-functional."
+  @incoming_policy_enforcement  %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "policy-enforcement" => %{
+              "action" => "block",
+              "reason" => @incoming_policy_enforcement_reason
+            },
+            "recipient" => %{"id" => "1234567890"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
+
+  @incoming_policy_enforcement_released %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "policy-enforcement" => %{
+              "action" => "unblock"
+            },
+            "recipient" => %{"id" => "1234567890"},
+            "timestamp" => 1_510_697_528_863
+          }
+        ],
+        "time" => 1_510_697_858_540
+      }
+    ],
+    "object" => "page",
+    "provider" => "facebook"
+  }
+
+  @incoming_unknown_policy_enforcement_data %{
+    "action" => "unknown-action",
+    "unknown-key" => "unknown key value"
+  }
+  @incoming_unknown_policy_enforcement %{
+    "entry" => [
+      %{
+        "id" => "1234567890",
+        "messaging" => [
+          %{
+            "policy-enforcement" => @incoming_unknown_policy_enforcement_data,
+            "recipient" => %{"id" => "1234567890"},
             "timestamp" => 1_510_697_528_863
           }
         ],
@@ -255,6 +319,41 @@ defmodule Aida.Channel.FacebookConnTest do
         assert Session.get_value(session, "first_name") == "John"
         assert Session.get_value(session, "last_name") == "Doe"
         assert Session.get_value(session, "gender") == "male"
+      end
+    end
+
+    test "logs policy enforcements blocks as errors", %{bot: bot} do
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        %{message: message} = ErrorLog |> Repo.one
+        assert message == "Policy Enforcement Notification - Bot has been blocked.\n\n#{@incoming_policy_enforcement_reason}"
+      end
+    end
+
+    test "doesn't log policy enforcement unblocks", %{bot: bot} do
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement_released)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        assert 0 == ErrorLog |> Repo.count
+      end
+    end
+
+    test "logs policy enforcements as errors by default", %{bot: bot} do
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_unknown_policy_enforcement)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        %{message: message} = ErrorLog |> Repo.one
+        assert message == "Policy Enforcement Notification - Unknown action: unknown-action.\n\n#{Poison.encode!(@incoming_unknown_policy_enforcement_data)}"
       end
     end
   end

@@ -104,6 +104,11 @@ defmodule Aida.Channel.Facebook do
       |> Plug.Conn.send_resp(200, "ok")
     end
 
+    def handle_message(%{bot_id: bot_id}, %{"policy-enforcement" => policy_enforcement}) do
+      BotManager.find(bot_id)
+      |> Bot.notify(:policy_enforcement, policy_enforcement)
+    end
+
     def handle_message(channel, message) do
       sender_id = message["sender"]["id"]
 
