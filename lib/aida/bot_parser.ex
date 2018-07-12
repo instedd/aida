@@ -22,6 +22,7 @@ defmodule Aida.BotParser do
       %Bot{
         id: id,
         languages: manifest["languages"],
+        notifications_url: manifest["notifications_url"],
         front_desk: parse_front_desk(manifest["front_desk"]),
         skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),

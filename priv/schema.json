@@ -9,6 +9,7 @@
       "type": "object",
       "properties": {
         "version": { "enum": ["1"] },
+        "notifications_url": {"$ref": "#/definitions/non_empty_string"},
         "languages": {
           "type": "array",
           "minItems": 1,
@@ -43,7 +44,7 @@
         }
       },
       "additionalProperties": false,
-      "required": ["version", "languages", "front_desk", "skills", "variables", "channels"]
+      "required": ["version", "languages", "notifications_url", "front_desk", "skills", "variables", "channels"]
     },
 
     "data_table": {

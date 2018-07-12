@@ -3,7 +3,7 @@ defmodule Aida.Channel.FacebookConnTest do
   use Phoenix.ConnTest
   import Mock
 
-  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, DB, DB.Session, ErrorLog}
+  alias Aida.{ChannelRegistry, Crypto, BotManager, BotParser, DB, DB.Session, ErrorLog, ErrorHandler}
   alias Aida.Channel.Facebook
 
   @fb_api_mock [
@@ -322,38 +322,66 @@ defmodule Aida.Channel.FacebookConnTest do
       end
     end
 
+    @ok_httpoison_response {:ok, %HTTPoison.Response{status_code: 200}}
+
     test "logs policy enforcements blocks as errors", %{bot: bot} do
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement)
-          |> Facebook.callback()
+        with_mock HTTPoison, [post: fn(_url, _body) -> @ok_httpoison_response end] do
+          conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement)
+            |> Facebook.callback()
 
-        assert response(conn, 200) == "ok"
+          assert response(conn, 200) == "ok"
 
-        %{message: message} = ErrorLog |> Repo.one
-        assert message == "Policy Enforcement Notification - Bot has been blocked.\n\n#{@incoming_policy_enforcement_reason}"
+          %{message: message} = ErrorLog |> Repo.one
+          assert message == "Policy Enforcement Notification - Bot has been blocked.\n\n#{@incoming_policy_enforcement_reason}"
+          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "block"}})
+        end
       end
     end
 
     test "doesn't log policy enforcement unblocks", %{bot: bot} do
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement_released)
-          |> Facebook.callback()
+        with_mock HTTPoison, [post: fn(_url, _body) -> @ok_httpoison_response end] do
+          conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement_released)
+            |> Facebook.callback()
 
-        assert response(conn, 200) == "ok"
+          assert response(conn, 200) == "ok"
 
-        assert 0 == ErrorLog |> Repo.count
+          assert 0 == ErrorLog |> Repo.count
+          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unblock"}})
+        end
       end
     end
 
     test "logs policy enforcements as errors by default", %{bot: bot} do
       with_mock FacebookApi, [:passthrough], @fb_api_mock do
-        conn = build_conn(:post, "/callback/facebook", @incoming_unknown_policy_enforcement)
-          |> Facebook.callback()
+        with_mock HTTPoison, [post: fn(_url, _body) -> @ok_httpoison_response end] do
+          conn = build_conn(:post, "/callback/facebook", @incoming_unknown_policy_enforcement)
+            |> Facebook.callback()
 
-        assert response(conn, 200) == "ok"
+          assert response(conn, 200) == "ok"
 
-        %{message: message} = ErrorLog |> Repo.one
-        assert message == "Policy Enforcement Notification - Unknown action: unknown-action.\n\n#{Poison.encode!(@incoming_unknown_policy_enforcement_data)}"
+          %{message: message} = ErrorLog |> Repo.one
+          assert message == "Policy Enforcement Notification - Unknown action: unknown-action.\n\n#{Poison.encode!(@incoming_unknown_policy_enforcement_data)}"
+          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unknown-action"}})
+        end
+      end
+    end
+
+    test "logs notification delivery error when endpoint is not available", %{bot: bot} do
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        with_mock HTTPoison, [post: fn(_url, _body) -> {:ok, %HTTPoison.Response{status_code: 404}} end] do
+          with_mock ErrorHandler, [capture_message: fn(_message, _extra) -> :ok end] do
+            conn = build_conn(:post, "/callback/facebook", @incoming_policy_enforcement_released)
+              |> Facebook.callback()
+
+            assert response(conn, 200) == "ok"
+
+            assert 0 == ErrorLog |> Repo.count
+            assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unblock"}})
+            assert called ErrorHandler.capture_message("Error posting notification to remote endpoint", %{notifications_url: "https://example.com/some/notification/endpoint", notification_type: :policy_enforcement})
+          end
+        end
       end
     end
   end

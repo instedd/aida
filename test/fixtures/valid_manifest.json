@@ -1,6 +1,7 @@
 {
   "version": "1",
   "languages": ["en","es"],
+  "notifications_url": "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
   "front_desk": {
     "greeting": {
       "message": {
