@@ -31,6 +31,7 @@ defmodule Aida.BotParserTest do
     assert bot == %Bot{
       id: @uuid,
       languages: ["en", "es"],
+      notifications_url: "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
       front_desk: %FrontDesk{
         threshold: 0.3,
         greeting: %{
@@ -527,6 +528,7 @@ defmodule Aida.BotParserTest do
     assert bot == %Bot{
       id: @uuid,
       languages: ["en", "es"],
+      notifications_url: "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
       front_desk: %FrontDesk{
         threshold: 0.3,
         greeting: %{

@@ -1,6 +1,7 @@
 {
   "version": "1",
   "languages": ["en"],
+  "notifications_url": "https://example.com/some/notification/endpoint",
   "front_desk": {
     "greeting": {
       "message": {

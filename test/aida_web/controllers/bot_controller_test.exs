@@ -33,6 +33,7 @@ defmodule AidaWeb.BotControllerTest do
   @valid_manifest %{
     "version" => "1",
     "languages" => ["en"],
+    "notifications_url" => "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
     "variables" => [],
@@ -42,6 +43,7 @@ defmodule AidaWeb.BotControllerTest do
   @updated_manifest %{
     "version" => "1",
     "languages" => ["es"],
+    "notifications_url" => "https://example.com/notifications/f729bb9903a839bc7fdb80145546ed80f31ea468139c7027e528708ab4558617",
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
     "variables" => [],

@@ -6,6 +6,7 @@ defmodule Aida.Bot do
     DataTable,
     DB.MessageLog,
     DB.MessagesPerDay,
+    ErrorHandler,
     FrontDesk,
     Message,
     Skill,
@@ -24,6 +25,7 @@ defmodule Aida.Bot do
   @type t :: %__MODULE__{
     id: String.t,
     languages: [String.t],
+    notifications_url: String.t,
     front_desk: FrontDesk.t,
     skills: [Skill.t],
     variables: [Variable.t],
@@ -34,6 +36,7 @@ defmodule Aida.Bot do
 
   defstruct id: nil,
             languages: [],
+            notifications_url: nil,
             front_desk: %FrontDesk{},
             skills: [],
             variables: [],
@@ -94,12 +97,34 @@ defmodule Aida.Bot do
     "Policy Enforcement Notification - Unknown action: #{action}.\n\n#{Poison.encode!(data)}"
   end
 
-  def notify(_bot, :policy_enforcement, %{"action" => "unblock"}), do: :ok
+  defp post_notification(notifications_url, notification_type, data) do
+    case HTTPoison.post(notifications_url, %{
+      type: notification_type,
+      data: data
+    }) do
+      {:ok, %{status_code: 200}} -> :ok
+      non_success -> ErrorHandler.capture_message(
+        "Error posting notification to remote endpoint",
+        %{
+          notifications_url: notifications_url,
+          notification_type: notification_type,
+          notification_data: data,
+          response_error: non_success
+        }
+      )
+    end
+  end
 
-  def notify(%{id: bot_id}, :policy_enforcement, %{"action" => action} = policy_enforcement_data) do
+  defp log_error_if_needed(_bot_id, %{"action" => "unblock"}), do: :ok
+  defp log_error_if_needed(bot_id, %{"action" => action} = policy_enforcement_data) do
     ErrorLog.context(bot_id: bot_id) do
       ErrorLog.write(policy_enforcement_message(action, policy_enforcement_data))
     end
+  end
+
+  def notify(%{id: bot_id, notifications_url: notifications_url}, :policy_enforcement, policy_enforcement_data) do
+    log_error_if_needed(bot_id, policy_enforcement_data)
+    post_notification(notifications_url, :policy_enforcement, policy_enforcement_data)
   end
 
   defp log_incoming(%{bot: %{public_keys: public_keys} = bot} = message) do

@@ -249,6 +249,7 @@ defmodule Aida.JsonSchemaTest do
   @valid_manifest ~s({
     "version" : "1",
     "languages" : ["en"],
+    "notifications_url": "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
     "front_desk" : #{@valid_front_desk},
     "skills" : [
       #{@valid_keyword_responder},
@@ -448,6 +449,7 @@ defmodule Aida.JsonSchemaTest do
     assert_enum("version", "2", :manifest_v1)
     assert_valid_enum("type", "1", :manifest_v1)
     assert_required("languages", :manifest_v1)
+    assert_required("notifications_url", :manifest_v1)
     assert_required("skills", :manifest_v1)
     assert_required("variables", :manifest_v1)
     assert_required("front_desk", :manifest_v1)
@@ -894,5 +896,11 @@ defmodule Aida.JsonSchemaTest do
 
     ~s({})
     |> reject_sub_type(:channel)
+  end
+
+  test "notifications_url" do
+    assert_invalid_value("notifications_url", "", :manifest_v1)
+    assert_valid_value("notifications_url", "https://user:password@example.com/some/path?with=query#selector", :manifest_v1)
+    assert_valid_value("notifications_url", "this-is-not-a-uri-but-we-support-it-anyway", :manifest_v1)
   end
 end
