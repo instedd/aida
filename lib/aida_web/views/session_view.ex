@@ -2,33 +2,21 @@ defmodule AidaWeb.SessionView do
   use AidaWeb, :view
   alias __MODULE__
 
-  def render("session_data.json", %{sessions: sessions}) do
-    %{data: render_many(sessions, SessionView, "session.json")}
-  end
-
-  def render("session_data_full.json", %{sessions: sessions}) do
-    %{data: render_many(sessions, SessionView, "session_full.json")}
-  end
-
-  def render("session_data_assets.json", %{sessions: sessions}) do
-    %{data: render_many(sessions, SessionView, "session_asset.json")}
-  end
-
-  def render("session.json", %{session: session}) do
+  def render("session_data.json", %{session: session}) do
     %{
       id: session.id,
       data: session.data |> hide_internal_data()
     }
   end
 
-  def render("session_full.json", %{session: session}) do
+  def render("session_data_full.json", %{session: session}) do
     %{
       id: session.id,
       data: session.data
     }
   end
 
-  def render("session_asset.json", %{session: session}) do
+  def render("session_data_assets.json", %{session: session}) do
     %{
       id: session.id,
       data: session.data |> hide_internal_data(),
@@ -44,11 +32,7 @@ defmodule AidaWeb.SessionView do
     }
   end
 
-  def render("index.json", %{sessions: sessions}) do
-    %{data: render_many(sessions, SessionView, "session_index.json")}
-  end
-
-  def render("session_index.json", %{session: session}) do
+  def render("index.json", %{session: session}) do
     %{
       id: session.id,
       first_message: session.first_message,
@@ -72,6 +56,10 @@ defmodule AidaWeb.SessionView do
   end
 
   def render("attachment.json", %{attachment_id: attachment_id}), do: %{id: attachment_id}
+
+  def render(template_name, %{sessions: sessions}) do
+    %{data: render_many(sessions, SessionView, template_name)}
+  end
 
   defp hide_internal_data(data) do
     internal_keys =

@@ -2,10 +2,15 @@ defmodule Aida.DB.Session do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query
-  alias Aida.Ecto.Type.JSON
-  alias Aida.Repo
-  alias Aida.Crypto
-  alias Aida.{Asset, DB}
+
+  alias Aida.{
+    Asset,
+    Crypto,
+    DB,
+    Ecto.Type.JSON,
+    Repo
+  }
+
   alias __MODULE__
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -107,7 +112,6 @@ defmodule Aida.DB.Session do
   def sessions_by_bot(bot_id) do
     Session
       |> where([s], s.bot_id == ^bot_id)
-      # |> where(fragment("bot_id = ?", type(^bot_id, :binary_id)))
       |> Repo.all()
   end
 
@@ -217,5 +221,4 @@ defmodule Aida.DB.Session do
       value -> value
     end
   end
-
 end

@@ -280,7 +280,6 @@ defmodule Aida.DB do
     result
   end
 
-
   @doc """
   Returns the messages per day for the given id. If the messages per day does not exist, it returns `nil`.
   """
@@ -304,7 +303,6 @@ defmodule Aida.DB do
       |> where([s], s.bot_id == ^bot_id)
       |> Repo.all()
   end
-
 
   @doc """
   Gets a single image.
@@ -353,6 +351,4 @@ defmodule Aida.DB do
 
     result
   end
-
-
 end

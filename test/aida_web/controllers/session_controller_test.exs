@@ -1,8 +1,18 @@
 defmodule AidaWeb.SessionControllerTest do
   use AidaWeb.ConnCase
-  alias Aida.{Asset, BotParser, DB, Repo, TestChannel, ChannelProvider, DB.MessageLog, JsonSchema}
-  alias Aida.DB.{Session, MessageLog}
-  alias Aida.JsonSchema
+
+  alias Aida.{
+    Asset,
+    BotParser,
+    ChannelProvider,
+    DB,
+    DB.MessageLog,
+    DB.Session,
+    JsonSchema,
+    Repo,
+    TestChannel
+  }
+
   import Mock
 
   setup :create_bot
@@ -354,7 +364,7 @@ defmodule AidaWeb.SessionControllerTest do
   end
 
   # This function is used instead of MessageLog.create in order to
-  # set created_at, updated_at properties
+  # set inserted_at, updated_at properties
   defp create_message_log(attrs) do
     %MessageLog{}
     |> Ecto.Changeset.cast(attrs, [:bot_id, :session_id, :direction, :content, :content_type, :inserted_at, :updated_at])

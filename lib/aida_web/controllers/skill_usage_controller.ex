@@ -16,5 +16,4 @@ defmodule AidaWeb.SkillUsageController do
 
     render(conn, "users_per_skill.json", skills: skill_usages)
   end
-
 end
