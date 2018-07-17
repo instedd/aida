@@ -45,7 +45,8 @@ defmodule Aida.Skill.Survey do
 
   def start_survey(survey, message) do
     message = message
-      |>  Message.put_session(state_key(survey), %{"step" => 0})
+      |> Message.drop_session(prefix(survey))
+      |> Message.put_session(state_key(survey), %{"step" => 0})
 
     answer(survey, message)
   end
@@ -65,8 +66,9 @@ defmodule Aida.Skill.Survey do
     end
   end
 
-  def state_key(survey), do: ".survey/#{survey.id}"
-  def answer_key(survey, question), do: "survey/#{survey.id}/#{question.name}"
+  defp prefix(%{id: id}), do: "survey/#{id}"
+  def state_key(survey), do: ".#{prefix(survey)}"
+  def answer_key(survey, question), do: "#{prefix(survey)}/#{question.name}"
 
   def current_question(survey, message) do
     case message |> Message.get_session(state_key(survey)) do
@@ -80,7 +82,9 @@ defmodule Aida.Skill.Survey do
     survey_state = case message |> Message.get_session(state_key(survey)) do
       %{"step" => step} = state ->
         case find_next_question(survey, message, step) do
-          nil -> nil
+          nil ->
+            Message.extract_to_asset(message, prefix(survey), survey.id)
+            nil
           step -> %{state | "step" => step}
         end
       _ -> %{"step" => 0}

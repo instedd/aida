@@ -5,6 +5,7 @@ defmodule Aida.DB.Session do
   alias Aida.Ecto.Type.JSON
   alias Aida.Repo
   alias Aida.Crypto
+  alias Aida.{Asset, DB}
   alias __MODULE__
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -15,6 +16,7 @@ defmodule Aida.DB.Session do
     field :provider_key, :string
     field :is_new, :boolean, default: true
     field :do_not_disturb, :boolean, default: false
+    has_many :assets, Asset
 
     timestamps()
   end
@@ -88,6 +90,7 @@ defmodule Aida.DB.Session do
 
   def save(%Session{} = session) do
     session
+      |> Repo.preload(:assets)
       |> Session.changeset(%{})
       |> Repo.insert!(on_conflict: :replace_all, conflict_target: :id)
   end
@@ -106,6 +109,30 @@ defmodule Aida.DB.Session do
       |> where([s], s.bot_id == ^bot_id)
       # |> where(fragment("bot_id = ?", type(^bot_id, :binary_id)))
       |> Repo.all()
+  end
+
+  def sessions_by_bot(bot_id, period, today \\ Date.utc_today()) do
+    Session
+      |> where([s], s.bot_id == ^bot_id)
+      |> assets_per_period(period, today)
+      |> Repo.all()
+  end
+
+  def assets_per_period(sessions, period, today) do
+    case period do
+      "all" -> sessions |> preload(:assets)
+      _ ->
+        {:ok, date} =
+          period
+          |> DB.convert_period(today)
+          |> NaiveDateTime.new(~T[00:00:00])
+
+        assets_query = Asset
+          |> where([s], s.inserted_at >= ^date)
+
+        sessions
+        |> preload(assets: ^assets_query)
+    end
   end
 
   def session_ids_by_bot(bot_id) do
@@ -139,7 +166,36 @@ defmodule Aida.DB.Session do
     Map.get(data, key)
   end
 
-  @spec put(session :: t, key :: String.t, value :: value) :: t
+  def drop(%Session{data: data} = session, keys) when is_list(keys) do
+    %{session | data: Map.drop(data, keys)}
+  end
+
+  def drop(session, prefix) when is_binary(prefix) do
+    drop(session, keys_with_prefix(session, prefix))
+  end
+
+  def take(%Session{data: data}, keys) do
+    Map.take(data, keys)
+  end
+
+  def keys_with_prefix(%Session{data: data}, prefix) do
+    Map.keys(data)
+    |> Enum.filter(fn key ->
+      String.starts_with?(key, prefix)
+    end)
+  end
+
+  def extract_to_asset(%Session{data: data, id: id} = session, prefix, skill_id) do
+    data = data |> Map.take(keys_with_prefix(session, prefix))
+
+    Aida.Asset.create(%{
+      skill_id: skill_id,
+      session_id: id,
+      data: data
+    })
+  end
+
+  @spec put(session :: t, key :: String.t(), value :: value) :: t
   def put(%Session{data: data} = session, key, nil) do
     %{session | data: Map.delete(data, key)}
   end

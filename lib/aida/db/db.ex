@@ -164,8 +164,7 @@ defmodule Aida.DB do
       |> Repo.all()
   end
 
-  defp convert_period(period, today) do
-
+  def convert_period(period, today) do
     case period do
       "today" -> today
       "this_week" -> Date.add(today, -Date.day_of_week(today))

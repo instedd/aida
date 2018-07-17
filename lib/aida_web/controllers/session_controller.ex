@@ -13,6 +13,11 @@ defmodule AidaWeb.SessionController do
     render(conn, "session_data_full.json", sessions: sessions)
   end
 
+  def session_data(conn, %{"bot_id" => bot_id, "period" => period}) do
+    sessions = Session.sessions_by_bot(bot_id, period)
+    render(conn, "session_data_assets.json", sessions: sessions)
+  end
+
   def session_data(conn, %{"bot_id" => bot_id}) do
     sessions = Session.sessions_by_bot(bot_id)
     render(conn, "session_data.json", sessions: sessions)

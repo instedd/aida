@@ -79,6 +79,8 @@ defmodule Aida.FrontDesk do
   defimpl Aida.Skill, for: __MODULE__ do
     def init(skill, _bot), do: skill
 
+    def clear_state(_skill, message), do: message
+
     def wake_up(_skill, _bot, _data), do: :ok
 
     def explain(_explanation, message), do: message

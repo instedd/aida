@@ -143,6 +143,14 @@ defmodule Aida.Message do
     %{message | session: Session.put(session, key, value)}
   end
 
+  def drop_session(%{session: session} = message, keys_or_prefix) do
+    %{message | session: Session.drop(session, keys_or_prefix)}
+  end
+
+  def extract_to_asset(%{session: session}, prefix, skill_id) do
+    Session.extract_to_asset(session, prefix, skill_id)
+  end
+
   @spec new_session?(message :: t) :: boolean
   def new_session?(%{session: session}) do
     session.is_new
@@ -284,5 +292,4 @@ defmodule Aida.Message do
           Session.save(%{message.session | do_not_disturb: do_not_disturb})
     }
   end
-
 end

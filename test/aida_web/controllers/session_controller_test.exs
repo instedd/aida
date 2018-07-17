@@ -1,6 +1,6 @@
 defmodule AidaWeb.SessionControllerTest do
   use AidaWeb.ConnCase
-  alias Aida.{BotParser, DB, Repo, TestChannel, ChannelProvider, DB.MessageLog, JsonSchema}
+  alias Aida.{Asset, BotParser, DB, Repo, TestChannel, ChannelProvider, DB.MessageLog, JsonSchema}
   alias Aida.DB.{Session, MessageLog}
   alias Aida.JsonSchema
   import Mock
@@ -201,6 +201,49 @@ defmodule AidaWeb.SessionControllerTest do
           "data" => data
         }
       ]
+    end
+
+    test "include assets for a requested period", %{
+      conn: conn,
+      bot: bot,
+      session: %{id: session_id} = session
+    } do
+      data = %{"foo" => 1, "bar" => 2, ".internal" => %{"state" => 1}}
+      result_data = Map.delete(data, ".internal")
+
+      asset_data = %{
+        "survey/food_preferences/request" => "No, thanks!",
+        "survey/food_preferences/wine_grapes" => ["merlot", "syrah"]
+      }
+
+      session = session |> Session.merge(data) |> Session.save()
+
+      {:ok, _} =
+        Asset.create(%{
+          skill_id: "food_preferences",
+          session_id: session.id,
+          data: asset_data
+        })
+
+      conn = get(conn, bot_session_path(conn, :session_data, bot.id, period: "this_week"))
+      [response] = json_response(conn, 200)["data"]
+
+      assert %{
+               "id" => ^session_id,
+               "data" => ^result_data,
+               "assets" => [
+                 %{
+                   "skill_id" => "food_preferences",
+                   "data" => ^asset_data,
+                   "timestamp" => ts
+                 }
+               ]
+             } = response
+
+      with {:ok, ts} <- NaiveDateTime.from_iso8601(ts),
+           {:ok, ts} <- DateTime.from_naive(ts, "Etc/UTC") do
+        assert_in_delta DateTime.diff(ts, DateTime.utc_now()), 0, 5
+      end
     end
   end
 

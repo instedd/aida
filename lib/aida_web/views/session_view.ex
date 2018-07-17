@@ -6,6 +6,14 @@ defmodule AidaWeb.SessionView do
     %{data: render_many(sessions, SessionView, "session.json")}
   end
 
+  def render("session_data_full.json", %{sessions: sessions}) do
+    %{data: render_many(sessions, SessionView, "session_full.json")}
+  end
+
+  def render("session_data_assets.json", %{sessions: sessions}) do
+    %{data: render_many(sessions, SessionView, "session_asset.json")}
+  end
+
   def render("session.json", %{session: session}) do
     %{
       id: session.id,
@@ -13,14 +21,26 @@ defmodule AidaWeb.SessionView do
     }
   end
 
-  def render("session_data_full.json", %{sessions: sessions}) do
-    %{data: render_many(sessions, SessionView, "session_full.json")}
-  end
-
   def render("session_full.json", %{session: session}) do
     %{
       id: session.id,
       data: session.data
+    }
+  end
+
+  def render("session_asset.json", %{session: session}) do
+    %{
+      id: session.id,
+      data: session.data |> hide_internal_data(),
+      assets: render_many(session.assets, SessionView, "asset.json", as: :asset)
+    }
+  end
+
+  def render("asset.json", %{asset: asset}) do
+    %{
+      skill_id: asset.skill_id,
+      timestamp: asset.inserted_at,
+      data: asset.data
     }
   end
 
