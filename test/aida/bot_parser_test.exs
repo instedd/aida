@@ -196,7 +196,7 @@ defmodule Aida.BotParserTest do
           bot_id: @uuid,
           name: "Food Preferences",
           schedule: nil,
-          keywords: %{"en" => ["food preferences", "food survey", "survey"], "es" => ["preferencias alimentarias", "encuesta alimentaria"]},
+          keywords: %{"en" => ["food", "preferences", "food", "survey", "survey"], "es" => ["preferencias", "alimentarias", "encuesta", "alimentaria"]},
           questions: [
             %Aida.Skill.Survey.Note{
               type: :note,
@@ -344,7 +344,7 @@ defmodule Aida.BotParserTest do
           bot_id: "f905a698-310f-473f-b2d0-00d30ad58b0c",
           id: "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
           root_id: "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
-          keywords: %{"en" => ["meal recommendation", "recommendation"], "es" => ["recomendación", "recomendacion"]},
+          keywords: %{"en" => ["meal", "recommendation", "recommendation"], "es" => ["recomendación", "recomendacion"]},
           clarification: %{
             "en" => "To get a meal recommendation write 'meal recommendation'",
             "es" => "Para recibir una recomendación escribe 'recomendación'"
@@ -432,7 +432,7 @@ defmodule Aida.BotParserTest do
                 question: %{"en" => "Do you want to eat a main course or a dessert?", "es" => "Querés comer un primer plato o un postre?"},
                 responses: [
                   %Aida.Skill.DecisionTree.Response{
-                    keywords: %{"en" => ["main course", "main"], "es" => ["primer plato"]},
+                    keywords: %{"en" => ["main", "course", "main"], "es" => ["primer", "plato"]},
                     next: "c038e08e-6095-4897-9184-eae929aba8c6"
                   },
                   %Aida.Skill.DecisionTree.Response{

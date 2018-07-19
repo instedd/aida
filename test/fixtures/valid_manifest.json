@@ -191,8 +191,8 @@
       "id": "food_preferences",
       "name": "Food Preferences",
       "keywords": {
-        "en": ["food preferences","food survey ", "SURVEY"],
-        "es": ["preFerencias alimentarias","encuesta alimentaria"]
+        "en": ["food", "preferences", "food", "survey ", "SURVEY"],
+        "es": ["preFerencias", "alimentarias", "encuesta", "alimentaria"]
       },
       "questions": [
         {
@@ -366,8 +366,8 @@
         "es": "Para recibir una recomendación escribe 'recomendación'"
       },
       "keywords": {
-        "en": ["meal Recommendation","recommendation "],
-        "es": ["recomendación","Recomendacion"]
+        "en": ["meal", "Recommendation", "recommendation "],
+        "es": ["recomendación", "Recomendacion"]
       },
       "tree": {
         "id": "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
@@ -378,8 +378,8 @@
         "responses": [
           {
             "keywords": {
-              "en": ["main course", "Main"],
-              "es": ["primer plato"]
+              "en": ["main", "course", "Main"],
+              "es": ["primer", "plato"]
             },
             "next": {
               "id": "c038e08e-6095-4897-9184-eae929aba8c6",
