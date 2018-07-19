@@ -17,7 +17,7 @@ defmodule Aida.BotParser do
     Unsubscribe
   }
 
-  @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t}
+  @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t | map}
   def parse(id, manifest) do
     try do
       %Bot{
@@ -362,15 +362,25 @@ defmodule Aida.BotParser do
     |> Map.to_list()
     |> Enum.find(fn({_, skills}) -> Enum.count(skills) > 1 end)
 
+
     case duplicated_skills do
       nil -> :ok
-      {id, _} -> {:error, "Duplicated skill (#{id})"}
+      {id, _} ->
+        [paths, _] = skills |> Enum.reduce([[], 0], fn(skill, [paths, index]) ->
+          if skill |> Skill.id == id do
+            [["#/skills/#{index}" | paths], index + 1]
+          else
+            [paths, index + 1]
+          end
+        end)
+
+        {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
     end
   end
 
   def validate_required_public_keys(%{skills: skills, public_keys: []}) do
     case skills |> Enum.any?(&Skill.uses_encryption?/1) do
-      true -> {:error, "Missing public_keys in manifest"}
+      true -> {:error, %{"message" => "Missing public_keys in manifest", "path" => "#/public_keys"}}
       _ -> :ok
     end
   end

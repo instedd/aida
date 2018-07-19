@@ -857,7 +857,7 @@ defmodule Aida.BotParserTest do
           }
         ])
 
-    assert {:error, "Duplicated skill (this is the same id)"} == BotParser.parse(@uuid, manifest)
+    assert {:error, %{"message" => "Duplicated skills (this is the same id)", "path" => ["#/skills/1", "#/skills/0"]}} == BotParser.parse(@uuid, manifest)
   end
 
   test "parse manifest with duplicated language_detector" do
@@ -883,7 +883,7 @@ defmodule Aida.BotParserTest do
           }
         ])
 
-    assert {:error, "Duplicated skill (language_detector)"} == BotParser.parse(@uuid, manifest)
+    assert {:error, %{"message" => "Duplicated skills (language_detector)", "path" => ["#/skills/1", "#/skills/0"]}} == BotParser.parse(@uuid, manifest)
   end
 
   test "parse manifest with invalid expression" do
@@ -936,7 +936,7 @@ defmodule Aida.BotParserTest do
 
       manifest = manifest |> Map.put("public_keys", [])
 
-      assert {:error, "Missing public_keys in manifest"} = BotParser.parse(@uuid, manifest)
+      assert {:error, %{"message" => "Missing public_keys in manifest", "path" => "#/public_keys"}} = BotParser.parse(@uuid, manifest)
     end
   end
 

@@ -58,7 +58,7 @@ defmodule AidaWeb.BotController do
           {:ok, _} ->
             conn
           {:error, err} ->
-            capture_message("Error while parsing manifest: #{err}")
+            capture_message("Error while parsing manifest: #{get_error_message(err)}")
             conn |> put_status(422) |> json(%{errors: [err]}) |> halt
         end
       {:error, errors} ->
@@ -67,4 +67,13 @@ defmodule AidaWeb.BotController do
         conn |> put_status(422) |> json(%{errors: errors}) |> halt
     end
   end
+
+  defp get_error_message(%{"message" => message}) do
+    message
+  end
+
+  defp get_error_message(error) do
+    error
+  end
+
 end

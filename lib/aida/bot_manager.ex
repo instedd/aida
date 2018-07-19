@@ -109,6 +109,10 @@ defmodule Aida.BotManager do
     start_bot(bot)
   end
 
+  defp start_bot({:error, %{"message" => errors}}) do
+    Logger.error(errors)
+  end
+
   defp start_bot({:error, errors}) do
     Logger.error(errors)
   end
