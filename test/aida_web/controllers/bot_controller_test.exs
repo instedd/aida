@@ -118,6 +118,35 @@ defmodule AidaWeb.BotControllerTest do
       end
     end
 
+    test "render errors when language detector is duplicated", %{conn: conn} do
+      manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+
+      manifest = manifest
+        |> Map.put("skills", [
+          %{
+            "type" => "language_detector",
+            "explanation" => "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+            "languages" => %{
+              "en" => ["english", "inglés"],
+              "es" => ["español", "spanish"]
+            }
+          },
+          %{
+            "type" => "language_detector",
+            "explanation" => "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+            "languages" => %{
+              "en" => ["english", "inglés"],
+              "es" => ["español", "spanish"]
+            }
+          }
+        ])
+
+      without_logging do
+        conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
+        assert json_response(conn, 422)["errors"] == [%{"message" => "Duplicated skills (language_detector)", "path" => ["#/skills/1", "#/skills/0"]}]
+      end
+    end
+
     test "renders errors when data is invalid", %{conn: conn} do
       without_logging do
         conn = post conn, bot_path(conn, :create), bot: @invalid_attrs
