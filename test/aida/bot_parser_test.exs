@@ -6,6 +6,7 @@ defmodule Aida.BotParserTest do
     DataTable,
     FrontDesk,
     Skill.KeywordResponder,
+    Skill.HumanOverride,
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
     Skill.ScheduledMessages.DelayedMessage,
@@ -768,6 +769,43 @@ defmodule Aida.BotParserTest do
         }
       ]
     }
+  end
+
+  test "parse manifest with human override skill" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_human_override.json") |> Poison.decode!
+
+    {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+    assert %Bot{
+      notifications_url: "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+      skills: [
+        %HumanOverride{
+          bot_id: @uuid,
+          id: "human_override_skill",
+          name: "Human override",
+          explanation: %{
+            "en" => "I can give you information about our availabilty",
+            "es" => "Te puedo dar información sobre nuestra disponibilidad"
+          },
+          clarification: %{
+            "en" => "To know our availabilty, write 'availabilty'",
+            "es" => "Para información sobre nuestro disponibilidad, escribe 'disponibilidad'"
+          },
+          keywords: %{
+            "en" => ["available", "availabilty", "table"],
+            "es" => ["disponible", "disponibilidad", "mesa"]
+          },
+          in_hours_response: %{
+            "en" => "Let me ask the manager for availability - I'll come back to you in a few minutes",
+            "es" => "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
+          },
+          off_hours_response: %{
+            "en" => "Sorry, but we are not taking reservations right now",
+            "es" => "Perdón, pero no estamos tomando reservas en este momento"
+          }
+        }
+      ]
+    } = bot
   end
 
   test "parse manifest with duplicated skill id" do

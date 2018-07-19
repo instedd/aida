@@ -5,6 +5,7 @@ defmodule Aida.BotParser do
     FrontDesk,
     Skill,
     Skill.DecisionTree,
+    Skill.HumanOverride,
     Skill.KeywordResponder,
     Skill.LanguageDetector,
     Skill.ScheduledMessages,
@@ -169,6 +170,20 @@ defmodule Aida.BotParser do
       relevant: parse_expr(skill["relevant"]),
       root_id: skill["tree"]["id"],
       tree: DecisionTree.flatten(skill["tree"])
+    }
+  end
+
+  defp parse_skill(%{"type" => "human_override"} = skill, bot_id) do
+    %HumanOverride{
+      id: skill["id"],
+      bot_id: bot_id,
+      name: skill["name"],
+      explanation: skill["explanation"],
+      clarification: skill["clarification"],
+      keywords: parse_string_list_map(skill["keywords"]),
+      relevant: parse_expr(skill["relevant"]),
+      in_hours_response: skill["in_hours_response"],
+      off_hours_response: skill["off_hours_response"],
     }
   end
 

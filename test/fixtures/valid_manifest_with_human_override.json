@@ -1,0 +1,86 @@
+{
+  "version": "1",
+  "languages": ["en", "es"],
+  "notifications_url": "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+  "front_desk": {
+    "greeting": {
+      "message": {
+        "en": "Hello, I'm a Restaurant bot",
+        "es": "Hola, soy un bot de Restaurant"
+      }
+    },
+    "introduction": {
+      "message": {
+        "en": "I can do a number of things",
+        "es": "Puedo ayudarte con varias cosas"
+      }
+    },
+    "not_understood": {
+      "message": {
+        "en": "Sorry, I didn't understand that",
+        "es": "Perdón, no entendí lo que dijiste"
+      }
+    },
+    "clarification": {
+      "message": {
+        "en": "I'm not sure exactly what you need.",
+        "es": "Perdón, no estoy seguro de lo que necesitás."
+      }
+    },
+    "unsubscribe": {
+      "introduction_message": {
+        "message": {
+          "en": "Send UNSUBSCRIBE to stop receiving messages",
+          "es": "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+        }
+      },
+      "keywords": {
+        "en": ["UNSUBSCRIBE"],
+        "es": ["DESUSCRIBIR"]
+      },
+      "acknowledge_message": {
+        "message": {
+          "en": "I won't send you any further messages",
+          "es": "No te enviaré más mensajes"
+        }
+      }
+    },
+    "threshold": 0.3
+  },
+  "skills": [
+    {
+      "type": "human_override",
+      "id": "human_override_skill",
+      "name": "Human override",
+      "explanation": {
+        "en": "I can give you information about our availabilty",
+        "es": "Te puedo dar información sobre nuestra disponibilidad"
+      },
+      "clarification": {
+        "en": "To know our availabilty, write 'availabilty'",
+        "es": "Para información sobre nuestro disponibilidad, escribe 'disponibilidad'"
+      },
+      "keywords": {
+        "en": ["available", "availabilty", "table"],
+        "es": ["disponible", "disponibilidad", "mesa"]
+      },
+      "in_hours_response": {
+        "en": "Let me ask the manager for availability - I'll come back to you in a few minutes",
+        "es": "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
+      },
+      "off_hours_response": {
+        "en": "Sorry, but we are not taking reservations right now",
+        "es": "Perdón, pero no estamos tomando reservas en este momento"
+      }
+    }
+  ],
+  "channels": [
+    {
+      "type": "facebook",
+      "page_id": "1234567890",
+      "verify_token": "qwertyuiopasdfghjklzxcvbnm",
+      "access_token": "QWERTYUIOPASDFGHJKLZXCVBNM"
+    }
+  ],
+  "variables": []
+}

@@ -115,7 +115,8 @@
         {"$ref": "#/definitions/language_detector"},
         {"$ref": "#/definitions/scheduled_messages"},
         {"$ref": "#/definitions/decision_tree"},
-        {"$ref": "#/definitions/survey"}
+        {"$ref": "#/definitions/survey"},
+        {"$ref": "#/definitions/human_override"}
       ]
     },
 
@@ -133,6 +134,23 @@
       },
       "additionalProperties": false,
       "required": ["type", "id", "name", "explanation", "clarification", "keywords", "response"]
+    },
+
+    "human_override": {
+      "type": "object",
+      "properties": {
+        "type": {"enum": ["human_override"]},
+        "id": {"$ref": "#/definitions/non_empty_string"},
+        "name": {"$ref": "#/definitions/non_empty_string"},
+        "explanation": {"$ref": "#/definitions/localized_string_or_empty"},
+        "clarification": {"$ref": "#/definitions/localized_string_or_empty"},
+        "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "in_hours_response": {"$ref": "#/definitions/localized_string"},
+        "off_hours_response": {"$ref": "#/definitions/localized_string"},
+        "relevant": {"$ref": "#/definitions/non_empty_string"}
+      },
+      "additionalProperties": false,
+      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "in_hours_response", "off_hours_response"]
     },
 
     "language_detector": {

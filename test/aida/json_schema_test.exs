@@ -30,12 +30,22 @@ defmodule Aida.JsonSchemaTest do
   })
   @valid_keyword_responder ~s({
     "type": "keyword_responder",
-    "id" : "1",
-    "name" : "a",
+    "id": "1",
+    "name": "a",
     "explanation": #{@valid_empty_localized_string},
     "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
     "response": #{@valid_localized_string}
+  })
+  @valid_human_override ~s({
+    "type": "human_override",
+    "id": "5",
+    "name": "a",
+    "explanation": #{@valid_empty_localized_string},
+    "clarification": #{@valid_empty_localized_string},
+    "keywords": #{@valid_localized_keywords},
+    "in_hours_response": #{@valid_localized_string},
+    "off_hours_response": #{@valid_localized_string}
   })
   @valid_delayed_message ~s({
     "delay": 1,
@@ -255,7 +265,8 @@ defmodule Aida.JsonSchemaTest do
       #{@valid_keyword_responder},
       #{@valid_scheduled_messages},
       #{@valid_language_detector},
-      #{@valid_survey}
+      #{@valid_survey},
+      #{@valid_human_override}
     ],
     "variables" : [],
     "channels" : [#{@valid_facebook_channel}, #{@valid_websocket_channel}],
@@ -479,6 +490,9 @@ defmodule Aida.JsonSchemaTest do
     File.read!("test/fixtures/valid_manifest_images.json")
     |> assert_valid(:manifest_v1)
 
+    File.read!("test/fixtures/valid_manifest_with_human_override.json")
+    |> assert_valid(:manifest_v1)
+
     File.read!("test/fixtures/valid_manifest.json")
     |> assert_valid(:manifest_v1)
   end
@@ -511,6 +525,25 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_keyword_responder
     |> assert_valid(:keyword_responder)
+  end
+
+  test "human_override" do
+    assert_enum("type", "foo", :human_override)
+    assert_valid_enum("type", "human_override", :human_override)
+    assert_required("type", :human_override)
+    assert_required("explanation", :human_override)
+    assert_required("clarification", :human_override)
+    assert_required("in_hours_response", :human_override)
+    assert_required("off_hours_response", :human_override)
+    assert_required("keywords", :human_override)
+    assert_required("name", :human_override)
+    assert_non_empty_string("name", :human_override)
+    assert_required("id", :human_override)
+    assert_non_empty_string("id", :human_override)
+    assert_optional("relevant", "${age} > 18", :human_override)
+
+    @valid_human_override
+    |> assert_valid(:human_override)
   end
 
   test "scheduled_messages" do
