@@ -127,6 +127,10 @@ defmodule Aida.Bot do
     post_notification(notifications_url, :policy_enforcement, policy_enforcement_data)
   end
 
+  def notify(%{notifications_url: notifications_url}, notification_type, message_data) do
+    post_notification(notifications_url, notification_type, message_data)
+  end
+
   defp log_incoming(%{bot: %{public_keys: public_keys} = bot} = message) do
     {content, content_type} =
       if message.sensitive do
