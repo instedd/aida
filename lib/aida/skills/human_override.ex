@@ -39,7 +39,7 @@ defmodule Aida.Skill.HumanOverride do
     end
 
     def put_response(%{in_hours_response: response}, %{bot: bot} = message) do
-      Bot.notify(bot, :human_override, %{message: Message.text_content(message), session_id: message.session.id})
+      Bot.notify(bot, :human_override, %{message: Message.text_content(message), session_id: message.session.id, name: Message.get_session(message, "first_name")})
       message |> Message.respond(response)
     end
 
