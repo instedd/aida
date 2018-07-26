@@ -1,6 +1,6 @@
 defmodule AidaWeb.SessionController do
   use AidaWeb, :controller
-  alias Aida.{DB, ChannelProvider, Channel}
+  alias Aida.{DB, Message, BotManager, Bot}
   alias Aida.DB.{Session, MessageLog}
 
   def index(conn, %{"bot_id" => bot_id}) do
@@ -30,10 +30,9 @@ defmodule AidaWeb.SessionController do
 
   def send_message(conn, %{"session_id" => session_id, "message" => message}) do
     session = Session.get(session_id)
-
-    ChannelProvider.find_channel(session)
-    |> Channel.send_message([message], session)
-
+    bot = BotManager.find(session.bot_id)
+    message = Message.new(message, bot, session)
+    Bot.send_message(message)
     conn |> send_resp(200, "")
   end
 
