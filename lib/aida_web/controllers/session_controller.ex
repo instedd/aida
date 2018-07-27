@@ -31,7 +31,7 @@ defmodule AidaWeb.SessionController do
   def send_message(conn, %{"session_id" => session_id, "message" => message}) do
     session = Session.get(session_id)
     bot = BotManager.find(session.bot_id)
-    message = Message.new(message, bot, session)
+    message = Message.new("", bot, session) |> Message.respond(message)
     Bot.send_message(message)
     conn |> send_resp(200, "")
   end

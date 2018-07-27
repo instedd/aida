@@ -4,14 +4,14 @@ defmodule AidaWeb.SessionControllerTest do
   alias Aida.{
     Asset,
     BotParser,
+    ChannelProvider,
     DB,
     DB.MessageLog,
     DB.Session,
     JsonSchema,
-    Message,
     Repo,
-    Bot,
-    BotManager
+    BotManager,
+    TestChannel
   }
 
   import Mock
@@ -304,15 +304,20 @@ defmodule AidaWeb.SessionControllerTest do
   end
 
   describe "send_message" do
-    test "sends message to a session", %{conn: conn, bot: bot, session: session} do
-      session = Session.get(session.id)
-      message = Message.new("Hi!", bot, session)
-      with_mock Bot, [send_message: fn(_message) -> :ok end] do
+    setup do
+      channel = TestChannel.new()
+
+      [channel: channel]
+    end
+
+    test "sends message to a session", %{conn: conn, bot: bot, channel: channel, session: session} do
+      with_mock ChannelProvider, [find_channel: fn _ -> channel end] do
+        session_id = session.id
         with_mock BotManager, [find: fn(_id) -> bot end] do
-          post conn, bot_session_session_path(conn, :send_message, bot.id, session.id, message: Message.text_content(message))
+          post conn, bot_session_session_path(conn, :send_message, bot.id, session_id, message: "Hi!")
           assert called BotManager.find(bot.id)
         end
-        assert called Bot.send_message(message)
+        assert_received {:send_message, ["Hi!"], ^session_id}
       end
     end
   end
