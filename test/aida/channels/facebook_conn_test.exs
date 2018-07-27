@@ -334,7 +334,7 @@ defmodule Aida.Channel.FacebookConnTest do
 
           %{message: message} = ErrorLog |> Repo.one
           assert message == "Policy Enforcement Notification - Bot has been blocked.\n\n#{@incoming_policy_enforcement_reason}"
-          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "block"}})
+          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "block", "reason" => @incoming_policy_enforcement_reason}} |> Poison.encode!)
         end
       end
     end
@@ -348,7 +348,7 @@ defmodule Aida.Channel.FacebookConnTest do
           assert response(conn, 200) == "ok"
 
           assert 0 == ErrorLog |> Repo.count
-          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unblock"}})
+          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unblock"}} |> Poison.encode!)
         end
       end
     end
@@ -363,7 +363,7 @@ defmodule Aida.Channel.FacebookConnTest do
 
           %{message: message} = ErrorLog |> Repo.one
           assert message == "Policy Enforcement Notification - Unknown action: unknown-action.\n\n#{Poison.encode!(@incoming_unknown_policy_enforcement_data)}"
-          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unknown-action"}})
+          assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: @incoming_unknown_policy_enforcement_data} |> Poison.encode!)
         end
       end
     end
@@ -378,7 +378,7 @@ defmodule Aida.Channel.FacebookConnTest do
             assert response(conn, 200) == "ok"
 
             assert 0 == ErrorLog |> Repo.count
-            assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unblock"}})
+            assert called HTTPoison.post("https://example.com/some/notification/endpoint", %{type: :policy_enforcement, data: %{"action" => "unblock"}} |> Poison.encode!)
             assert called ErrorHandler.capture_message("Error posting notification to remote endpoint", %{notifications_url: "https://example.com/some/notification/endpoint", notification_type: :policy_enforcement})
           end
         end

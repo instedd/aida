@@ -31,6 +31,8 @@ defmodule Aida.HumanOverrideTest do
     setup :create_bot
 
     test "respond with in_hours_response and push the notification", %{bot: bot, session: session} do
+      session = session |> Session.put("first_name", "John")
+
       with_mock_post do
         response =
           Message.new("table", bot, session)
@@ -44,8 +46,8 @@ defmodule Aida.HumanOverrideTest do
         assert called(
                  HTTPoison.post(@notifications_url, %{
                    type: :human_override,
-                   data: %{message: "table", session_id: session.id}
-                 })
+                   data: %{message: "table", session_id: session.id, name: "John"}
+                 } |> Poison.encode!)
                )
       end
     end

@@ -101,7 +101,7 @@ defmodule Aida.Bot do
     case HTTPoison.post(notifications_url, %{
       type: notification_type,
       data: data
-    }) do
+    } |> Poison.encode!) do
       {:ok, %{status_code: 200}} -> :ok
       non_success -> ErrorHandler.capture_message(
         "Error posting notification to remote endpoint",
