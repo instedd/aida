@@ -46,7 +46,7 @@ defmodule Aida.HumanOverrideTest do
         assert called(
                  HTTPoison.post(@notifications_url, %{
                    type: :human_override,
-                   data: %{message: "table", session_id: session.id, name: "John"}
+                   data: %{message: "table", session_id: session.id, bot_id: bot.id, name: "John"}
                  } |> Poison.encode!)
                )
       end
