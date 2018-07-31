@@ -28,12 +28,16 @@ defmodule AidaWeb.SessionController do
     render(conn, "logs.json", logs: logs)
   end
 
-  def send_message(conn, %{"session_id" => session_id, "message" => message}) do
+  def send_message(conn, %{"bot_id" => bot_id, "session_id" => session_id, "message" => message}) do
     session = Session.get(session_id)
-    bot = BotManager.find(session.bot_id)
-    message = Message.new("", bot, session) |> Message.respond(message)
-    Bot.send_message(message)
-    conn |> send_resp(200, "")
+    if session.bot_id != bot_id do
+      conn |> put_status(422) |> json(%{errors: "Unknown session"}) |> halt
+    else
+      bot = BotManager.find(session.bot_id)
+      message = Message.new("", bot, session) |> Message.respond(message)
+      Bot.send_message(message)
+      conn |> send_resp(200, "")
+    end
   end
 
   def attachment(conn, %{"bot_id" => bot_id, "session_id" => session_id, "file" => file}) do
