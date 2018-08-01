@@ -83,7 +83,7 @@
         "not_understood": {"$ref": "#/definitions/message"},
         "clarification": {"$ref": "#/definitions/message"},
         "unsubscribe": {"$ref": "#/definitions/unsubscribe"},
-        "threshold": { "maximum": 0.5, "minimum": 0 }
+        "threshold": { "maximum": 0.5, "minimum": 0.01 }
       },
       "additionalProperties": false,
       "required": ["greeting", "introduction", "not_understood", "clarification", "unsubscribe", "threshold"]

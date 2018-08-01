@@ -850,7 +850,7 @@ defmodule Aida.JsonSchemaTest do
     assert_required("threshold", :front_desk)
     assert_required("unsubscribe", :front_desk)
     assert_max("threshold", 0.5, :front_desk)
-    assert_min("threshold", 0, :front_desk)
+    assert_min("threshold", 0.01, :front_desk)
 
     @valid_front_desk
     |> assert_valid(:front_desk)
