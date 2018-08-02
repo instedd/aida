@@ -147,10 +147,29 @@
         "keywords": {"$ref": "#/definitions/localized_keywords"},
         "in_hours_response": {"$ref": "#/definitions/localized_string"},
         "off_hours_response": {"$ref": "#/definitions/localized_string"},
+        "in_hours": {
+          "type": "object",
+          "properties": {
+            "hours": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "day": {"enum": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]},
+                  "since": {"$ref": "#/definitions/hour"},
+                  "until": {"$ref": "#/definitions/hour"}
+                },
+                "required": ["day"]
+              },
+              "uniqueItems": true
+            },
+            "timezone": {"$ref": "#/definitions/non_empty_string"}
+          }
+        },
         "relevant": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
-      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "in_hours_response", "off_hours_response"]
+      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "in_hours_response", "off_hours_response", "in_hours"]
     },
 
     "language_detector": {
@@ -551,6 +570,11 @@
     "non_empty_string": {
       "type": "string",
       "minLength": 1
+    },
+
+    "hour": {
+      "type": "string",
+      "pattern": "^(\\d{1,2}):(\\d{2})$"
     },
 
     "attributes_dict": {

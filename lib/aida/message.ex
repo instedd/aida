@@ -9,6 +9,7 @@ defmodule Aida.Message do
     bot: Bot.t,
     content: TextContent.t | ImageContent.t | UnknownContent.t | SystemContent.t,
     sensitive: boolean,
+    timestamp: DateTime.t,
     reply: [String.t]
   }
 
@@ -16,14 +17,21 @@ defmodule Aida.Message do
             bot: %Bot{},
             content: %TextContent{},
             sensitive: false,
+            timestamp: DateTime.utc_now,
             reply: []
 
   @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
   def new(content, %Bot{} = bot, session) do
+    new(content, bot, session, DateTime.utc_now)
+  end
+
+  @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  def new(content, %Bot{} = bot, session, timestamp) do
     %Message{
       session: session,
       bot: bot,
-      content: TextContent.new(content)
+      content: TextContent.new(content),
+      timestamp: timestamp
     }
   end
 

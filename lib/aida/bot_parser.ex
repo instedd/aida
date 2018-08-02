@@ -184,6 +184,7 @@ defmodule Aida.BotParser do
       relevant: parse_expr(skill["relevant"]),
       in_hours_response: skill["in_hours_response"],
       off_hours_response: skill["off_hours_response"],
+      in_hours: skill["in_hours"]
     }
   end
 

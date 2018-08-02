@@ -15,6 +15,27 @@ defmodule Aida.JsonSchemaTest do
   @valid_empty_localized_string ~s({"en": "a"})
   @valid_message ~s({"message" : #{@valid_localized_string}})
   @valid_localized_keywords ~s({"en": ["a"]})
+  @valid_in_hours ~s({
+    "hours": [
+      {
+        "day": "mon",
+        "since": "9:00",
+        "until": "18:00"
+      },
+      {
+        "day": "mon",
+        "since": "20:00"
+      },
+      {
+        "day": "tue",
+        "until": "03:00"
+      },
+      {
+        "day": "wed"
+      }
+    ],
+    "timezone": "GMT-3"
+  })
   @valid_unsubscribe ~s({
     "introduction_message": #{@valid_message},
     "keywords": #{@valid_localized_keywords},
@@ -45,7 +66,8 @@ defmodule Aida.JsonSchemaTest do
     "clarification": #{@valid_empty_localized_string},
     "keywords": #{@valid_localized_keywords},
     "in_hours_response": #{@valid_localized_string},
-    "off_hours_response": #{@valid_localized_string}
+    "off_hours_response": #{@valid_localized_string},
+    "in_hours": #{@valid_in_hours}
   })
   @valid_delayed_message ~s({
     "delay": 1,
