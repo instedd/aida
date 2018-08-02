@@ -69,8 +69,29 @@
         "es": "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
       },
       "off_hours_response": {
-        "en": "Sorry, but we are not taking reservations right now",
-        "es": "Perdón, pero no estamos tomando reservas en este momento"
+        "en": "Sorry, but we are not taking reservations right now. I'll let you know about tomorrow.",
+        "es": "Perdón, pero no estamos tomando reservas en este momento. Mañana le haré saber nuestra disponibilidad."
+      },
+      "in_hours": {
+        "hours": [
+          {
+            "day": "mon",
+            "since": "9:30",
+            "until": "18:00"
+          },
+          {
+            "day": "mon",
+            "since": "20:00"
+          },
+          {
+            "day": "tue",
+            "until": "03:00"
+          },
+          {
+            "day": "wed"
+          }
+        ],
+        "timezone": "America/Buenos_Aires"
       }
     }
   ],
