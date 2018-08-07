@@ -11,7 +11,8 @@ defmodule Aida.TimeMachine do
   defmacro time_travel(ts, do: block) do
     quote do
       now = unquote(ts)
-      with_mock DateTime, [:passthrough], [utc_now: fn -> now end] do
+
+      with_mock DateTime, [:passthrough], utc_now: fn -> now end do
         # Make sure no messages were received before this time travel
         refute_received _
 
@@ -19,10 +20,10 @@ defmodule Aida.TimeMachine do
 
         if scheduler_pid do
           # Simulate a :timeout event on the server
-          send scheduler_pid, :timeout
+          send(scheduler_pid, :timeout)
 
           # Wait until all the messages are processed
-          Scheduler.flush
+          Scheduler.flush()
         end
 
         # Run the test block
@@ -32,6 +33,6 @@ defmodule Aida.TimeMachine do
   end
 
   def within(shift) do
-    Timex.shift(DateTime.utc_now, shift)
+    Timex.shift(DateTime.utc_now(), shift)
   end
 end

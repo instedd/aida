@@ -37,16 +37,25 @@ defmodule Aida.Expr.ParserTest do
     end
 
     test "precedence" do
-      assert parse("1 and 2 and 3") == binop(binop(literal(1), :and, literal(2)), :and, literal(3))
+      assert parse("1 and 2 and 3") ==
+               binop(binop(literal(1), :and, literal(2)), :and, literal(3))
+
       assert parse("1 or 2 or 3") == binop(binop(literal(1), :or, literal(2)), :or, literal(3))
       assert parse("1 + 2 + 3") == binop(binop(literal(1), :+, literal(2)), :+, literal(3))
-      assert parse("1 * 2 + 3 * 4") == binop(binop(literal(1), :*, literal(2)), :+, binop(literal(3), :*, literal(4)))
-      assert parse("1 < 2 and 3 < 4") == binop(binop(literal(1), :<, literal(2)), :and, binop(literal(3), :<, literal(4)))
-      assert parse("1 + 2 = 3 - 4") == binop(binop(literal(1), :+, literal(2)), :=, binop(literal(3), :-, literal(4)))
+
+      assert parse("1 * 2 + 3 * 4") ==
+               binop(binop(literal(1), :*, literal(2)), :+, binop(literal(3), :*, literal(4)))
+
+      assert parse("1 < 2 and 3 < 4") ==
+               binop(binop(literal(1), :<, literal(2)), :and, binop(literal(3), :<, literal(4)))
+
+      assert parse("1 + 2 = 3 - 4") ==
+               binop(binop(literal(1), :+, literal(2)), :=, binop(literal(3), :-, literal(4)))
     end
 
     test "parentheses" do
-      assert parse("1 and (2 and 3)") == binop(literal(1), :and, binop(literal(2), :and, literal(3)))
+      assert parse("1 and (2 and 3)") ==
+               binop(literal(1), :and, binop(literal(2), :and, literal(3)))
     end
 
     test "variables" do
@@ -86,7 +95,7 @@ defmodule Aida.Expr.ParserTest do
     end
 
     test "function calls" do
-      assert parse("true()") == call(:true, [])
+      assert parse("true()") == call(true, [])
       assert parse("selected(${var}, 2)") == call(:selected, [var("var"), literal(2)])
     end
 

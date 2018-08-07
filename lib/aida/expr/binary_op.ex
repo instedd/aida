@@ -3,7 +3,7 @@ defmodule Aida.Expr.BinaryOp do
 
   defimpl Aida.Expr, for: __MODULE__ do
     def to_string(bin) do
-      "(#{bin.left |> Aida.Expr.to_string} #{bin.op} #{bin.right |> Aida.Expr.to_string})"
+      "(#{bin.left |> Aida.Expr.to_string()} #{bin.op} #{bin.right |> Aida.Expr.to_string()})"
     end
 
     def eval(bin, context) do
@@ -13,13 +13,11 @@ defmodule Aida.Expr.BinaryOp do
       case bin.op do
         :and -> left and right
         :or -> left or right
-
         :+ -> left + right
         :- -> left - right
         :* -> left * right
         :div -> left / right
         :mod -> rem(left, right)
-
         := -> left == right
         :!= -> left != right
         :< -> left < right

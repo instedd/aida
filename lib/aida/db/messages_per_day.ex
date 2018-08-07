@@ -8,10 +8,10 @@ defmodule Aida.DB.MessagesPerDay do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "messages_per_day" do
-    field :bot_id, :binary_id
-    field :day, :date
-    field :sent_messages, :integer, default: 0
-    field :received_messages, :integer, default: 0
+    field(:bot_id, :binary_id)
+    field(:day, :date)
+    field(:sent_messages, :integer, default: 0)
+    field(:received_messages, :integer, default: 0)
 
     timestamps()
   end

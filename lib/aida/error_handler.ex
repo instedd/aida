@@ -23,6 +23,6 @@ defmodule Aida.ErrorHandler do
       result: :none
     )
 
-    Logger.warn("#{message} #{inspect extra}")
+    Logger.warn("#{message} #{inspect(extra)}")
   end
 end

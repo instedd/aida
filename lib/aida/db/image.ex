@@ -4,12 +4,12 @@ defmodule Aida.DB.Image do
   alias __MODULE__
 
   schema "images" do
-    field :binary, :binary
-    field :binary_type, :string
-    field :source_url, :string
-    field :bot_id, :binary_id
-    field :session_id, :binary_id
-    field :uuid, :binary_id, read_after_writes: true
+    field(:binary, :binary)
+    field(:binary_type, :string)
+    field(:source_url, :string)
+    field(:bot_id, :binary_id)
+    field(:session_id, :binary_id)
+    field(:uuid, :binary_id, read_after_writes: true)
 
     timestamps()
   end

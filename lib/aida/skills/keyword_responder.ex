@@ -2,15 +2,15 @@ defmodule Aida.Skill.KeywordResponder do
   alias Aida.{Bot, Message, Message.TextContent, Skill.Utils}
 
   @type t :: %__MODULE__{
-    explanation: Bot.message,
-    clarification: Bot.message,
-    id: String.t(),
-    bot_id: String.t(),
-    name: String.t(),
-    keywords: %{},
-    response: %{},
-    relevant: nil | Aida.Expr.t
-  }
+          explanation: Bot.message(),
+          clarification: Bot.message(),
+          id: String.t(),
+          bot_id: String.t(),
+          name: String.t(),
+          keywords: %{},
+          response: %{},
+          relevant: nil | Aida.Expr.t()
+        }
 
   defstruct explanation: %{},
             clarification: %{},

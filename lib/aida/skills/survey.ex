@@ -6,14 +6,14 @@ defmodule Aida.Skill.Survey do
   import Aida.ErrorHandler
 
   @type t :: %__MODULE__{
-    id: String.t(),
-    bot_id: String.t(),
-    name: String.t(),
-    schedule: DateTime.t,
-    relevant: nil | Aida.Expr.t,
-    keywords: nil | %{},
-    questions: [SelectQuestion.t() | InputQuestion.t()]
-  }
+          id: String.t(),
+          bot_id: String.t(),
+          name: String.t(),
+          schedule: DateTime.t(),
+          relevant: nil | Aida.Expr.t(),
+          keywords: nil | %{},
+          questions: [SelectQuestion.t() | InputQuestion.t()]
+        }
 
   defstruct id: "",
             bot_id: "",
@@ -28,7 +28,6 @@ defmodule Aida.Skill.Survey do
     message = Message.new("", bot, session)
 
     if Skill.is_relevant?(survey, message) do
-
       if session |> Session.get_value("language") do
         message = Message.clear_state(message)
         message = start_survey(survey, message)
@@ -37,21 +36,28 @@ defmodule Aida.Skill.Survey do
           Bot.send_message(message)
         rescue
           error ->
-            capture_exception("Error starting survey", error, bot_id: bot.id, skill_id: survey.id, session_id: session.id)
+            capture_exception(
+              "Error starting survey",
+              error,
+              bot_id: bot.id,
+              skill_id: survey.id,
+              session_id: session.id
+            )
         end
       end
     end
   end
 
   def start_survey(survey, message) do
-    message = message
+    message =
+      message
       |> Message.drop_session(prefix(survey))
       |> Message.put_session(state_key(survey), %{"step" => 0})
 
     answer(survey, message)
   end
 
-   def answer(survey, message) do
+  def answer(survey, message) do
     case current_question(survey, message) do
       nil ->
         message
@@ -74,21 +80,28 @@ defmodule Aida.Skill.Survey do
     case message |> Message.get_session(state_key(survey)) do
       %{"step" => step} ->
         survey.questions |> Enum.at(step)
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
   def move_to_next_question(survey, message) do
-    survey_state = case message |> Message.get_session(state_key(survey)) do
-      %{"step" => step} = state ->
-        case find_next_question(survey, message, step) do
-          nil ->
-            Message.extract_to_asset(message, prefix(survey), survey.id)
-            nil
-          step -> %{state | "step" => step}
-        end
-      _ -> %{"step" => 0}
-    end
+    survey_state =
+      case message |> Message.get_session(state_key(survey)) do
+        %{"step" => step} = state ->
+          case find_next_question(survey, message, step) do
+            nil ->
+              Message.extract_to_asset(message, prefix(survey), survey.id)
+              nil
+
+            step ->
+              %{state | "step" => step}
+          end
+
+        _ ->
+          %{"step" => 0}
+      end
 
     message
     |> Message.put_session(state_key(survey), survey_state)
@@ -96,15 +109,18 @@ defmodule Aida.Skill.Survey do
 
   defp find_next_question(survey, message, step) do
     step = step + 1
+
     if step >= Enum.count(survey.questions) do
       nil
     else
       question = survey.questions |> Enum.at(step)
+
       if question.relevant == nil do
         step
       else
-        context = message |> Message.expr_context
-        relevant = question |> Question.relevant |> Aida.Expr.eval(context)
+        context = message |> Message.expr_context()
+        relevant = question |> Question.relevant() |> Aida.Expr.eval(context)
+
         if relevant == false do
           find_next_question(survey, message, step)
         else
@@ -118,15 +134,16 @@ defmodule Aida.Skill.Survey do
     def init(%{schedule: nil} = skill, _), do: skill
 
     def init(skill, bot) do
-      if DateTime.compare(skill.schedule, DateTime.utc_now) == :gt do
+      if DateTime.compare(skill.schedule, DateTime.utc_now()) == :gt do
         BotManager.schedule_wake_up(bot, skill, skill.schedule)
       end
+
       skill
     end
 
     def wake_up(skill, %{id: bot_id} = bot, _data) do
       Session.session_ids_by_bot(bot_id)
-        |> Enum.each(&(Survey.scheduled_start_survey(skill, bot, &1)))
+      |> Enum.each(&Survey.scheduled_start_survey(skill, bot, &1))
 
       :ok
     end
@@ -147,31 +164,33 @@ defmodule Aida.Skill.Survey do
       question = Survey.current_question(survey, message)
 
       if question do
+        message =
+          if question.encrypt do
+            message |> Message.mark_sensitive()
+          else
+            message
+          end
 
-        message = if question.encrypt do
-          message |> Message.mark_sensitive
-        else
-          message
-        end
+        message =
+          case Question.accept_answer(question, message) do
+            :error ->
+              if question.constraint_message do
+                message |> Message.respond(question.constraint_message)
+              else
+                message
+              end
 
-        message = case Question.accept_answer(question, message) do
-          :error ->
-            if question.constraint_message do
-              message |> Message.respond(question.constraint_message)
-            else
-              message
-            end
-
-          {:ok, answer} ->
+            {:ok, answer} ->
               message =
                 Message.put_session(
                   message,
                   Survey.answer_key(survey, question),
                   answer,
-                  encrypted: question |> Question.encrypt?
+                  encrypted: question |> Question.encrypt?()
                 )
-            Survey.move_to_next_question(survey, message)
-        end
+
+              Survey.move_to_next_question(survey, message)
+          end
 
         Survey.answer(survey, message)
       else
@@ -187,6 +206,7 @@ defmodule Aida.Skill.Survey do
           else
             0
           end
+
         question ->
           if question |> Question.valid_answer?(message) do
             1

@@ -25,7 +25,7 @@ defmodule Aida.ScheduledMessagesTest do
     test "init schedules wake_up", %{bot: bot, skill: skill} do
       skill |> Skill.init(bot)
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ts, handler: BotManager} = task
       assert_in_delta DateTime.diff(ts, within(hours: 10)), 0, 60
@@ -37,7 +37,7 @@ defmodule Aida.ScheduledMessagesTest do
 
       skill |> Skill.init(bot)
 
-      assert [] = Scheduler.Task.load
+      assert [] = Scheduler.Task.load()
     end
 
     test "send message", %{bot: bot, skill: skill, session_id: session_id} do
@@ -59,7 +59,11 @@ defmodule Aida.ScheduledMessagesTest do
       end
     end
 
-    test "wake up clears active skills", %{bot: bot, skill: skill, session: %{id: session_id} = session} do
+    test "wake up clears active skills", %{
+      bot: bot,
+      skill: skill,
+      session: %{id: session_id} = session
+    } do
       session
       |> Session.merge(%{
         ".survey/food_preferences" => %{"step" => 3},
@@ -79,7 +83,9 @@ defmodule Aida.ScheduledMessagesTest do
       session = Session.get(session_id)
 
       assert session |> Session.get_value(".survey/food_preferences") == nil
-      assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+
+      assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") ==
+               nil
     end
   end
 
@@ -90,7 +96,12 @@ defmodule Aida.ScheduledMessagesTest do
     setup do
       message1 = %DelayedMessage{delay: 60, message: %{"en" => "Are you there?"}}
       message2 = %DelayedMessage{delay: 1440, message: %{"en" => "Long time no see!"}}
-      skill = %ScheduledMessages{id: @skill_id, schedule_type: :since_last_incoming_message, messages: [message1, message2]}
+
+      skill = %ScheduledMessages{
+        id: @skill_id,
+        schedule_type: :since_last_incoming_message,
+        messages: [message1, message2]
+      }
 
       %{skill: skill}
     end
@@ -101,22 +112,35 @@ defmodule Aida.ScheduledMessagesTest do
     end
 
     test "find enclosing messages", %{skill: skill} do
-      assert {nil, %DelayedMessage{delay: 60}} = ScheduledMessages.find_enclosing_messages(skill, 40)
-      assert {%DelayedMessage{delay: 60}, %DelayedMessage{delay: 1440}} = ScheduledMessages.find_enclosing_messages(skill, 60)
-      assert {%DelayedMessage{delay: 1440}, nil} = ScheduledMessages.find_enclosing_messages(skill, 1440)
+      assert {nil, %DelayedMessage{delay: 60}} =
+               ScheduledMessages.find_enclosing_messages(skill, 40)
+
+      assert {%DelayedMessage{delay: 60}, %DelayedMessage{delay: 1440}} =
+               ScheduledMessages.find_enclosing_messages(skill, 60)
+
+      assert {%DelayedMessage{delay: 1440}, nil} =
+               ScheduledMessages.find_enclosing_messages(skill, 1440)
     end
 
     test "appoint wake up on incoming message", %{session: session, bot: bot, skill: skill} do
       assert skill |> Skill.confidence(Message.new("Hi", bot, session)) == 0
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/#{session.id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ts, handler: BotManager} = task
       assert_in_delta DateTime.diff(ts, within(minutes: 60)), 0, 60
     end
 
     test "wake up after first delay", %{session_id: session_id, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: bot.id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log =
+        MessageLog.create(%{
+          bot_id: bot.id,
+          session_id: session_id,
+          direction: "incoming",
+          content: "Hi",
+          content_type: "text"
+        })
+
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
 
@@ -125,13 +149,20 @@ defmodule Aida.ScheduledMessagesTest do
         assert_received {:send_message, ["Are you there?"], ^session_id}
       end
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/#{session_id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^next_ts, handler: BotManager} = task
     end
 
     test "wake up after second delay", %{session_id: session_id, bot: bot, skill: skill} do
-      MessageLog.create(%{bot_id: bot.id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      MessageLog.create(%{
+        bot_id: bot.id,
+        session_id: session_id,
+        direction: "incoming",
+        content: "Hi",
+        content_type: "text"
+      })
+
       wake_up_ts = within(minutes: 1440)
 
       time_travel(wake_up_ts) do
@@ -139,11 +170,19 @@ defmodule Aida.ScheduledMessagesTest do
         assert_received {:send_message, ["Long time no see!"], ^session_id}
       end
 
-      assert [] = Scheduler.Task.load
+      assert [] = Scheduler.Task.load()
     end
 
     test "wake up too early", %{session_id: session_id, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: bot.id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log =
+        MessageLog.create(%{
+          bot_id: bot.id,
+          session_id: session_id,
+          direction: "incoming",
+          content: "Hi",
+          content_type: "text"
+        })
+
       wake_up_ts = within(minutes: 10)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 60)
 
@@ -152,13 +191,25 @@ defmodule Aida.ScheduledMessagesTest do
         refute_received _
       end
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/#{session_id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^next_ts, handler: BotManager} = task
     end
 
-    test "don't send if the skill is not relevant for the session", %{session_id: session_id, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: bot.id, session_id: session_id, direction: "incoming", content: "Hi", content_type: "text"})
+    test "don't send if the skill is not relevant for the session", %{
+      session_id: session_id,
+      bot: bot,
+      skill: skill
+    } do
+      message_log =
+        MessageLog.create(%{
+          bot_id: bot.id,
+          session_id: session_id,
+          direction: "incoming",
+          content: "Hi",
+          content_type: "text"
+        })
+
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
       skill = %{skill | relevant: Aida.Expr.parse("${age} > 18")}
@@ -168,37 +219,45 @@ defmodule Aida.ScheduledMessagesTest do
         refute_received _
       end
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/#{session_id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^next_ts, handler: BotManager} = task
     end
 
     test "don't send if the language is not set", %{session: session, bot: bot, skill: skill} do
-      message_log = MessageLog.create(%{bot_id: bot.id, session_id: session.id, direction: "incoming", content: "Hi", content_type: "text"})
+      message_log =
+        MessageLog.create(%{
+          bot_id: bot.id,
+          session_id: session.id,
+          direction: "incoming",
+          content: "Hi",
+          content_type: "text"
+        })
+
       wake_up_ts = within(minutes: 60)
       next_ts = Timex.shift(message_log.inserted_at, minutes: 1440)
-      session |> Session.put("language", nil) |> Session.save
+      session |> Session.put("language", nil) |> Session.save()
 
       time_travel(wake_up_ts) do
         skill |> Skill.wake_up(bot, session.id)
         refute_received _
       end
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/#{session.id}"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^next_ts, handler: BotManager} = task
     end
 
     test "don't do anything if the session id is invalid", %{bot: bot, skill: skill} do
-      skill |> Skill.wake_up(bot, Ecto.UUID.generate)
+      skill |> Skill.wake_up(bot, Ecto.UUID.generate())
       refute_received _
-      assert [] = Scheduler.Task.load
+      assert [] = Scheduler.Task.load()
     end
 
     test "don't do anything if the session id is nil", %{bot: bot, skill: skill} do
       skill |> Skill.wake_up(bot, nil)
       refute_received _
-      assert [] = Scheduler.Task.load
+      assert [] = Scheduler.Task.load()
     end
 
     test "wake up clears active skills", %{
@@ -233,7 +292,9 @@ defmodule Aida.ScheduledMessagesTest do
       session = Session.get(session_id)
 
       assert Session.get_value(session, ".survey/food_preferences") == nil
-      assert Session.get_value(session, ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+
+      assert Session.get_value(session, ".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") ==
+               nil
     end
   end
 
@@ -252,24 +313,36 @@ defmodule Aida.ScheduledMessagesTest do
     test "init schedules a wake_up", %{bot: bot, skill: skill, start: start} do
       assert skill |> Skill.init(bot) == skill
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/0"
       assert %Scheduler.Task{name: ^expected_task_name, ts: ^start, handler: BotManager} = task
     end
 
-    test "send message and schedule the next occurrence", %{bot: bot, skill: skill, session_id: session_id, start: start} do
+    test "send message and schedule the next occurrence", %{
+      bot: bot,
+      skill: skill,
+      session_id: session_id,
+      start: start
+    } do
       time_travel(start) do
         skill |> Skill.wake_up(bot, "0")
         assert_received {:send_message, ["Hello"], ^session_id}
       end
 
-      assert [task] = Scheduler.Task.load
+      assert [task] = Scheduler.Task.load()
       expected_task_name = "#{bot.id}/#{skill.id}/0"
       expected_ts = Timex.shift(start, days: 2)
-      assert %Scheduler.Task{name: ^expected_task_name, ts: ^expected_ts, handler: BotManager} = task
+
+      assert %Scheduler.Task{name: ^expected_task_name, ts: ^expected_ts, handler: BotManager} =
+               task
     end
 
-    test "wake up clears active skills", %{bot: bot, skill: skill, session: %{id: session_id} = session, start: start} do
+    test "wake up clears active skills", %{
+      bot: bot,
+      skill: skill,
+      session: %{id: session_id} = session,
+      start: start
+    } do
       session
       |> Session.merge(%{
         ".survey/food_preferences" => %{"step" => 3},
@@ -287,17 +360,20 @@ defmodule Aida.ScheduledMessagesTest do
       session = Session.get(session_id)
 
       assert session |> Session.get_value(".survey/food_preferences") == nil
-      assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") == nil
+
+      assert session |> Session.get_value(".decision_tree/2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f") ==
+               nil
     end
   end
 
   defp create_session_for_test_channel(%{bot: bot}) do
     pid = System.unique_integer([:positive])
-    Process.register(self(), "#{pid}" |> String.to_atom)
+    Process.register(self(), "#{pid}" |> String.to_atom())
 
-    session = Session.new({bot.id, "test", "#{pid}"})
+    session =
+      Session.new({bot.id, "test", "#{pid}"})
       |> Session.merge(%{"language" => "en"})
-      |> Session.save
+      |> Session.save()
 
     [session: session, session_id: session.id, session: session]
   end

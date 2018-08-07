@@ -1,31 +1,45 @@
 defmodule Aida.Message do
   alias Aida.{Message, Bot}
   alias Aida.DB.{Session}
-  alias Aida.Message.{TextContent, ImageContent, UnknownContent, Content, SystemContent, InvalidImageContent}
+
+  alias Aida.Message.{
+    TextContent,
+    ImageContent,
+    UnknownContent,
+    Content,
+    SystemContent,
+    InvalidImageContent
+  }
+
   use Aida.ErrorLog
 
   @type t :: %__MODULE__{
-    session: Session.t,
-    bot: Bot.t,
-    content: TextContent.t | ImageContent.t | UnknownContent.t | SystemContent.t,
-    sensitive: boolean,
-    timestamp: DateTime.t,
-    reply: [String.t]
-  }
+          session: Session.t(),
+          bot: Bot.t(),
+          content: TextContent.t() | ImageContent.t() | UnknownContent.t() | SystemContent.t(),
+          sensitive: boolean,
+          timestamp: DateTime.t(),
+          reply: [String.t()]
+        }
 
   defstruct session: %Session{},
             bot: %Bot{},
             content: %TextContent{},
             sensitive: false,
-            timestamp: DateTime.utc_now,
+            timestamp: DateTime.utc_now(),
             reply: []
 
-  @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  @spec new(content :: String.t(), bot :: Bot.t(), session :: Session.t()) :: t
   def new(content, %Bot{} = bot, session) do
-    new(content, bot, session, DateTime.utc_now)
+    new(content, bot, session, DateTime.utc_now())
   end
 
-  @spec new(content :: String.t, bot :: Bot.t, session :: Session.t, timestamp :: DateTime.t) :: t
+  @spec new(
+          content :: String.t(),
+          bot :: Bot.t(),
+          session :: Session.t(),
+          timestamp :: DateTime.t()
+        ) :: t
   def new(content, %Bot{} = bot, session, timestamp) do
     %Message{
       session: session,
@@ -35,7 +49,7 @@ defmodule Aida.Message do
     }
   end
 
-  @spec new_from_image(image :: %{uuid: String.t}, bot :: Bot.t, session :: Session.t) :: t
+  @spec new_from_image(image :: %{uuid: String.t()}, bot :: Bot.t(), session :: Session.t()) :: t
   def new_from_image(%{uuid: image_uuid}, %Bot{} = bot, session) do
     %Message{
       session: session,
@@ -44,7 +58,7 @@ defmodule Aida.Message do
     }
   end
 
-  @spec new_from_image(source_url :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  @spec new_from_image(source_url :: String.t(), bot :: Bot.t(), session :: Session.t()) :: t
   def new_from_image(source_url, %Bot{} = bot, session) do
     %Message{
       session: session,
@@ -61,7 +75,7 @@ defmodule Aida.Message do
     }
   end
 
-  @spec new_unknown(bot :: Bot.t, session :: Session.t) :: t
+  @spec new_unknown(bot :: Bot.t(), session :: Session.t()) :: t
   def new_unknown(%Bot{} = bot, session) do
     %Message{
       session: session,
@@ -107,18 +121,24 @@ defmodule Aida.Message do
     :not_image_content
   end
 
-  def pull_and_store_image(%{content: %ImageContent{source_url: _, image_id: nil} = content} = message) do
-    %{message | content: ImageContent.pull_and_store_image(content, message.bot.id, message.session.id)}
+  def pull_and_store_image(
+        %{content: %ImageContent{source_url: _, image_id: nil} = content} = message
+      ) do
+    %{
+      message
+      | content: ImageContent.pull_and_store_image(content, message.bot.id, message.session.id)
+    }
   end
 
   def pull_and_store_image(%{content: %ImageContent{source_url: _, image_id: _}} = message) do
     message
   end
 
-  @spec respond(message :: t, response :: String.t | map) :: t
+  @spec respond(message :: t, response :: String.t() | map) :: t
   def respond(message, %{} = response) do
     respond(message, response[language(message)])
   end
+
   def respond(message, response) do
     response = interpolate_expressions(message, response)
     response = interpolate_vars(message, response)
@@ -133,17 +153,18 @@ defmodule Aida.Message do
     %{message | reply: message.reply ++ [response]}
   end
 
-  @spec get_session(message :: t, key :: String.t) :: Session.value
+  @spec get_session(message :: t, key :: String.t()) :: Session.value()
   def get_session(%{session: session}, key) do
     Session.get_value(session, key)
   end
 
-  @spec put_session(message :: t, key :: String.t, value :: Session.value) :: t
+  @spec put_session(message :: t, key :: String.t(), value :: Session.value()) :: t
   def put_session(%{session: session, bot: bot} = message, key, value, options \\ []) do
     encrypted = Keyword.get(options, :encrypted, false)
+
     value =
       if encrypted do
-        Bot.encrypt(bot, value |> Poison.encode!)
+        Bot.encrypt(bot, value |> Poison.encode!())
       else
         value
       end
@@ -168,13 +189,13 @@ defmodule Aida.Message do
     Bot.clear_state(bot, message)
   end
 
-  @spec language(message :: t) :: Session.value
+  @spec language(message :: t) :: Session.value()
   def language(message) do
     get_session(message, "language")
   end
 
   def words(%{content: %TextContent{text: text}}) do
-    Regex.scan(~r/\w+/u, text |> String.downcase) |> Enum.map(&hd/1)
+    Regex.scan(~r/\w+/u, text |> String.downcase()) |> Enum.map(&hd/1)
   end
 
   def words(_), do: []
@@ -183,6 +204,7 @@ defmodule Aida.Message do
     case message.bot |> Bot.lookup_var(message, key) do
       nil ->
         message.session |> Session.lookup_var(key)
+
       var ->
         var[language(message)]
     end
@@ -200,12 +222,13 @@ defmodule Aida.Message do
     value |> to_string
   end
 
-  @spec interpolate_vars(message :: t, text :: String.t) :: String.t
+  @spec interpolate_vars(message :: t, text :: String.t()) :: String.t()
   defp interpolate_vars(message, text, resolved_vars \\ []) do
     Regex.scan(~r/\$\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}/, text, return: :index)
-    |> List.foldr(text, fn (match, text) ->
+    |> List.foldr(text, fn match, text ->
       [{p_start, p_len}, {v_start, v_len}] = match
       var_name = text |> Kernel.binary_part(v_start, v_len)
+
       var_value =
         if var_name in resolved_vars do
           "..."
@@ -217,19 +240,23 @@ defmodule Aida.Message do
 
             value ->
               display_var(value)
-           end
+          end
         end
-      <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
-      text_before <> interpolate_vars(message, var_value, [var_name | resolved_vars]) <> text_after
+
+      <<text_before::binary-size(p_start), _::binary-size(p_len), text_after::binary>> = text
+
+      text_before <>
+        interpolate_vars(message, var_value, [var_name | resolved_vars]) <> text_after
     end)
   end
 
-  @spec interpolate_expressions(message :: t, text :: String.t) :: String.t
+  @spec interpolate_expressions(message :: t, text :: String.t()) :: String.t()
   def interpolate_expressions(message, text) do
     Regex.scan(~r/\{\{(.*)\}\}/U, text, return: :index)
-    |> List.foldr(text, fn (match, text) ->
+    |> List.foldr(text, fn match, text ->
       [{p_start, p_len}, {v_start, v_len}] = match
       expr = text |> Kernel.binary_part(v_start, v_len)
+
       expr_result =
         try do
           Aida.Expr.parse(expr)
@@ -241,7 +268,7 @@ defmodule Aida.Message do
             "[ERROR: #{Exception.message(error)}]"
         end
 
-      <<text_before :: binary-size(p_start), _ :: binary-size(p_len), text_after :: binary>> = text
+      <<text_before::binary-size(p_start), _::binary-size(p_len), text_after::binary>> = text
       text_before <> expr_result <> text_after
     end)
   end
@@ -266,6 +293,7 @@ defmodule Aida.Message do
             else
               nil
             end
+
           value ->
             value
         end
@@ -274,9 +302,10 @@ defmodule Aida.Message do
       end
     end
 
-    context = options
-      |> Keyword.merge([var_lookup: var_lookup])
-      |> Aida.Expr.Context.new
+    context =
+      options
+      |> Keyword.merge(var_lookup: var_lookup)
+      |> Aida.Expr.Context.new()
 
     Bot.expr_context(message.bot, context, options)
   end
@@ -296,8 +325,7 @@ defmodule Aida.Message do
   def set_session_do_not_disturb!(message, do_not_disturb) do
     %{
       message
-      | session:
-          Session.save(%{message.session | do_not_disturb: do_not_disturb})
+      | session: Session.save(%{message.session | do_not_disturb: do_not_disturb})
     }
   end
 end

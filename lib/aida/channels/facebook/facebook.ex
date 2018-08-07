@@ -10,11 +10,11 @@ defmodule Aida.Channel.Facebook do
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
-    bot_id: String.t,
-    page_id: String.t,
-    verify_token: String.t,
-    access_token: String.t
-  }
+          bot_id: String.t(),
+          page_id: String.t(),
+          verify_token: String.t(),
+          access_token: String.t()
+        }
 
   defstruct [:bot_id, :page_id, :verify_token, :access_token]
 
@@ -26,7 +26,8 @@ defmodule Aida.Channel.Facebook do
     %Facebook{}
   end
 
-  @spec find_channel_for_page_id(page_id :: String.t, bot_id :: String.t | nil) :: t | :not_found
+  @spec find_channel_for_page_id(page_id :: String.t(), bot_id :: String.t() | nil) ::
+          t | :not_found
   def find_channel_for_page_id(page_id, bot_id \\ nil)
 
   def find_channel_for_page_id(page_id, nil) do
@@ -37,15 +38,17 @@ defmodule Aida.Channel.Facebook do
     case BotManager.find(bot_id) do
       :not_found ->
         :not_found
+
       bot ->
         bot.channels |> find_channel_in_channels_for_page_id(page_id)
     end
   end
 
   defp find_channel_in_channels_for_page_id(channels, page_id) do
-    case Enum.find(channels, fn (channel) -> Map.get(channel, :page_id) == page_id end) do
-        nil ->
+    case Enum.find(channels, fn channel -> Map.get(channel, :page_id) == page_id end) do
+      nil ->
         :not_found
+
       channel ->
         channel
     end
@@ -60,10 +63,11 @@ defmodule Aida.Channel.Facebook do
     params = conn.params
     mode = params["hub.mode"]
 
-    body = cond do
-      mode == "subscribe" ->  params["hub.challenge"]
-      true -> "error"
-    end
+    body =
+      cond do
+        mode == "subscribe" -> params["hub.challenge"]
+        true -> "error"
+      end
 
     conn
     |> Plug.Conn.send_resp(200, body)
@@ -108,12 +112,12 @@ defmodule Aida.Channel.Facebook do
 
       if params["object"] == "page" && params["entry"] do
         params["entry"]
-          |> Enum.each(fn entry ->
-            entry["messaging"]
-              |> Enum.each(fn message ->
-                handle_message(channel, message)
-              end)
+        |> Enum.each(fn entry ->
+          entry["messaging"]
+          |> Enum.each(fn message ->
+            handle_message(channel, message)
           end)
+        end)
       end
 
       conn
@@ -137,32 +141,44 @@ defmodule Aida.Channel.Facebook do
         sender_id = Session.encrypt_id(sender_id, channel.bot_id)
         recipient_id = message["recipient"]["id"]
 
-        session = Session.find_or_create(channel.bot_id, "facebook", "#{recipient_id}/#{sender_id}")
+        session =
+          Session.find_or_create(channel.bot_id, "facebook", "#{recipient_id}/#{sender_id}")
 
         case message["message"]["text"] do
           nil ->
-            attachment = if message["message"]["attachments"] do
-              Enum.at(message["message"]["attachments"], 0)
-            else
-              %{}
-            end
+            attachment =
+              if message["message"]["attachments"] do
+                Enum.at(message["message"]["attachments"], 0)
+              else
+                %{}
+              end
 
             case attachment["type"] do
               "image" ->
                 source_url =
-                  if (attachment["payload"] && attachment["payload"]["url"]) do
+                  if attachment["payload"] && attachment["payload"]["url"] do
                     attachment["payload"]["url"]
                   else
                     ""
                   end
+
                 try do
                   handle_by_message_type(channel, session, sender_id, :image, source_url)
                 rescue
                   error ->
-                    capture_exception("Error obtaining Facebook image", error, bot_id: channel.bot_id, image: source_url)
+                    capture_exception(
+                      "Error obtaining Facebook image",
+                      error,
+                      bot_id: channel.bot_id,
+                      image: source_url
+                    )
+
                     :ok
                 end
-              nil -> :ok
+
+              nil ->
+                :ok
+
               _ ->
                 handle_by_message_type(channel, session, sender_id, :unknown, "")
             end
@@ -176,12 +192,24 @@ defmodule Aida.Channel.Facebook do
         end
       rescue
         error ->
-          capture_exception("Error processing Facebook message", error, bot_id: channel.bot_id, message: message)
+          capture_exception(
+            "Error processing Facebook message",
+            error,
+            bot_id: channel.bot_id,
+            message: message
+          )
+
           send_message(channel, ["Oops! Something went wrong"], %{provider_key: sender_id})
       end
     end
 
-    @spec handle_by_message_type(Aida.Channel.t, Session.t, String.t, :text | :image | :unknown | :system, String.t) :: :ok
+    @spec handle_by_message_type(
+            Aida.Channel.t(),
+            Session.t(),
+            String.t(),
+            :text | :image | :unknown | :system,
+            String.t()
+          ) :: :ok
     defp handle_by_message_type(channel, session, sender_id, message_type, message_string) do
       bot = BotManager.find(channel.bot_id)
 
@@ -209,14 +237,18 @@ defmodule Aida.Channel.Facebook do
         encrypted = Enum.count(public_keys) > 0
 
         profile =
-          channel.access_token |> FacebookApi.new()
+          channel.access_token
+          |> FacebookApi.new()
           |> FacebookApi.get_profile(Session.decrypt_id(sender_id, bot_id))
 
         message
         |> Message.put_session("first_name", profile["first_name"])
         |> Message.put_session("last_name", profile["last_name"], encrypted: encrypted)
         |> Message.put_session("gender", profile["gender"])
-        |> Message.put_session(".facebook_profile_ts", DateTime.utc_now() |> DateTime.to_iso8601())
+        |> Message.put_session(
+          ".facebook_profile_ts",
+          DateTime.utc_now() |> DateTime.to_iso8601()
+        )
       else
         message
       end
@@ -234,10 +266,12 @@ defmodule Aida.Channel.Facebook do
     end
 
     def send_message(channel, messages, session) do
-      recipient = session.provider_key
+      recipient =
+        session.provider_key
         |> String.split("/")
-        |> List.last
+        |> List.last()
         |> Session.decrypt_id(channel.bot_id)
+
       api = FacebookApi.new(channel.access_token)
 
       Enum.each(messages, fn message ->

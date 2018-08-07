@@ -3,7 +3,8 @@ defmodule Aida.SessionHelper do
     quote do
       alias Aida.DB.Session
 
-      def new_session(id, values, bot_id \\ Ecto.UUID.generate) when is_binary(id) and is_map(values) do
+      def new_session(id, values, bot_id \\ Ecto.UUID.generate())
+          when is_binary(id) and is_map(values) do
         %Session{
           id: id,
           data: values,

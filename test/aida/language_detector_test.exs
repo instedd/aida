@@ -22,7 +22,7 @@ defmodule Aida.LanguageDetectorTest do
   @bot_id "2c20e05c-74e1-4b9b-923f-10b65a82dbd8"
 
   setup do
-    initial_session = new_session(Ecto.UUID.generate, %{})
+    initial_session = new_session(Ecto.UUID.generate(), %{})
     [initial_session: initial_session]
   end
 

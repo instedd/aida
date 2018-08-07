@@ -54,7 +54,9 @@ defmodule Aida.CryptoTest do
     test "Generate random nonce" do
       box = Crypto.Box.build("Hello", @server_pair, [@user1_pk])
       recipient = box.recipients |> hd()
-      data = Kcl.unbox(recipient.encrypted, box.nonce_base <> "0000", @user1_sk, @server_pk) |> elem(0)
+
+      data =
+        Kcl.unbox(recipient.encrypted, box.nonce_base <> "0000", @user1_sk, @server_pk) |> elem(0)
 
       assert "Hello" == data
 
@@ -72,8 +74,20 @@ defmodule Aida.CryptoTest do
           Msgpax.Bin.new(@server_pk),
           Msgpax.Bin.new(@nonce_base),
           [
-            [Msgpax.Bin.new(@user1_pk), Msgpax.Bin.new(Kcl.box("Hello", @nonce_base <> "0000", @server_sk, @user1_pk) |> elem(0))],
-            [Msgpax.Bin.new(@user2_pk), Msgpax.Bin.new(Kcl.box("Hello", @nonce_base <> "0001", @server_sk, @user2_pk) |> elem(0))]
+            [
+              Msgpax.Bin.new(@user1_pk),
+              Msgpax.Bin.new(
+                Kcl.box("Hello", @nonce_base <> "0000", @server_sk, @user1_pk)
+                |> elem(0)
+              )
+            ],
+            [
+              Msgpax.Bin.new(@user2_pk),
+              Msgpax.Bin.new(
+                Kcl.box("Hello", @nonce_base <> "0001", @server_sk, @user2_pk)
+                |> elem(0)
+              )
+            ]
           ]
         ]
         |> Msgpax.pack!(iodata: false)
@@ -113,25 +127,30 @@ defmodule Aida.CryptoTest do
   describe "Crypto helpers" do
     test "Create box" do
       box = Crypto.box("Hello", [@user1_pk])
+
       assert %Crypto.Box{
-        public_key: server_pk,
-        nonce_base: nonce_base,
-        recipients: [%{
-          public_key: @user1_pk,
-          encrypted: data
-        }]
-      } = box
+               public_key: server_pk,
+               nonce_base: nonce_base,
+               recipients: [
+                 %{
+                   public_key: @user1_pk,
+                   encrypted: data
+                 }
+               ]
+             } = box
 
       assert "Hello" == Kcl.unbox(data, nonce_base <> "0000", @user1_sk, server_pk) |> elem(0)
     end
 
     test "Encrypt to json" do
       json = Crypto.encrypt("Hello", [@user1_pk])
+
       assert %{
-        "type" => "encrypted",
-        "version" => "1",
-        "data" => data
-      } = json
+               "type" => "encrypted",
+               "version" => "1",
+               "data" => data
+             } = json
+
       assert {:ok, _} = Base.decode64(data)
     end
 

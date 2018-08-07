@@ -39,18 +39,20 @@ defmodule Aida.Expr.EvalTest do
     end
 
     test "variables" do
-      lookup_fn = fn ("foo") -> 42 end
+      lookup_fn = fn "foo" -> 42 end
       assert eval("${foo}", %Context{var_lookup: lookup_fn}) == 42
+
       assert_raise Aida.Expr.UnknownVariableError, ~r/'foo'/, fn ->
-        eval("${foo}", Context.new)
+        eval("${foo}", Context.new())
       end
     end
 
     test "attributes" do
-      lookup_fn = fn ("foo") -> 42 end
+      lookup_fn = fn "foo" -> 42 end
       assert eval("foo", %Context{attr_lookup: lookup_fn}) == 42
+
       assert_raise Aida.Expr.UnknownAttributeError, ~r/'foo'/, fn ->
-        eval("foo", Context.new)
+        eval("foo", Context.new())
       end
     end
 
@@ -58,18 +60,23 @@ defmodule Aida.Expr.EvalTest do
       assert eval("true()") == true
       assert eval("false()") == false
 
-      lookup_fn = fn ("foo") -> [1, 2, 3] end
+      lookup_fn = fn "foo" -> [1, 2, 3] end
       context = %Context{var_lookup: lookup_fn}
       assert eval("selected(${foo}, 1)", context) == true
       assert eval("selected(${foo}, 'bar')", context) == false
     end
 
     test "custom function calls" do
-      context = %Context{functions: %{"lookup" => fn(_) -> true end}}
+      context = %Context{functions: %{"lookup" => fn _ -> true end}}
       assert eval("lookup()", context) == true
 
-      lookup_fn = fn ("bar") -> [1, 2, 3] end
-      context = %Context{var_lookup: lookup_fn, functions: %{"foo" => fn([bar, n]) -> bar |> Enum.at(n) end}}
+      lookup_fn = fn "bar" -> [1, 2, 3] end
+
+      context = %Context{
+        var_lookup: lookup_fn,
+        functions: %{"foo" => fn [bar, n] -> bar |> Enum.at(n) end}
+      }
+
       assert eval("foo(${bar}, 1)", context) == 2
 
       assert_raise Aida.Expr.UnknownFunctionError, fn ->

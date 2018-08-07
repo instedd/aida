@@ -9,11 +9,11 @@ defmodule Aida.ErrorLog do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "error_logs" do
-    belongs_to :bot, DB.Bot, type: :binary_id
-    belongs_to :session, DB.Session, type: :binary_id
-    field :skill_id, :string
-    field :message, :string
-    timestamps updated_at: false, type: :utc_datetime
+    belongs_to(:bot, DB.Bot, type: :binary_id)
+    belongs_to(:session, DB.Session, type: :binary_id)
+    field(:skill_id, :string)
+    field(:message, :string)
+    timestamps(updated_at: false, type: :utc_datetime)
   end
 
   @doc false

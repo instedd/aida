@@ -9,15 +9,15 @@ defmodule Aida.SurveyQuestionTest do
     %Choice{
       name: "yes",
       labels: %{
-        "en" => ["Yes","Sure","Ok"],
-        "es" => ["Si","OK","Dale"]
+        "en" => ["Yes", "Sure", "Ok"],
+        "es" => ["Si", "OK", "Dale"]
       }
     },
     %Choice{
       name: "no",
       labels: %{
-        "en" => ["No","Nope","Later"],
-        "es" => ["No","Luego","Nop"]
+        "en" => ["No", "Nope", "Later"],
+        "es" => ["No", "Luego", "Nop"]
       }
     }
   ]
@@ -97,7 +97,10 @@ defmodule Aida.SurveyQuestionTest do
   setup do
     session_id = "18723278-0665-454f-98a3-d85cec9a7acd"
     session = new_session(session_id, %{"language" => "en"})
-    session_with_food_type = new_session(session_id, %{"language" => "en", "food_type" => "pasta"})
+
+    session_with_food_type =
+      new_session(session_id, %{"language" => "en", "food_type" => "pasta"})
+
     [session: session, session_with_food_type: session_with_food_type]
   end
 
@@ -123,7 +126,10 @@ defmodule Aida.SurveyQuestionTest do
       assert Question.valid_answer?(question, message) == false
     end
 
-    test "valid_answer? with choice filter", %{session: session, session_with_food_type: session_with_food_type} do
+    test "valid_answer? with choice filter", %{
+      session: session,
+      session_with_food_type: session_with_food_type
+    } do
       question = %SelectQuestion{
         type: :select_one,
         choices: @entrees,
@@ -142,7 +148,9 @@ defmodule Aida.SurveyQuestionTest do
       assert Question.valid_answer?(question, message) == false
     end
 
-    test "valid_answer? with choice filter is case insensitive and ignores trailing spaces", %{session_with_food_type: session_with_food_type} do
+    test "valid_answer? with choice filter is case insensitive and ignores trailing spaces", %{
+      session_with_food_type: session_with_food_type
+    } do
       question = %SelectQuestion{
         type: :select_one,
         choices: @entrees,
@@ -156,7 +164,6 @@ defmodule Aida.SurveyQuestionTest do
 
       message = Message.new("LasagnE", @bot, session_with_food_type)
       assert Question.valid_answer?(question, message) == true
-
     end
 
     test "valid_answer? with choice filter but no attributes", %{session: session} do
@@ -348,7 +355,7 @@ defmodule Aida.SurveyQuestionTest do
       }
 
       message = Message.new("123456", @bot, session)
-      assert Question.accept_answer(question, message) == {:ok, 123456}
+      assert Question.accept_answer(question, message) == {:ok, 123_456}
 
       message = Message.new("1", @bot, session)
       assert Question.accept_answer(question, message) == {:ok, 1}
@@ -388,7 +395,10 @@ defmodule Aida.SurveyQuestionTest do
         }
       }
 
-      with_mock ImageContent, [pull_and_store_image: fn(content, _bot_id, _session_id) -> %ImageContent{source_url: content.source_url, image_id: 8} end] do
+      with_mock ImageContent,
+        pull_and_store_image: fn content, _bot_id, _session_id ->
+          %ImageContent{source_url: content.source_url, image_id: 8}
+        end do
         url = "http://www.foo.bar/?gfe_rd=cr&dcr=0&ei=5x9ZWpjLOY3j8Af5t7OIAw"
 
         message = Message.new_from_image(url, @bot, session)
@@ -409,10 +419,10 @@ defmodule Aida.SurveyQuestionTest do
         headers: [{"Content-Type", "image/png"}]
       }
 
-      with_mock HTTPoison, [get!: fn(_) -> response end] do
+      with_mock HTTPoison, get!: fn _ -> response end do
         image_content = %ImageContent{source_url: url, image_id: nil}
         ImageContent.pull_and_store_image(image_content, bot.id, session.id)
-        assert (Aida.DB.Image |> Aida.Repo.all |> hd).binary_type == "image/png"
+        assert (Aida.DB.Image |> Aida.Repo.all() |> hd).binary_type == "image/png"
       end
     end
   end

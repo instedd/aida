@@ -9,14 +9,14 @@ defmodule Aida.Channel.FacebookTest do
   @page_id "1234567890"
 
   setup do
-    ChannelRegistry.start_link
-    BotManager.start_link
+    ChannelRegistry.start_link()
+    BotManager.start_link()
     :ok
   end
 
   describe "with bot" do
     setup do
-      manifest = File.read!("test/fixtures/valid_manifest_single_lang.json") |> Poison.decode!
+      manifest = File.read!("test/fixtures/valid_manifest_single_lang.json") |> Poison.decode!()
       {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(db_bot.id, manifest)
       BotManager.start(bot)
@@ -48,10 +48,10 @@ defmodule Aida.Channel.FacebookTest do
       page_id: @page_id
     }
 
-    channel |> Channel.start
+    channel |> Channel.start()
     assert Facebook.find_channel_for_page_id(@page_id) == channel
 
-    channel |> Channel.stop
+    channel |> Channel.stop()
     assert Facebook.find_channel_for_page_id(@page_id) == :not_found
   end
 end

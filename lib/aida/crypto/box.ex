@@ -57,7 +57,7 @@ defmodule Aida.Crypto.Box do
 
   defp bin(data), do: Msgpax.Bin.new(data)
 
-  @spec decode(String.t) :: t
+  @spec decode(String.t()) :: t
   def decode(encoded_box) do
     box_data =
       encoded_box

@@ -10,7 +10,7 @@ defmodule Aida.DBTest do
   describe "bots" do
     alias Aida.DB.Bot
 
-    @manifest File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+    @manifest File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
     @updated_manifest %{skills: [], variables: [], channels: []}
 
     @valid_attrs %{manifest: @manifest}
@@ -42,11 +42,11 @@ defmodule Aida.DBTest do
     end
 
     test "create_bot/1 registers bot" do
-      ChannelRegistry.start_link
-      BotManager.start_link
+      ChannelRegistry.start_link()
+      BotManager.start_link()
 
       {:ok, bot} = DB.create_bot(@valid_attrs)
-      BotManager.flush
+      BotManager.flush()
       assert %Aida.Bot{} = BotManager.find(bot.id)
     end
 
@@ -62,8 +62,8 @@ defmodule Aida.DBTest do
     end
 
     test "update_bot/2 notifies the manager about the change" do
-      ChannelRegistry.start_link
-      BotManager.start_link
+      ChannelRegistry.start_link()
+      BotManager.start_link()
 
       bot = bot_fixture()
       BotManager.flush()
@@ -87,8 +87,8 @@ defmodule Aida.DBTest do
     end
 
     test "delete_bot/1 notifies the manager about the change" do
-      ChannelRegistry.start_link
-      BotManager.start_link
+      ChannelRegistry.start_link()
+      BotManager.start_link()
 
       bot = bot_fixture()
       BotManager.flush()
@@ -100,8 +100,8 @@ defmodule Aida.DBTest do
     end
 
     test "deletes associated sessions when deletes a bot" do
-      ChannelRegistry.start_link
-      BotManager.start_link
+      ChannelRegistry.start_link()
+      BotManager.start_link()
       bot = bot_fixture()
       bot2 = bot_fixture()
       BotManager.flush()
@@ -109,47 +109,69 @@ defmodule Aida.DBTest do
       Session.new({bot.id, "facebook", "1234"})
       Session.new({bot2.id, "facebook", "5678"})
 
-      assert (Session |> Repo.all |> Enum.count == 2)
+      assert Session |> Repo.all() |> Enum.count() == 2
 
       DB.delete_bot(bot)
       BotManager.flush()
 
-      assert (Session |> Repo.all |> Enum.count == 1)
+      assert Session |> Repo.all() |> Enum.count() == 1
     end
 
     test "deletes associated skill usage entries when deletes a bot" do
-      ChannelRegistry.start_link
-      BotManager.start_link
+      ChannelRegistry.start_link()
+      BotManager.start_link()
       bot1 = bot_fixture()
       bot2 = bot_fixture()
       BotManager.flush()
 
-      DB.create_or_update_skill_usage(%{bot_id: bot1.id, user_id: "session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
-      DB.create_or_update_skill_usage(%{bot_id: bot2.id, user_id: "other_session_id", last_usage: Date.utc_today(), skill_id: "keyword_responder_1", user_generated: true})
+      DB.create_or_update_skill_usage(%{
+        bot_id: bot1.id,
+        user_id: "session_id",
+        last_usage: Date.utc_today(),
+        skill_id: "keyword_responder_1",
+        user_generated: true
+      })
 
-      assert (SkillUsage |> Repo.all |> Enum.count == 2)
+      DB.create_or_update_skill_usage(%{
+        bot_id: bot2.id,
+        user_id: "other_session_id",
+        last_usage: Date.utc_today(),
+        skill_id: "keyword_responder_1",
+        user_generated: true
+      })
+
+      assert SkillUsage |> Repo.all() |> Enum.count() == 2
 
       DB.delete_bot(bot1)
       BotManager.flush()
 
-      assert (SkillUsage |> Repo.all |> Enum.count == 1)
+      assert SkillUsage |> Repo.all() |> Enum.count() == 1
     end
 
     test "deletes associated messages per day entries when deletes a bot" do
-      ChannelRegistry.start_link
-       BotManager.start_link
-       bot1 = bot_fixture()
-       bot2 = bot_fixture()
-       BotManager.flush()
+      ChannelRegistry.start_link()
+      BotManager.start_link()
+      bot1 = bot_fixture()
+      bot2 = bot_fixture()
+      BotManager.flush()
 
-       DB.create_or_update_messages_per_day_received(%{bot_id: bot1.id, day: Date.utc_today(), received_messages: 1})
-       DB.create_or_update_messages_per_day_received(%{bot_id: bot2.id, day: Date.utc_today(), received_messages: 1})
+      DB.create_or_update_messages_per_day_received(%{
+        bot_id: bot1.id,
+        day: Date.utc_today(),
+        received_messages: 1
+      })
 
-       assert (MessagesPerDay |> Repo.all |> Enum.count == 2)
-       DB.delete_bot(bot1)
-       BotManager.flush()
+      DB.create_or_update_messages_per_day_received(%{
+        bot_id: bot2.id,
+        day: Date.utc_today(),
+        received_messages: 1
+      })
 
-       assert (MessagesPerDay |> Repo.all |> Enum.count == 1)
+      assert MessagesPerDay |> Repo.all() |> Enum.count() == 2
+      DB.delete_bot(bot1)
+      BotManager.flush()
+
+      assert MessagesPerDay |> Repo.all() |> Enum.count() == 1
     end
 
     test "change_bot/1 returns a bot changeset" do
@@ -158,14 +180,16 @@ defmodule Aida.DBTest do
     end
 
     test "get_session/1 returns nil if the session doesn't exist" do
-      assert Session.get(Ecto.UUID.generate) == nil
+      assert Session.get(Ecto.UUID.generate()) == nil
     end
 
     test "get_session/1 returns the session with the given id" do
       bot = bot_fixture()
-      session = Session.new({bot.id, @provider, @provider_key})
+
+      session =
+        Session.new({bot.id, @provider, @provider_key})
         |> Session.merge(%{"foo" => 1, "bar" => 2})
-        |> Session.save
+        |> Session.save()
 
       session = Session.get(session.id)
       assert session.bot_id == bot.id
@@ -176,13 +200,15 @@ defmodule Aida.DBTest do
 
     test "replaces existing session" do
       bot = bot_fixture()
-      s1 = Session.new({bot.id, @provider, @provider_key})
+
+      s1 =
+        Session.new({bot.id, @provider, @provider_key})
         |> Session.merge(%{"foo" => 1, "bar" => 2})
-        |> Session.save
+        |> Session.save()
 
       Session.find_or_create(bot.id, @provider, @provider_key)
-        |> Session.merge(%{"foo" => 3, "bar" => 4})
-        |> Session.save
+      |> Session.merge(%{"foo" => 3, "bar" => 4})
+      |> Session.save()
 
       session = Session.get(s1.id)
       assert session.id == s1.id
@@ -195,8 +221,8 @@ defmodule Aida.DBTest do
     test "get sessions by bot" do
       bot = bot_fixture()
       other_bot = bot_fixture()
-      Session.new({bot.id, @provider, @provider_key}) |> Session.save
-      Session.new({other_bot.id, @provider, "4321/9876"}) |> Session.save
+      Session.new({bot.id, @provider, @provider_key}) |> Session.save()
+      Session.new({other_bot.id, @provider, "4321/9876"}) |> Session.save()
 
       s1 = Session.find_or_create(bot.id, @provider, @provider_key)
       sessions = Session.sessions_by_bot(bot.id)
@@ -206,8 +232,8 @@ defmodule Aida.DBTest do
     test "delete_session/1 deletes a session" do
       bot = bot_fixture()
       other_bot = bot_fixture()
-      s1 = Session.new({bot.id, @provider, @provider_key}) |> Session.save
-      s2 = Session.new({other_bot.id, @provider, @provider_key}) |> Session.save
+      s1 = Session.new({bot.id, @provider, @provider_key}) |> Session.save()
+      s2 = Session.new({other_bot.id, @provider, @provider_key}) |> Session.save()
 
       Session.delete(s1.id)
       assert Session.get(s1.id) == nil
@@ -221,9 +247,32 @@ defmodule Aida.DBTest do
       session_id_2 = "facebook/0123456789/0987654321"
       skill_id = "language_detector"
 
-      {:ok, skill_usage} = DB.create_or_update_skill_usage(%{bot_id: bot_id, user_id: session_id, last_usage: Date.add(Date.utc_today(), -2), skill_id: skill_id, user_generated: true})
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(%{bot_id: bot_id, user_id: session_id_2, last_usage: Date.add(Date.utc_today(), -2), skill_id: skill_id, user_generated: true})
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(%{bot_id: bot_id, user_id: session_id, last_usage: Date.utc_today(), skill_id: skill_id, user_generated: true})
+      {:ok, skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: Date.add(Date.utc_today(), -2),
+          skill_id: skill_id,
+          user_generated: true
+        })
+
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(Date.utc_today(), -2),
+          skill_id: skill_id,
+          user_generated: true
+        })
+
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: Date.utc_today(),
+          skill_id: skill_id,
+          user_generated: true
+        })
 
       db_skill_usage = DB.get_skill_usage(skill_usage.id)
       assert db_skill_usage.bot_id == bot_id
@@ -244,50 +293,81 @@ defmodule Aida.DBTest do
       skill_id_3 = "keyword_2"
       {:ok, today} = Date.from_iso8601("2017-12-12")
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(today, -(today.day-1)),
-        skill_id: skill_id_3, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: Date.add(today, -(today.day - 1)),
+          skill_id: skill_id_3,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id_2, user_id: session_id,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id_2,
+          user_id: session_id,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id_3, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id_3,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id_2, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id_2,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id_2, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id_2,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id,
-        last_usage: today,
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: today,
+          skill_id: skill_id,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_3,
-        last_usage: today,
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_3,
+          last_usage: today,
+          skill_id: skill_id,
+          user_generated: true
+        })
 
       assert Enum.count(DB.list_skill_usages()) == 8
 
-      skill_usages_today =
-        DB.skill_usages_per_user_bot_and_period(bot_id, "today", today)
+      skill_usages_today = DB.skill_usages_per_user_bot_and_period(bot_id, "today", today)
 
       assert Enum.count(skill_usages_today) == 1
       assert skill_usages_today == [%{count: 2, skill_id: "language_detector"}]
@@ -297,22 +377,24 @@ defmodule Aida.DBTest do
         |> Enum.sort(&(&1.skill_id < &2.skill_id))
 
       assert Enum.count(skill_usages_this_week) == 3
+
       assert skill_usages_this_week == [
-        %{count: 2, skill_id: "keyword_1"},
-        %{count: 1, skill_id: "keyword_2"},
-        %{count: 3, skill_id: "language_detector"}
-      ]
+               %{count: 2, skill_id: "keyword_1"},
+               %{count: 1, skill_id: "keyword_2"},
+               %{count: 3, skill_id: "language_detector"}
+             ]
 
       skill_usages_this_month =
         DB.skill_usages_per_user_bot_and_period(bot_id, "this_month", today)
         |> Enum.sort(&(&1.skill_id < &2.skill_id))
 
       assert Enum.count(skill_usages_this_month) == 3
+
       assert skill_usages_this_month == [
-        %{count: 2, skill_id: "keyword_1"},
-        %{count: 2, skill_id: "keyword_2"},
-        %{count: 3, skill_id: "language_detector"}
-      ]
+               %{count: 2, skill_id: "keyword_1"},
+               %{count: 2, skill_id: "keyword_2"},
+               %{count: 3, skill_id: "language_detector"}
+             ]
     end
 
     test "active_users_per_bot_and_period/2 returns the active users for a bot" do
@@ -329,76 +411,116 @@ defmodule Aida.DBTest do
       skill_id_3 = "keyword_2"
       {:ok, today} = Date.from_iso8601("2017-12-12")
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_4,
-        last_usage: Date.add(today, -(today.day-1)),
-        skill_id: skill_id_3, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_4,
+          last_usage: Date.add(today, -(today.day - 1)),
+          skill_id: skill_id_3,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(today, -(today.day-1)),
-        skill_id: skill_id_3, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: Date.add(today, -(today.day - 1)),
+          skill_id: skill_id_3,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id_2, user_id: session_id,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id_2,
+          user_id: session_id,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id_3, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id_3,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_2,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id_2, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_2,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id_2,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id,
-        last_usage: Date.add(today, -Date.day_of_week(today)),
-        skill_id: skill_id_2, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: Date.add(today, -Date.day_of_week(today)),
+          skill_id: skill_id_2,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id,
-        last_usage: today,
-        skill_id: skill_id, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id,
+          last_usage: today,
+          skill_id: skill_id,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_3,
-        last_usage: today,
-        skill_id: skill_id_2, user_generated: true})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_3,
+          last_usage: today,
+          skill_id: skill_id_2,
+          user_generated: true
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_5,
-        last_usage: today,
-        skill_id: skill_id_2, user_generated: false})
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_5,
+          last_usage: today,
+          skill_id: skill_id_2,
+          user_generated: false
+        })
 
-      {:ok, _skill_usage} = DB.create_or_update_skill_usage(
-        %{bot_id: bot_id, user_id: session_id_3,
-        last_usage: today,
-        skill_id: skill_id, user_generated: true})
-
+      {:ok, _skill_usage} =
+        DB.create_or_update_skill_usage(%{
+          bot_id: bot_id,
+          user_id: session_id_3,
+          last_usage: today,
+          skill_id: skill_id,
+          user_generated: true
+        })
 
       assert Enum.count(DB.list_skill_usages()) == 11
 
       active_users_today = DB.active_users_per_bot_and_period(bot_id, "today", today)
       assert Enum.count(active_users_today) == 2
 
-
       active_users_this_week = DB.active_users_per_bot_and_period(bot_id, "this_week", today)
       assert Enum.count(active_users_this_week) == 3
-
 
       active_users_this_month = DB.active_users_per_bot_and_period(bot_id, "this_month", today)
       assert Enum.count(active_users_this_month) == 4
     end
-
 
     test "create_or_update_messages_per_day_received/1 increments existing messages_per_day with the proper count" do
       {:ok, bot} = DB.create_bot(%{manifest: %{}})
@@ -416,17 +538,14 @@ defmodule Aida.DBTest do
       DB.create_or_update_messages_per_day_received(changeset_2)
       DB.create_or_update_messages_per_day_received(changeset_2)
 
-
       db_messages_per_day = DB.get_messages_per_day(messages_per_day.id)
       assert db_messages_per_day.received_messages == 4
 
       db_messages_per_day_2 = DB.get_messages_per_day(messages_per_day_2.id)
       assert db_messages_per_day_2.received_messages == 3
 
-
       assert Enum.count(DB.list_messages_per_day()) == 2
     end
-
 
     test "create_or_update_messages_per_day_sent/1 increments existing messages_per_day with the proper count" do
       {:ok, bot} = DB.create_bot(%{manifest: %{}})
@@ -445,17 +564,14 @@ defmodule Aida.DBTest do
       DB.create_or_update_messages_per_day_sent(changeset_2)
       DB.create_or_update_messages_per_day_sent(changeset_2)
 
-
       db_messages_per_day = DB.get_messages_per_day(messages_per_day.id)
       assert db_messages_per_day.sent_messages == 3
 
       db_messages_per_day_2 = DB.get_messages_per_day(messages_per_day_2.id)
       assert db_messages_per_day_2.sent_messages == 5
 
-
       assert Enum.count(DB.list_messages_per_day()) == 2
     end
-
 
     test "get_bot_messages_per_day_for_period/3 returns the proper count for a bot in a certain period" do
       {:ok, bot} = DB.create_bot(%{manifest: %{}})
@@ -479,7 +595,6 @@ defmodule Aida.DBTest do
       DB.create_or_update_messages_per_day_received(changeset_3)
       DB.create_or_update_messages_per_day_received(changeset_3)
       DB.create_or_update_messages_per_day_received(changeset_3)
-
 
       bot_messages_per_day = DB.get_bot_messages_per_day_for_period(bot_id, "this_week")
 

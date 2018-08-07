@@ -13,6 +13,7 @@ defmodule Aida.Bot do
     Variable,
     FrontDesk
   }
+
   alias Aida.Message.SystemContent
   alias Aida.DB.Session
 
@@ -23,16 +24,16 @@ defmodule Aida.Bot do
   @type message :: map
 
   @type t :: %__MODULE__{
-    id: String.t,
-    languages: [String.t],
-    notifications_url: String.t,
-    front_desk: FrontDesk.t,
-    skills: [Skill.t],
-    variables: [Variable.t],
-    channels: [Channel.t],
-    public_keys: [binary],
-    data_tables: [DataTable.t]
-  }
+          id: String.t(),
+          languages: [String.t()],
+          notifications_url: String.t(),
+          front_desk: FrontDesk.t(),
+          skills: [Skill.t()],
+          variables: [Variable.t()],
+          channels: [Channel.t()],
+          public_keys: [binary],
+          data_tables: [DataTable.t()]
+        }
 
   defstruct id: nil,
             languages: [],
@@ -46,22 +47,23 @@ defmodule Aida.Bot do
 
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do
-    skills = bot.skills
-      |> Enum.map(fn(skill) ->
+    skills =
+      bot.skills
+      |> Enum.map(fn skill ->
         Skill.init(skill, bot)
       end)
 
     {:ok, %{bot | skills: skills}}
   end
 
-  @spec wake_up(bot :: t, skill_id :: String.t, data :: nil | String.t) :: :ok
+  @spec wake_up(bot :: t, skill_id :: String.t(), data :: nil | String.t()) :: :ok
   def wake_up(%Bot{} = bot, skill_id, data \\ nil) do
     find_skill(bot, skill_id)
-      |> Skill.wake_up(bot, data)
+    |> Skill.wake_up(bot, data)
   end
 
-  @spec chat(message :: Message.t) :: Message.t
-  def chat(%Message{ content: %SystemContent{text: text}, session: session, bot: bot } = message) do
+  @spec chat(message :: Message.t()) :: Message.t()
+  def chat(%Message{content: %SystemContent{text: text}, session: session, bot: bot} = message) do
     case text do
       "##RESET" ->
         Session.delete(session.id)
@@ -74,8 +76,9 @@ defmodule Aida.Bot do
         Bot.chat(Message.new(text, bot, session))
     end
   end
+
   def chat(%Message{} = message) do
-    ErrorLog.context(bot_id: message.bot.id, session_id: message.session.id) do
+    ErrorLog.context bot_id: message.bot.id, session_id: message.session.id do
       message
       |> Message.set_session_do_not_disturb!(false)
       |> reset_language_if_invalid()
@@ -89,7 +92,7 @@ defmodule Aida.Bot do
     end
   end
 
-  defp policy_enforcement_message("block", %{"reason" => reason }) do
+  defp policy_enforcement_message("block", %{"reason" => reason}) do
     "Policy Enforcement Notification - Bot has been blocked.\n\n#{reason}"
   end
 
@@ -98,31 +101,43 @@ defmodule Aida.Bot do
   end
 
   defp post_notification(notifications_url, notification_type, data) do
-    case HTTPoison.post(notifications_url, %{
-      type: notification_type,
-      data: data
-    } |> Poison.encode!) do
-      {:ok, %{status_code: 200}} -> :ok
-      non_success -> ErrorHandler.capture_message(
-        "Error posting notification to remote endpoint",
-        %{
-          notifications_url: notifications_url,
-          notification_type: notification_type,
-          notification_data: data,
-          response_error: non_success
-        }
-      )
+    case HTTPoison.post(
+           notifications_url,
+           %{
+             type: notification_type,
+             data: data
+           }
+           |> Poison.encode!()
+         ) do
+      {:ok, %{status_code: 200}} ->
+        :ok
+
+      non_success ->
+        ErrorHandler.capture_message(
+          "Error posting notification to remote endpoint",
+          %{
+            notifications_url: notifications_url,
+            notification_type: notification_type,
+            notification_data: data,
+            response_error: non_success
+          }
+        )
     end
   end
 
   defp log_error_if_needed(_bot_id, %{"action" => "unblock"}), do: :ok
+
   defp log_error_if_needed(bot_id, %{"action" => action} = policy_enforcement_data) do
-    ErrorLog.context(bot_id: bot_id) do
+    ErrorLog.context bot_id: bot_id do
       ErrorLog.write(policy_enforcement_message(action, policy_enforcement_data))
     end
   end
 
-  def notify(%{id: bot_id, notifications_url: notifications_url}, :policy_enforcement, policy_enforcement_data) do
+  def notify(
+        %{id: bot_id, notifications_url: notifications_url},
+        :policy_enforcement,
+        policy_enforcement_data
+      ) do
     log_error_if_needed(bot_id, policy_enforcement_data)
     post_notification(notifications_url, :policy_enforcement, policy_enforcement_data)
   end
@@ -194,7 +209,7 @@ defmodule Aida.Bot do
   end
 
   defp save_session(message) do
-    message.session |> Session.save
+    message.session |> Session.save()
     message
   end
 
@@ -224,37 +239,40 @@ defmodule Aida.Bot do
 
   defp choose_language_for_single_language_bot(message) do
     if !Message.language(message) && Enum.count(message.bot.languages) == 1 do
-      Message.put_session(message, "language", message.bot.languages |> List.first)
+      Message.put_session(message, "language", message.bot.languages |> List.first())
     else
       message
     end
   end
 
   defp handle(message) do
-    skills_sorted = [message.bot.front_desk | relevant_skills(message)]
+    skills_sorted =
+      [message.bot.front_desk | relevant_skills(message)]
       |> Enum.map(&evaluate_confidence(&1, message))
       |> Enum.reject(&is_nil/1)
       |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
 
     case skills_sorted do
       [] ->
-        ErrorLog.context(skill_id: "front_desk") do
+        ErrorLog.context skill_id: "front_desk" do
           if Message.new_session?(message) do
             message |> FrontDesk.greet()
           else
             message |> FrontDesk.not_understood()
           end
         end
+
       skills ->
         higher_confidence_skill = Enum.at(skills, 0)
 
-        difference = case Enum.count(skills) do
-          1 -> higher_confidence_skill.confidence
-          _ -> higher_confidence_skill.confidence - Enum.at(skills, 1).confidence
-        end
+        difference =
+          case Enum.count(skills) do
+            1 -> higher_confidence_skill.confidence
+            _ -> higher_confidence_skill.confidence - Enum.at(skills, 1).confidence
+          end
 
         if threshold(message.bot) <= difference do
-          ErrorLog.context(skill_id: Skill.id(higher_confidence_skill.skill)) do
+          ErrorLog.context skill_id: Skill.id(higher_confidence_skill.skill) do
             message =
               Enum.reject(message.bot.skills, fn skill ->
                 skill == higher_confidence_skill.skill
@@ -264,8 +282,8 @@ defmodule Aida.Bot do
             Skill.respond(higher_confidence_skill.skill, message)
           end
         else
-          ErrorLog.context(skill_id: "front_desk") do
-            message |> FrontDesk.clarification(Enum.map(skills, fn(skill) -> skill.skill end))
+          ErrorLog.context skill_id: "front_desk" do
+            message |> FrontDesk.clarification(Enum.map(skills, fn skill -> skill.skill end))
           end
         end
     end
@@ -282,39 +300,44 @@ defmodule Aida.Bot do
 
   defp evaluate_confidence(skill, message) do
     confidence = Skill.confidence(skill, message)
+
     case confidence do
       :threshold ->
         %{confidence: threshold(message.bot), skill: skill}
+
       confidence when confidence > 0 ->
         %{confidence: confidence, skill: skill}
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
   def relevant_skills(message) do
     message.bot.skills
-      |> Enum.filter(&Skill.is_relevant?(&1, message))
-      |> Enum.filter(fn
-        %Skill.LanguageDetector{} -> true
-        _ -> Session.get_value(message.session, "language") != nil
-      end)
+    |> Enum.filter(&Skill.is_relevant?(&1, message))
+    |> Enum.filter(fn
+      %Skill.LanguageDetector{} -> true
+      _ -> Session.get_value(message.session, "language") != nil
+    end)
   end
 
   defp find_skill(bot, skill_id) do
-    skills = bot.skills
-      |> Enum.filter(fn(skill) ->
+    skills =
+      bot.skills
+      |> Enum.filter(fn skill ->
         Skill.id(skill) == skill_id
       end)
 
     case skills do
       [skill] -> skill
-      [] -> Logger.info "Skill not found #{skill_id}"
-      _ -> Logger.info "Duplicated skill id #{skill_id}"
+      [] -> Logger.info("Skill not found #{skill_id}")
+      _ -> Logger.info("Duplicated skill id #{skill_id}")
     end
   end
 
   def threshold(%Bot{front_desk: front_desk}) do
-    front_desk |> FrontDesk.threshold
+    front_desk |> FrontDesk.threshold()
   end
 
   def lookup_var(%Bot{variables: variables}, message, key) do
@@ -328,7 +351,7 @@ defmodule Aida.Bot do
   end
 
   def expr_context(bot, context, _options) do
-    Aida.Expr.Context.add_function(context, "lookup", fn([key, table_name, value_column]) ->
+    Aida.Expr.Context.add_function(context, "lookup", fn [key, table_name, value_column] ->
       case DataTable.lookup(bot.data_tables, key, table_name, value_column) do
         {:error, reason} ->
           Logger.warn(reason)
@@ -356,5 +379,4 @@ defmodule Aida.Bot do
     channel = ChannelProvider.find_channel(session)
     channel |> Channel.send_message(message.reply, session)
   end
-
 end

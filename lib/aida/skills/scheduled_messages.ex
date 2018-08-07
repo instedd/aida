@@ -6,9 +6,9 @@ defmodule Aida.Skill.ScheduledMessages do
 
   defmodule DelayedMessage do
     @type t :: %__MODULE__{
-      delay: pos_integer,
-      message: Aida.Bot.message
-    }
+            delay: pos_integer,
+            message: Aida.Bot.message()
+          }
 
     defstruct delay: 1,
               message: %{}
@@ -16,32 +16,32 @@ defmodule Aida.Skill.ScheduledMessages do
 
   defmodule FixedTimeMessage do
     @type t :: %__MODULE__{
-      schedule: DateTime.t,
-      message: Aida.Bot.message
-    }
+            schedule: DateTime.t(),
+            message: Aida.Bot.message()
+          }
 
-    defstruct schedule: DateTime.utc_now,
+    defstruct schedule: DateTime.utc_now(),
               message: %{}
   end
 
   defmodule RecurrentMessage do
     @type t :: %__MODULE__{
-      recurrence: Recurrence.t,
-      message: Aida.Bot.message
-    }
+            recurrence: Recurrence.t(),
+            message: Aida.Bot.message()
+          }
 
     defstruct recurrence: nil,
               message: %{}
   end
 
   @type t :: %__MODULE__{
-    id: String.t,
-    bot_id: String.t,
-    name: String.t,
-    schedule_type: :since_last_incoming_message | :fixed_time,
-    relevant: nil | Aida.Expr.t,
-    messages: [DelayedMessage.t | FixedTimeMessage.t]
-  }
+          id: String.t(),
+          bot_id: String.t(),
+          name: String.t(),
+          schedule_type: :since_last_incoming_message | :fixed_time,
+          relevant: nil | Aida.Expr.t(),
+          messages: [DelayedMessage.t() | FixedTimeMessage.t()]
+        }
 
   defstruct id: "",
             bot_id: "",
@@ -59,7 +59,7 @@ defmodule Aida.Skill.ScheduledMessages do
 
   Either elements of the tuple could be `nil`.
   """
-  @spec find_enclosing_messages(t, number) :: {nil | DelayedMessage.t, nil | DelayedMessage.t}
+  @spec find_enclosing_messages(t, number) :: {nil | DelayedMessage.t(), nil | DelayedMessage.t()}
   def find_enclosing_messages(skill, delay) do
     find_enclosing_messages(skill.messages, delay, nil)
   end
@@ -78,24 +78,26 @@ defmodule Aida.Skill.ScheduledMessages do
 
   defimpl Aida.Skill, for: __MODULE__ do
     def init(%{schedule_type: :since_last_incoming_message, messages: messages} = skill, _bot) do
-      messages = messages |> Enum.sort_by(&(&1.delay))
+      messages = messages |> Enum.sort_by(& &1.delay)
       %{skill | messages: messages}
     end
 
     def init(%{schedule_type: :fixed_time, messages: [message | _]} = skill, bot) do
-      if DateTime.compare(message.schedule, DateTime.utc_now) == :gt do
+      if DateTime.compare(message.schedule, DateTime.utc_now()) == :gt do
         BotManager.schedule_wake_up(bot, skill, message.schedule)
       end
+
       skill
     end
 
     def init(%{schedule_type: :recurrent, messages: messages} = skill, bot) do
       messages
-      |> Enum.with_index
+      |> Enum.with_index()
       |> Enum.each(fn {message, index} ->
-        next = message.recurrence |> Recurrence.next
+        next = message.recurrence |> Recurrence.next()
         BotManager.schedule_wake_up(bot, skill, index |> to_string, next)
       end)
+
       skill
     end
 
@@ -117,18 +119,28 @@ defmodule Aida.Skill.ScheduledMessages do
           Bot.send_message(message)
         rescue
           error ->
-            capture_exception("Error sending scheduled message", error, bot_id: bot.id, skill_id: skill.id, session_id: session_id)
+            capture_exception(
+              "Error sending scheduled message",
+              error,
+              bot_id: bot.id,
+              skill_id: skill.id,
+              session_id: session_id
+            )
         end
 
         SkillUsage.log_skill_usage(bot.id, Skill.id(skill), session_id, false)
       end
     end
 
-    def wake_up(%{schedule_type: :since_last_incoming_message} = skill, bot, session_id) when is_binary(session_id) do
+    def wake_up(%{schedule_type: :since_last_incoming_message} = skill, bot, session_id)
+        when is_binary(session_id) do
       last_activity_ts = MessageLog.get_last_incoming(bot.id, session_id)
+
       if last_activity_ts do
-        last_activity_delay = DateTime.diff(DateTime.utc_now, last_activity_ts)
-        {current_message, next_message} = ScheduledMessages.find_enclosing_messages(skill, last_activity_delay / 60)
+        last_activity_delay = DateTime.diff(DateTime.utc_now(), last_activity_ts)
+
+        {current_message, next_message} =
+          ScheduledMessages.find_enclosing_messages(skill, last_activity_delay / 60)
 
         if current_message do
           send_message(skill, bot, session_id, current_message.message)
@@ -152,12 +164,13 @@ defmodule Aida.Skill.ScheduledMessages do
     def wake_up(%{schedule_type: :recurrent, messages: messages} = skill, bot, message_index) do
       message_index = String.to_integer(message_index)
       recurrent_message = messages |> Enum.at(message_index)
+
       Session.session_ids_by_bot(bot.id)
       |> Enum.each(fn session_id ->
         send_message(skill, bot, session_id, recurrent_message.message)
       end)
 
-      next = recurrent_message.recurrence |> Recurrence.next
+      next = recurrent_message.recurrence |> Recurrence.next()
       BotManager.schedule_wake_up(bot, skill, message_index |> to_string, next)
     end
 
@@ -177,11 +190,16 @@ defmodule Aida.Skill.ScheduledMessages do
       message
     end
 
-    def confidence(%ScheduledMessages{schedule_type: :since_last_incoming_message} = skill, message) do
-      first_message_delay = skill.messages
+    def confidence(
+          %ScheduledMessages{schedule_type: :since_last_incoming_message} = skill,
+          message
+        ) do
+      first_message_delay =
+        skill.messages
         |> Enum.map(fn %DelayedMessage{delay: delay} -> delay end)
         |> Enum.min()
-      wake_up_ts = Timex.shift(DateTime.utc_now, minutes: first_message_delay)
+
+      wake_up_ts = Timex.shift(DateTime.utc_now(), minutes: first_message_delay)
 
       BotManager.schedule_wake_up(message.bot, skill, message.session.id, wake_up_ts)
 

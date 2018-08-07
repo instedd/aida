@@ -37,7 +37,8 @@ defmodule Aida.DataTable do
   end
 
   defp find_table_row(table, key, key_column_index) do
-    case table.data |> Enum.find(fn row -> compare_key(row |> Enum.at(key_column_index), key) end) do
+    case table.data
+         |> Enum.find(fn row -> compare_key(row |> Enum.at(key_column_index), key) end) do
       nil -> {:error, "Row not found with key: #{key}"}
       row -> {:ok, row}
     end

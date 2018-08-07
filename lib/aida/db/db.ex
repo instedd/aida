@@ -58,9 +58,10 @@ defmodule Aida.DB do
 
   """
   def create_bot(attrs \\ %{}) do
-    result = %Bot{}
-    |> Bot.changeset(attrs)
-    |> Repo.insert()
+    result =
+      %Bot{}
+      |> Bot.changeset(attrs)
+      |> Repo.insert()
 
     case result do
       {:ok, bot} -> PubSub.broadcast(bot_created: bot.id)
@@ -83,9 +84,10 @@ defmodule Aida.DB do
 
   """
   def update_bot(%Bot{} = bot, attrs) do
-    result = bot
-    |> Bot.changeset(attrs)
-    |> Repo.update()
+    result =
+      bot
+      |> Bot.changeset(attrs)
+      |> Repo.update()
 
     case result do
       {:ok, bot} -> PubSub.broadcast(bot_updated: bot.id)
@@ -142,11 +144,11 @@ defmodule Aida.DB do
     date = convert_period(period, today)
 
     SkillUsage
-      |> group_by([s], [s.skill_id])
-      |> select([s], %{skill_id: s.skill_id, count: count(s.user_id)})
-      |> where([s], s.last_usage >= ^date)
-      |> where([s], s.bot_id == ^bot_id)
-      |> Repo.all()
+    |> group_by([s], [s.skill_id])
+    |> select([s], %{skill_id: s.skill_id, count: count(s.user_id)})
+    |> where([s], s.last_usage >= ^date)
+    |> where([s], s.bot_id == ^bot_id)
+    |> Repo.all()
   end
 
   @doc """
@@ -156,12 +158,12 @@ defmodule Aida.DB do
     date = convert_period(period, today)
 
     SkillUsage
-      |> distinct(true)
-      |> select([s], {s.user_id})
-      |> where([s], s.last_usage >= ^date)
-      |> where([s], s.bot_id == ^bot_id)
-      |> where([s], s.user_generated == true)
-      |> Repo.all()
+    |> distinct(true)
+    |> select([s], {s.user_id})
+    |> where([s], s.last_usage >= ^date)
+    |> where([s], s.bot_id == ^bot_id)
+    |> where([s], s.user_generated == true)
+    |> Repo.all()
   end
 
   def convert_period(period, today) do
@@ -193,9 +195,10 @@ defmodule Aida.DB do
 
   """
   def create_skill_usage(attrs \\ %{}) do
-    result = %SkillUsage{}
-    |> SkillUsage.changeset(attrs)
-    |> Repo.insert()
+    result =
+      %SkillUsage{}
+      |> SkillUsage.changeset(attrs)
+      |> Repo.insert()
 
     result
   end
@@ -213,9 +216,13 @@ defmodule Aida.DB do
 
   """
   def create_or_update_skill_usage(attrs) do
-    result = %SkillUsage{}
-    |> SkillUsage.changeset(attrs)
-    |> Repo.insert(on_conflict: [set: [last_usage: attrs.last_usage]], conflict_target: [:bot_id, :user_id, :skill_id, :user_generated])
+    result =
+      %SkillUsage{}
+      |> SkillUsage.changeset(attrs)
+      |> Repo.insert(
+        on_conflict: [set: [last_usage: attrs.last_usage]],
+        conflict_target: [:bot_id, :user_id, :skill_id, :user_generated]
+      )
 
     result
   end
@@ -233,9 +240,10 @@ defmodule Aida.DB do
 
   """
   def update_skill_usage(%SkillUsage{} = skill_usage, attrs) do
-    result = skill_usage
-    |> SkillUsage.changeset(attrs)
-    |> Repo.update()
+    result =
+      skill_usage
+      |> SkillUsage.changeset(attrs)
+      |> Repo.update()
 
     result
   end
@@ -253,9 +261,10 @@ defmodule Aida.DB do
 
   """
   def create_or_update_messages_per_day_received(attrs) do
-    result = %MessagesPerDay{}
-    |> MessagesPerDay.changeset(attrs)
-    |> Repo.insert(on_conflict: [inc: [received_messages: 1]], conflict_target: [:bot_id, :day])
+    result =
+      %MessagesPerDay{}
+      |> MessagesPerDay.changeset(attrs)
+      |> Repo.insert(on_conflict: [inc: [received_messages: 1]], conflict_target: [:bot_id, :day])
 
     result
   end
@@ -273,9 +282,10 @@ defmodule Aida.DB do
 
   """
   def create_or_update_messages_per_day_sent(attrs) do
-    result = %MessagesPerDay{}
-    |> MessagesPerDay.changeset(attrs)
-    |> Repo.insert(on_conflict: [inc: [sent_messages: 1]], conflict_target: [:bot_id, :day])
+    result =
+      %MessagesPerDay{}
+      |> MessagesPerDay.changeset(attrs)
+      |> Repo.insert(on_conflict: [inc: [sent_messages: 1]], conflict_target: [:bot_id, :day])
 
     result
   end
@@ -298,10 +308,13 @@ defmodule Aida.DB do
     date = convert_period(period, today)
 
     MessagesPerDay
-      |> select([s], %{received_messages: fragment("coalesce(?, 0)", sum(s.received_messages)), sent_messages: fragment("coalesce(?, 0)", sum(s.sent_messages))})
-      |> where([s], s.day >= ^date)
-      |> where([s], s.bot_id == ^bot_id)
-      |> Repo.all()
+    |> select([s], %{
+      received_messages: fragment("coalesce(?, 0)", sum(s.received_messages)),
+      sent_messages: fragment("coalesce(?, 0)", sum(s.sent_messages))
+    })
+    |> where([s], s.day >= ^date)
+    |> where([s], s.bot_id == ^bot_id)
+    |> Repo.all()
   end
 
   @doc """
@@ -340,9 +353,10 @@ defmodule Aida.DB do
 
   """
   def create_image(attrs \\ %{}) do
-    result = %Image{}
-    |> Image.changeset(attrs)
-    |> Repo.insert()
+    result =
+      %Image{}
+      |> Image.changeset(attrs)
+      |> Repo.insert()
 
     # case result do
     #   {:ok, image} -> PubSub.broadcast(image_created: image.id)

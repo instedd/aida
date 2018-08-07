@@ -5,9 +5,9 @@ defmodule AidaWeb.BotController do
   alias Aida.DB.Bot
   alias Aida.{JsonSchema, BotParser}
 
-  action_fallback AidaWeb.FallbackController
+  action_fallback(AidaWeb.FallbackController)
 
-  plug :validate_params when action in [:create, :update]
+  plug(:validate_params when action in [:create, :update])
 
   def index(conn, _params) do
     bots = DB.list_bots()
@@ -38,6 +38,7 @@ defmodule AidaWeb.BotController do
 
   def delete(conn, %{"id" => id}) do
     bot = DB.get_bot!(id)
+
     with {:ok, %Bot{}} <- DB.delete_bot(bot) do
       send_resp(conn, :no_content, "")
     end
@@ -46,23 +47,31 @@ defmodule AidaWeb.BotController do
   defp validate_params(conn, _params) do
     manifest = conn.params["bot"]["manifest"]
 
-    manifest = if (is_binary(manifest)) do
-      {:ok, manifest} = Poison.decode(manifest)
-      manifest
-    else
-      manifest
-    end
+    manifest =
+      if is_binary(manifest) do
+        {:ok, manifest} = Poison.decode(manifest)
+        manifest
+      else
+        manifest
+      end
+
     case JsonSchema.validate(manifest, :manifest_v1) do
       :ok ->
         case BotParser.parse("", manifest) do
           {:ok, _} ->
             conn
+
           {:error, err} ->
             capture_message("Error while parsing manifest: #{get_error_message(err)}")
             conn |> put_status(422) |> json(%{errors: [err]}) |> halt
         end
+
       {:error, errors} ->
-        capture_message("Error while validating manifest", json_errors: errors, manifest: manifest)
+        capture_message(
+          "Error while validating manifest",
+          json_errors: errors,
+          manifest: manifest
+        )
 
         conn |> put_status(422) |> json(%{errors: errors}) |> halt
     end
@@ -75,5 +84,4 @@ defmodule AidaWeb.BotController do
   defp get_error_message(error) do
     error
   end
-
 end

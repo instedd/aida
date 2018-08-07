@@ -7,8 +7,8 @@ defmodule Aida.DB.Bot do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "bots" do
-    field :manifest, JSON
-    field :temp, :boolean, default: false
+    field(:manifest, JSON)
+    field(:temp, :boolean, default: false)
 
     timestamps()
   end

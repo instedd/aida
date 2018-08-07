@@ -8,11 +8,11 @@ defmodule Aida.DB.SkillUsage do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "skill_usage" do
-    field :bot_id, :binary_id
-    field :user_id, :string
-    field :last_usage, :date
-    field :skill_id, :string
-    field :user_generated, :boolean, default: false
+    field(:bot_id, :binary_id)
+    field(:user_id, :string)
+    field(:last_usage, :date)
+    field(:skill_id, :string)
+    field(:user_generated, :boolean, default: false)
 
     timestamps()
   end
@@ -25,7 +25,14 @@ defmodule Aida.DB.SkillUsage do
   end
 
   def log_skill_usage(bot_id, skill_id, session_id, user_generated \\ true) do
-    changeset = %{bot_id: bot_id, user_id: session_id, last_usage: Date.utc_today(), skill_id: skill_id, user_generated: user_generated}
+    changeset = %{
+      bot_id: bot_id,
+      user_id: session_id,
+      last_usage: Date.utc_today(),
+      skill_id: skill_id,
+      user_generated: user_generated
+    }
+
     DB.create_or_update_skill_usage(changeset)
   end
 end

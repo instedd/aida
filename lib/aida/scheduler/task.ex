@@ -6,9 +6,9 @@ defmodule Aida.Scheduler.Task do
   import Ecto.Changeset
 
   schema "scheduler_tasks" do
-    field :name, :string
-    field :ts, :utc_datetime
-    field :handler, Ecto.Atom
+    field(:name, :string)
+    field(:ts, :utc_datetime)
+    field(:handler, Ecto.Atom)
 
     timestamps()
   end
@@ -17,17 +17,18 @@ defmodule Aida.Scheduler.Task do
     Task
     |> order_by([t], t.ts)
     |> limit(^limit)
-    |> Repo.all
+    |> Repo.all()
   end
 
   def delete(task) do
-    task |> Repo.delete
+    task |> Repo.delete()
   end
 
   def delete_by_name(name) do
-    result = Task
+    result =
+      Task
       |> where([t], t.name == ^name)
-      |> Repo.delete_all
+      |> Repo.delete_all()
 
     case result do
       {0, _} -> {:error, :not_found}

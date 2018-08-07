@@ -5,7 +5,7 @@ defmodule Aida.JsonSchemaTest do
   alias ExJsonSchema.Validator.Error
 
   setup_all do
-    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref())
     :ok
   end
 
@@ -337,14 +337,13 @@ defmodule Aida.JsonSchemaTest do
 
     errors
     |> Enum.any?(fn item ->
-      (%Error.Required{} = item.error) &&
-        Enum.member?(item.error.missing, thing) &&
+      (%Error.Required{} = item.error) && Enum.member?(item.error.missing, thing) &&
         item.path == "#"
     end)
   end
 
   defp reject_sub_type(json_thing, type) do
-    validate(json_thing, type, fn(validation_result) ->
+    validate(json_thing, type, fn validation_result ->
       validation_result
       |> errors_for("#")
       |> Enum.any?(fn validation_error ->
@@ -354,29 +353,29 @@ defmodule Aida.JsonSchemaTest do
   end
 
   defp assert_valid(json_thing, type) do
-    validate(json_thing, type, fn(validation_result) ->
+    validate(json_thing, type, fn validation_result ->
       :ok == validation_result
     end)
   end
 
   defp assert_required(thing, type) do
-    validate(~s({}), type, fn(validation_result) ->
+    validate(~s({}), type, fn validation_result ->
       required?(validation_result, thing)
     end)
   end
 
   defp assert_optional(thing, valid_value, type) do
-    validate(~s({}), type, fn(validation_result) ->
+    validate(~s({}), type, fn validation_result ->
       !required?(validation_result, thing)
     end)
 
-    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": #{inspect(valid_value)}}), type, fn validation_result ->
       !error_present?(validation_result, %Error.AdditionalProperties{}, thing)
     end)
   end
 
   defp assert_dependency(thing, valid_value, dependency, type) do
-    validate(~s({"#{thing}": #{inspect(valid_value)}}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": #{inspect(valid_value)}}), type, fn validation_result ->
       error_present?(
         validation_result,
         %Error.Dependencies{missing: [dependency], property: thing},
@@ -386,43 +385,43 @@ defmodule Aida.JsonSchemaTest do
   end
 
   defp assert_minimum_properties(type) do
-    validate(~s({}), type, fn(validation_result) ->
+    validate(~s({}), type, fn validation_result ->
       error_present?(validation_result, %Error.MinProperties{actual: 0, expected: 1}, "#")
     end)
   end
 
   defp assert_empty_array(thing, type) do
-    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": []}), type, fn validation_result ->
       !error_present?(validation_result, %Error.MinItems{actual: 0, expected: 1}, thing)
     end)
   end
 
   defp reject_empty_array(thing, type) do
-    validate(~s({"#{thing}": []}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": []}), type, fn validation_result ->
       error_present?(validation_result, %Error.MinItems{actual: 0, expected: 1}, thing)
     end)
   end
 
   defp assert_valid_value(thing, valid_value, type) do
-    validate(~s({"#{thing}": #{inspect valid_value}}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": #{inspect(valid_value)}}), type, fn validation_result ->
       !any_error_present?(validation_result, thing)
     end)
   end
 
   defp assert_invalid_value(thing, value, type) do
-    validate(~s({"#{thing}": #{inspect value}}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": #{inspect(value)}}), type, fn validation_result ->
       any_error_present?(validation_result, thing)
     end)
   end
 
   defp reject_array_duplicates(thing, type) do
-    validate(~s({"#{thing}": [1, 1]}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": [1, 1]}), type, fn validation_result ->
       error_present?(validation_result, %Error.Enum{}, thing)
     end)
   end
 
   defp assert_kind(thing, type, kind) do
-    validate(~s({"#{thing}": {}}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": {}}), type, fn validation_result ->
       error_present?(validation_result, %Error.Type{actual: "object", expected: [kind]}, thing)
     end)
   end
@@ -472,7 +471,7 @@ defmodule Aida.JsonSchemaTest do
   end
 
   defp assert_non_empty_string(thing, type) do
-    validate(~s({"#{thing}": ""}), type, fn(validation_result) ->
+    validate(~s({"#{thing}": ""}), type, fn validation_result ->
       error_present?(validation_result, %Error.MinLength{actual: 0, expected: 1}, thing)
     end)
   end
@@ -645,7 +644,13 @@ defmodule Aida.JsonSchemaTest do
     assert_required("on", :recurrence_weekly)
     assert_array("on", :recurrence_weekly)
     reject_empty_array("on", :recurrence_weekly)
-    assert_valid_value("on", ~w[monday tuesday wednesday thursday friday saturday sunday], :recurrence_weekly)
+
+    assert_valid_value(
+      "on",
+      ~w[monday tuesday wednesday thursday friday saturday sunday],
+      :recurrence_weekly
+    )
+
     assert_invalid_value("on", ~w[foo], :recurrence_weekly)
     reject_array_duplicates("on", :recurrence_weekly)
   end
@@ -955,7 +960,17 @@ defmodule Aida.JsonSchemaTest do
 
   test "notifications_url" do
     assert_invalid_value("notifications_url", "", :manifest_v1)
-    assert_valid_value("notifications_url", "https://user:password@example.com/some/path?with=query#selector", :manifest_v1)
-    assert_valid_value("notifications_url", "this-is-not-a-uri-but-we-support-it-anyway", :manifest_v1)
+
+    assert_valid_value(
+      "notifications_url",
+      "https://user:password@example.com/some/path?with=query#selector",
+      :manifest_v1
+    )
+
+    assert_valid_value(
+      "notifications_url",
+      "this-is-not-a-uri-but-we-support-it-anyway",
+      :manifest_v1
+    )
   end
 end

@@ -5,16 +5,16 @@ defmodule Aida.Skill.DecisionTree do
   alias Aida.Skill.DecisionTree.{Question, Answer, Response}
 
   @type t :: %__MODULE__{
-    id: String.t,
-    bot_id: String.t,
-    name: String.t,
-    explanation: Bot.message,
-    clarification: Bot.message,
-    keywords: %{},
-    relevant: nil | Aida.Expr.t,
-    root_id: String.t,
-    tree: [Question.t | Answer.t]
-  }
+          id: String.t(),
+          bot_id: String.t(),
+          name: String.t(),
+          explanation: Bot.message(),
+          clarification: Bot.message(),
+          keywords: %{},
+          relevant: nil | Aida.Expr.t(),
+          root_id: String.t(),
+          tree: [Question.t() | Answer.t()]
+        }
 
   defstruct id: "",
             bot_id: "",
@@ -28,10 +28,10 @@ defmodule Aida.Skill.DecisionTree do
 
   defmodule Question do
     @type t :: %__MODULE__{
-      id: String.t,
-      question: Aida.Bot.message,
-      responses: [Response.t]
-    }
+            id: String.t(),
+            question: Aida.Bot.message(),
+            responses: [Response.t()]
+          }
 
     defstruct id: "",
               question: %{},
@@ -39,6 +39,7 @@ defmodule Aida.Skill.DecisionTree do
 
     def valid_answer?(question, message) do
       response = find_response(question, message)
+
       case response do
         nil -> false
         _ -> true
@@ -47,6 +48,7 @@ defmodule Aida.Skill.DecisionTree do
 
     def next_question_id(question, message) do
       response = find_response(question, message)
+
       case response do
         nil -> question.id
         _ -> response.next
@@ -61,9 +63,9 @@ defmodule Aida.Skill.DecisionTree do
 
   defmodule Answer do
     @type t :: %__MODULE__{
-      id: String.t,
-      message: Aida.Bot.message
-    }
+            id: String.t(),
+            message: Aida.Bot.message()
+          }
 
     defstruct id: "",
               message: %{}
@@ -71,15 +73,15 @@ defmodule Aida.Skill.DecisionTree do
 
   defmodule Response do
     @type t :: %__MODULE__{
-      keywords: %{},
-      next: String.t
-    }
+            keywords: %{},
+            next: String.t()
+          }
 
     defstruct keywords: %{},
               next: ""
 
-    def matches_string(response, string)do
-      Enum.any?(Map.values(response.keywords), fn(x) ->
+    def matches_string(response, string) do
+      Enum.any?(Map.values(response.keywords), fn x ->
         Enum.member?(x, string)
       end)
     end
@@ -93,17 +95,17 @@ defmodule Aida.Skill.DecisionTree do
     answer.message
   end
 
-
   def flatten(tree) do
     [{tree["id"], parse_question(tree)} | internal_flatten(tree["responses"])]
-      |> Enum.into(%{})
+    |> Enum.into(%{})
   end
 
   defp internal_flatten([_ | _] = responses) do
-    responses |> Enum.map(fn response ->
+    responses
+    |> Enum.map(fn response ->
       internal_flatten(response["next"])
     end)
-      |> List.flatten()
+    |> List.flatten()
   end
 
   defp internal_flatten(%{"answer" => _} = answer) do
@@ -115,11 +117,16 @@ defmodule Aida.Skill.DecisionTree do
   end
 
   def parse_question(question) do
-    %Question{id: question["id"], question: question["question"], responses: parse_responses(question["responses"])}
+    %Question{
+      id: question["id"],
+      question: question["question"],
+      responses: parse_responses(question["responses"])
+    }
   end
 
   def parse_responses(responses) do
-    responses |> Enum.map(fn response ->
+    responses
+    |> Enum.map(fn response ->
       parse_response(response)
     end)
   end
@@ -134,10 +141,10 @@ defmodule Aida.Skill.DecisionTree do
 
   def downcase_keywords(keywords) do
     keywords
-      |> Enum.map(fn {k, v} ->
-        {k, Enum.map(v, &String.trim(String.downcase(&1)))}
-      end)
-      |> Enum.into(%{})
+    |> Enum.map(fn {k, v} ->
+      {k, Enum.map(v, &String.trim(String.downcase(&1)))}
+    end)
+    |> Enum.into(%{})
   end
 
   def state_key(decision_tree), do: ".decision_tree/#{decision_tree.id}"
@@ -147,7 +154,9 @@ defmodule Aida.Skill.DecisionTree do
     case message |> Message.get_session(state_key(decision_tree)) do
       %{"question" => question} ->
         decision_tree.tree[question]
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 
@@ -171,27 +180,42 @@ defmodule Aida.Skill.DecisionTree do
     def put_response(decision_tree, message) do
       question = DecisionTree.current_question(decision_tree, message)
 
-      {next_question, message} = case question do
-        nil ->
-          session = message.session
-          if session |> Session.get_value("language") do
-            message = message
-              |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => decision_tree.root_id})
+      {next_question, message} =
+        case question do
+          nil ->
+            session = message.session
 
-            {decision_tree.tree[decision_tree.root_id], message}
-          end
-        _ ->
-          next_question = decision_tree.tree[Question.next_question_id(question, message)]
-          message = case next_question do
-            %Question{} -> message
-              |> Message.put_session(DecisionTree.state_key(decision_tree), %{"question" => next_question.id})
-            %Answer{} -> message
-              |> Message.put_session(DecisionTree.state_key(decision_tree), nil)
-            nil ->
-              message
-          end
-          {next_question || question, message}
-      end
+            if session |> Session.get_value("language") do
+              message =
+                message
+                |> Message.put_session(DecisionTree.state_key(decision_tree), %{
+                  "question" => decision_tree.root_id
+                })
+
+              {decision_tree.tree[decision_tree.root_id], message}
+            end
+
+          _ ->
+            next_question = decision_tree.tree[Question.next_question_id(question, message)]
+
+            message =
+              case next_question do
+                %Question{} ->
+                  message
+                  |> Message.put_session(DecisionTree.state_key(decision_tree), %{
+                    "question" => next_question.id
+                  })
+
+                %Answer{} ->
+                  message
+                  |> Message.put_session(DecisionTree.state_key(decision_tree), nil)
+
+                nil ->
+                  message
+              end
+
+            {next_question || question, message}
+        end
 
       message |> Message.respond(DecisionTree.get_message(next_question))
     end
@@ -200,6 +224,7 @@ defmodule Aida.Skill.DecisionTree do
       case DecisionTree.current_question(decision_tree, message) do
         nil ->
           Utils.confidence_for_keywords(decision_tree.keywords, message)
+
         question ->
           if question |> Question.valid_answer?(message) do
             1

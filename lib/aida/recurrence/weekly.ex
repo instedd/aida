@@ -3,10 +3,10 @@ defmodule Aida.Recurrence.Weekly do
 
   @type dow :: :sunday | :monday | :tuesday | :wednesday | :thursday | :friday | :saturday
   @type t :: %__MODULE__{
-    start: DateTime.t,
-    every: pos_integer,
-    on: [dow]
-  }
+          start: DateTime.t(),
+          every: pos_integer,
+          on: [dow]
+        }
 
   defstruct start: nil,
             every: 1,
@@ -41,6 +41,7 @@ defmodule Aida.Recurrence.Weekly do
     # Note that actually the special case for `every = 1` is not necessary but
     # added just to avoid calculations.
     defp adjust_every(datetime, _, 1), do: datetime
+
     defp adjust_every(datetime, start, every) do
       # Calculate the number of whole weeks between the start date and the given date
       diff_in_weeks = DateTime.diff(datetime, start) |> div(@seconds_in_a_week)
@@ -50,6 +51,7 @@ defmodule Aida.Recurrence.Weekly do
         0 ->
           # Already a multiple, no changes
           datetime
+
         rem ->
           Timex.shift(datetime, weeks: every - rem)
       end
@@ -60,8 +62,8 @@ defmodule Aida.Recurrence.Weekly do
       # Get the selected day of week as an integer (1 - Monday, ..., 7 - Sunday)
       dow =
         datetime
-        |> DateTime.to_date
-        |> Date.day_of_week
+        |> DateTime.to_date()
+        |> Date.day_of_week()
 
       # Calculate the necessary offset and move forward the date
       offset = adjust_offset(dow, on)
@@ -71,7 +73,10 @@ defmodule Aida.Recurrence.Weekly do
     # Calculate the offset in days between a day of week and the next available one
     # It works by moving to the next day of week until it succeeds (worst case: 6 iterations)
     defp adjust_offset(dow, on, offset \\ 0)
-    defp adjust_offset(_, on, offset) when offset >= 7, do: raise "Invalid 'on' value for weekly recurrence: #{inspect on}"
+
+    defp adjust_offset(_, on, offset) when offset >= 7,
+      do: raise("Invalid 'on' value for weekly recurrence: #{inspect(on)}")
+
     defp adjust_offset(dow, on, offset) do
       if dow_to_atom(dow) in on do
         offset

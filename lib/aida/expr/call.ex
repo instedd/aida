@@ -7,12 +7,12 @@ defmodule Aida.Expr.Call do
     end
 
     def eval(call, context) do
-      args = call.args |> Enum.map(&(Aida.Expr.eval(&1, context)))
+      args = call.args |> Enum.map(&Aida.Expr.eval(&1, context))
       invoke(call.name, args, context)
     end
 
-    defp invoke(:true, [], _), do: true
-    defp invoke(:false, [], _), do: false
+    defp invoke(true, [], _), do: true
+    defp invoke(false, [], _), do: false
 
     defp invoke(:selected, [list, value], _) do
       value in list

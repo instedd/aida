@@ -4,9 +4,9 @@ defmodule Aida.Channel.WebSocket do
 
   @behaviour Aida.ChannelProvider
   @type t :: %__MODULE__{
-    bot_id: String.t,
-    access_token: String.t
-  }
+          bot_id: String.t(),
+          access_token: String.t()
+        }
 
   defstruct [:bot_id, :access_token]
 
@@ -47,8 +47,12 @@ defmodule Aida.Channel.WebSocket do
     def send_message(channel, messages, session) do
       recipient = session.id
 
-      messages |> Enum.each(fn message ->
-        AidaWeb.Endpoint.broadcast("bot:#{channel.bot_id}", "btu_msg", %{text: message, session: recipient})
+      messages
+      |> Enum.each(fn message ->
+        AidaWeb.Endpoint.broadcast("bot:#{channel.bot_id}", "btu_msg", %{
+          text: message,
+          session: recipient
+        })
       end)
     end
   end

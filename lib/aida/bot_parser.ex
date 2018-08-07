@@ -17,7 +17,8 @@ defmodule Aida.BotParser do
     Unsubscribe
   }
 
-  @spec parse(id :: String.t, manifest :: map) :: {:ok, Bot.t} | {:error, reason :: String.t | map}
+  @spec parse(id :: String.t(), manifest :: map) ::
+          {:ok, Bot.t()} | {:error, reason :: String.t() | map}
   def parse(id, manifest) do
     try do
       %Bot{
@@ -25,9 +26,9 @@ defmodule Aida.BotParser do
         languages: manifest["languages"],
         notifications_url: manifest["notifications_url"],
         front_desk: parse_front_desk(manifest["front_desk"]),
-        skills: manifest["skills"] |> Enum.map(&(parse_skill(&1, id))),
+        skills: manifest["skills"] |> Enum.map(&parse_skill(&1, id)),
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
-        channels: manifest["channels"] |> Enum.map(&(parse_channel(id, &1))),
+        channels: manifest["channels"] |> Enum.map(&parse_channel(id, &1)),
         public_keys: parse_public_keys(manifest["public_keys"]),
         data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1)
       }
@@ -44,7 +45,7 @@ defmodule Aida.BotParser do
     end
   end
 
-  @spec parse_front_desk(front_desk :: map) :: FrontDesk.t
+  @spec parse_front_desk(front_desk :: map) :: FrontDesk.t()
   defp parse_front_desk(front_desk) do
     %FrontDesk{
       threshold: front_desk["threshold"],
@@ -56,7 +57,7 @@ defmodule Aida.BotParser do
     }
   end
 
-  @spec parse_unsubscribe(unsubscribe :: map) :: Unsubscribe.t
+  @spec parse_unsubscribe(unsubscribe :: map) :: Unsubscribe.t()
   defp parse_unsubscribe(unsubscribe) do
     %Unsubscribe{
       introduction_message: unsubscribe["introduction_message"]["message"],
@@ -65,7 +66,7 @@ defmodule Aida.BotParser do
     }
   end
 
-  @spec parse_data_table(data_table :: map) :: DataTable.t
+  @spec parse_data_table(data_table :: map) :: DataTable.t()
   defp parse_data_table(data_table) do
     %DataTable{
       name: data_table["name"],
@@ -74,7 +75,7 @@ defmodule Aida.BotParser do
     }
   end
 
-  @spec parse_variable(var :: map) :: Variable.t
+  @spec parse_variable(var :: map) :: Variable.t()
   defp parse_variable(var) do
     %Variable{
       name: var["name"],
@@ -83,13 +84,14 @@ defmodule Aida.BotParser do
     }
   end
 
-  @spec parse_variable_overrides(overrides :: nil | list) :: [Variable.Override.t]
+  @spec parse_variable_overrides(overrides :: nil | list) :: [Variable.Override.t()]
   defp parse_variable_overrides(nil), do: []
+
   defp parse_variable_overrides(overrides) do
     overrides |> Enum.map(&parse_variable_override/1)
   end
 
-  @spec parse_variable_override(override :: map) :: Variable.Override.t
+  @spec parse_variable_override(override :: map) :: Variable.Override.t()
   defp parse_variable_override(override) do
     %Variable.Override{
       relevant: parse_expr(override["relevant"]),
@@ -120,11 +122,12 @@ defmodule Aida.BotParser do
   end
 
   defp parse_skill(%{"type" => "scheduled_messages"} = skill, bot_id) do
-    schedule_type = case skill["schedule_type"] do
-      "since_last_incoming_message" -> :since_last_incoming_message
-      "fixed_time" -> :fixed_time
-      "recurrent" -> :recurrent
-    end
+    schedule_type =
+      case skill["schedule_type"] do
+        "since_last_incoming_message" -> :since_last_incoming_message
+        "fixed_time" -> :fixed_time
+        "recurrent" -> :recurrent
+      end
 
     %ScheduledMessages{
       id: skill["id"],
@@ -132,7 +135,7 @@ defmodule Aida.BotParser do
       name: skill["name"],
       schedule_type: schedule_type,
       relevant: parse_expr(skill["relevant"]),
-      messages: skill["messages"] |> Enum.map(&(parse_scheduled_message(&1, schedule_type)))
+      messages: skill["messages"] |> Enum.map(&parse_scheduled_message(&1, schedule_type))
     }
   end
 
@@ -146,7 +149,8 @@ defmodule Aida.BotParser do
           schedule |> DateTime.from_iso8601()
       end
 
-    choice_lists = skill["choice_lists"] |> Enum.map(&parse_survey_choice_list/1) |> Enum.into(%{})
+    choice_lists =
+      skill["choice_lists"] |> Enum.map(&parse_survey_choice_list/1) |> Enum.into(%{})
 
     %Survey{
       id: skill["id"],
@@ -155,7 +159,7 @@ defmodule Aida.BotParser do
       schedule: schedule,
       keywords: parse_string_list_map(skill["keywords"]),
       relevant: parse_expr(skill["relevant"]),
-      questions: skill["questions"] |> Enum.map(&(parse_survey_question(&1, choice_lists)))
+      questions: skill["questions"] |> Enum.map(&parse_survey_question(&1, choice_lists))
     }
   end
 
@@ -197,6 +201,7 @@ defmodule Aida.BotParser do
 
   defp parse_scheduled_message(message, :fixed_time) do
     {:ok, schedule, _} = message["schedule"] |> DateTime.from_iso8601()
+
     %ScheduledMessages.FixedTimeMessage{
       schedule: schedule,
       message: message["message"]
@@ -212,6 +217,7 @@ defmodule Aida.BotParser do
 
   defp parse_recurrence(%{"type" => "daily"} = recurrence) do
     {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+
     %Recurrence.Daily{
       start: start,
       every: recurrence["every"]
@@ -220,6 +226,7 @@ defmodule Aida.BotParser do
 
   defp parse_recurrence(%{"type" => "weekly"} = recurrence) do
     {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+
     %Recurrence.Weekly{
       start: start,
       every: recurrence["every"],
@@ -229,6 +236,7 @@ defmodule Aida.BotParser do
 
   defp parse_recurrence(%{"type" => "monthly"} = recurrence) do
     {:ok, start, _} = recurrence["start"] |> DateTime.from_iso8601()
+
     %Recurrence.Monthly{
       start: start,
       every: recurrence["every"],
@@ -245,19 +253,22 @@ defmodule Aida.BotParser do
   defp parse_weekday("saturday"), do: :saturday
 
   defp parse_survey_question(question, choice_lists) do
-    question_type = case question["type"] do
-      "integer" -> :integer
-      "decimal" -> :decimal
-      "image" -> :image
-      "text" -> :text
-      "select_one" -> :select_one
-      "select_many" -> :select_many
-      "note" -> :note
-    end
+    question_type =
+      case question["type"] do
+        "integer" -> :integer
+        "decimal" -> :decimal
+        "image" -> :image
+        "text" -> :text
+        "select_one" -> :select_one
+        "select_many" -> :select_many
+        "note" -> :note
+      end
+
     parse_survey_question(question_type, question, choice_lists)
   end
 
-  defp parse_survey_question(question_type, question, choice_lists) when question_type == :select_one or question_type == :select_many do
+  defp parse_survey_question(question_type, question, choice_lists)
+       when question_type == :select_one or question_type == :select_many do
     %Survey.SelectQuestion{
       type: question_type,
       choices: choice_lists[question["choices"]],
@@ -345,7 +356,7 @@ defmodule Aida.BotParser do
 
   defp parse_string_list(string_list) do
     string_list
-    |> Enum.map(&(&1 |> String.trim |> String.downcase))
+    |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
   end
 
   defp validate(bot) do
@@ -358,22 +369,26 @@ defmodule Aida.BotParser do
   end
 
   defp validate_skill_id_uniqueness(%{skills: skills}) do
-    duplicated_skills = skills
-    |> Enum.group_by(fn(skill) -> skill |> Skill.id end)
-    |> Map.to_list()
-    |> Enum.find(fn({_, skills}) -> Enum.count(skills) > 1 end)
-
+    duplicated_skills =
+      skills
+      |> Enum.group_by(fn skill -> skill |> Skill.id() end)
+      |> Map.to_list()
+      |> Enum.find(fn {_, skills} -> Enum.count(skills) > 1 end)
 
     case duplicated_skills do
-      nil -> :ok
+      nil ->
+        :ok
+
       {id, _} ->
-        [paths, _] = skills |> Enum.reduce([[], 0], fn(skill, [paths, index]) ->
-          if skill |> Skill.id == id do
-            [["#/skills/#{index}" | paths], index + 1]
-          else
-            [paths, index + 1]
-          end
-        end)
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}" | paths], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
     end
@@ -381,8 +396,11 @@ defmodule Aida.BotParser do
 
   def validate_required_public_keys(%{skills: skills, public_keys: []}) do
     case skills |> Enum.any?(&Skill.uses_encryption?/1) do
-      true -> {:error, %{"message" => "Missing public_keys in manifest", "path" => "#/public_keys"}}
-      _ -> :ok
+      true ->
+        {:error, %{"message" => "Missing public_keys in manifest", "path" => "#/public_keys"}}
+
+      _ ->
+        :ok
     end
   end
 

@@ -1,20 +1,22 @@
 defmodule AidaWeb.ErrorLogControllerTest do
   use AidaWeb.ConnCase
+
   alias Aida.{
     BotParser,
     DB,
     DB.Session,
     ErrorLog,
     JsonSchema,
-    Repo,
+    Repo
   }
+
   require Aida.ErrorLog
 
   setup :create_bot
   setup :create_session
 
   setup %{conn: conn} do
-    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref())
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
@@ -34,10 +36,10 @@ defmodule AidaWeb.ErrorLogControllerTest do
       assert error_log.skill_id == skill_id
       assert error_log.message == "Some error"
 
-      conn = get conn, bot_error_log_path(conn, :index, bot.id)
+      conn = get(conn, bot_error_log_path(conn, :index, bot.id))
 
       response = json_response(conn, 200)["data"]
-      assert response |> Enum.count == 1
+      assert response |> Enum.count() == 1
 
       assert (response |> hd)["session_id"] == session.id
       assert (response |> hd)["message"] == "Some error"
@@ -45,8 +47,10 @@ defmodule AidaWeb.ErrorLogControllerTest do
   end
 
   defp create_bot(_context) do
-    manifest = File.read!("test/fixtures/valid_manifest.json")
-                |> Poison.decode!
+    manifest =
+      File.read!("test/fixtures/valid_manifest.json")
+      |> Poison.decode!()
+
     {:ok, bot} = DB.create_bot(%{manifest: manifest})
     {:ok, bot} = BotParser.parse(bot.id, manifest)
 
@@ -54,8 +58,9 @@ defmodule AidaWeb.ErrorLogControllerTest do
   end
 
   defp create_session(%{bot: bot}) do
-    session = Session.new({bot.id, "facebook", "1234/5678"})
-      |> Session.save
+    session =
+      Session.new({bot.id, "facebook", "1234/5678"})
+      |> Session.save()
 
     [session: session]
   end

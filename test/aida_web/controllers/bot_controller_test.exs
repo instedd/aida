@@ -33,7 +33,8 @@ defmodule AidaWeb.BotControllerTest do
   @valid_manifest %{
     "version" => "1",
     "languages" => ["en"],
-    "notifications_url" => "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+    "notifications_url" =>
+      "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
     "variables" => [],
@@ -43,7 +44,8 @@ defmodule AidaWeb.BotControllerTest do
   @updated_manifest %{
     "version" => "1",
     "languages" => ["es"],
-    "notifications_url" => "https://example.com/notifications/f729bb9903a839bc7fdb80145546ed80f31ea468139c7027e528708ab4558617",
+    "notifications_url" =>
+      "https://example.com/notifications/f729bb9903a839bc7fdb80145546ed80f31ea468139c7027e528708ab4558617",
     "front_desk" => @valid_front_desk,
     "skills" => [@valid_keyword_responder],
     "variables" => [],
@@ -60,33 +62,36 @@ defmodule AidaWeb.BotControllerTest do
   end
 
   setup %{conn: conn} do
-    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref)
+    GenServer.start_link(JsonSchema, [], name: JsonSchema.server_ref())
 
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
   end
 
   describe "index" do
     test "lists all bots", %{conn: conn} do
-      conn = get conn, bot_path(conn, :index)
+      conn = get(conn, bot_path(conn, :index))
       assert json_response(conn, 200)["data"] == []
     end
   end
 
   describe "create bot" do
     test "renders bot when data is valid", %{conn: conn} do
-      conn = post conn, bot_path(conn, :create), bot: @create_attrs
+      conn = post(conn, bot_path(conn, :create), bot: @create_attrs)
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get conn, bot_path(conn, :show, id)
+      conn = get(conn, bot_path(conn, :show, id))
+
       assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "manifest" => @valid_manifest,
-        "temp" => false}
+               "id" => id,
+               "manifest" => @valid_manifest,
+               "temp" => false
+             }
     end
 
     test "render errors when variable name is invalid", %{conn: conn} do
-      manifest = File.read!("test/fixtures/valid_manifest.json")
-        |> Poison.decode!
+      manifest =
+        File.read!("test/fixtures/valid_manifest.json")
+        |> Poison.decode!()
         |> Map.put("skills", [
           %{
             "type" => "keyword_responder",
@@ -113,19 +118,21 @@ defmodule AidaWeb.BotControllerTest do
         ])
 
       without_logging do
-        conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
+        conn = post(conn, bot_path(conn, :create), bot: %{manifest: manifest})
         assert json_response(conn, 422)["errors"] == ["Invalid expression: '${4age} >= 18'"]
       end
     end
 
     test "render errors when language detector is duplicated", %{conn: conn} do
-      manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+      manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
 
-      manifest = manifest
+      manifest =
+        manifest
         |> Map.put("skills", [
           %{
             "type" => "language_detector",
-            "explanation" => "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+            "explanation" =>
+              "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
             "languages" => %{
               "en" => ["english", "inglés"],
               "es" => ["español", "spanish"]
@@ -133,7 +140,8 @@ defmodule AidaWeb.BotControllerTest do
           },
           %{
             "type" => "language_detector",
-            "explanation" => "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
+            "explanation" =>
+              "To chat in english say 'english' or 'inglés'. Para hablar en español escribe 'español' o 'spanish'",
             "languages" => %{
               "en" => ["english", "inglés"],
               "es" => ["español", "spanish"]
@@ -142,49 +150,57 @@ defmodule AidaWeb.BotControllerTest do
         ])
 
       without_logging do
-        conn = post conn, bot_path(conn, :create), bot: %{manifest: manifest}
-        assert json_response(conn, 422)["errors"] == [%{"message" => "Duplicated skills (language_detector)", "path" => ["#/skills/1", "#/skills/0"]}]
+        conn = post(conn, bot_path(conn, :create), bot: %{manifest: manifest})
+
+        assert json_response(conn, 422)["errors"] == [
+                 %{
+                   "message" => "Duplicated skills (language_detector)",
+                   "path" => ["#/skills/1", "#/skills/0"]
+                 }
+               ]
       end
     end
 
     test "renders errors when data is invalid", %{conn: conn} do
       without_logging do
-        conn = post conn, bot_path(conn, :create), bot: @invalid_attrs
+        conn = post(conn, bot_path(conn, :create), bot: @invalid_attrs)
         assert json_response(conn, 422)["errors"] != %{}
       end
     end
 
     test "creates temporary bot", %{conn: conn} do
-      conn = post conn, bot_path(conn, :create), bot: Map.merge(@create_attrs, %{temp: true})
+      conn = post(conn, bot_path(conn, :create), bot: Map.merge(@create_attrs, %{temp: true}))
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get conn, bot_path(conn, :show, id)
-      assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "manifest" => @valid_manifest,
-        "temp" => true
-      }
-    end
+      conn = get(conn, bot_path(conn, :show, id))
 
+      assert json_response(conn, 200)["data"] == %{
+               "id" => id,
+               "manifest" => @valid_manifest,
+               "temp" => true
+             }
+    end
   end
 
   describe "update bot" do
     setup [:create_bot]
 
     test "renders bot when data is valid", %{conn: conn, bot: %Bot{id: id} = bot} do
-      conn = put conn, bot_path(conn, :update, bot), bot: @update_attrs
+      conn = put(conn, bot_path(conn, :update, bot), bot: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-      conn = get conn, bot_path(conn, :show, id)
+      conn = get(conn, bot_path(conn, :show, id))
+
       assert json_response(conn, 200)["data"] == %{
-        "id" => id,
-        "manifest" => @updated_manifest,
-        "temp" => false}
+               "id" => id,
+               "manifest" => @updated_manifest,
+               "temp" => false
+             }
     end
 
     test "renders errors when data is invalid", %{conn: conn, bot: bot} do
       without_logging do
-        conn = put conn, bot_path(conn, :update, bot), bot: @invalid_attrs
+        conn = put(conn, bot_path(conn, :update, bot), bot: @invalid_attrs)
         assert json_response(conn, 422)["errors"] != %{}
       end
     end
@@ -194,11 +210,12 @@ defmodule AidaWeb.BotControllerTest do
     setup [:create_bot]
 
     test "deletes chosen bot", %{conn: conn, bot: bot} do
-      conn = delete conn, bot_path(conn, :delete, bot)
+      conn = delete(conn, bot_path(conn, :delete, bot))
       assert response(conn, 204)
-      assert_error_sent 404, fn ->
-        get conn, bot_path(conn, :show, bot)
-      end
+
+      assert_error_sent(404, fn ->
+        get(conn, bot_path(conn, :show, bot))
+      end)
     end
   end
 

@@ -9,8 +9,8 @@ defmodule Aida.Scheduler.Server do
 
   defmodule State do
     @type t :: %__MODULE__{
-      next_ts: nil | pos_integer
-    }
+            next_ts: nil | pos_integer
+          }
 
     defstruct [:next_ts]
   end
@@ -19,7 +19,7 @@ defmodule Aida.Scheduler.Server do
   Initializes the server loading the existing tasks from the database
   """
   def init([]) do
-    Aida.PubSub.subscribe_scheduler
+    Aida.PubSub.subscribe_scheduler()
     {state, delay} = dispatch()
     {:ok, state, delay}
   end
@@ -50,7 +50,7 @@ defmodule Aida.Scheduler.Server do
 
   # Loads the next batch of tasks and run the ones already overdue.
   # Returns a tuple with the state and next delay
-  @spec dispatch() :: {State.t, timeout()}
+  @spec dispatch() :: {State.t(), timeout()}
   defp dispatch do
     case Task.load(@batch_size) do
       [] -> {%State{next_ts: nil}, next_delay(nil)}
@@ -61,7 +61,8 @@ defmodule Aida.Scheduler.Server do
   defp dispatch([]), do: dispatch()
 
   defp dispatch([task | tasks]) do
-    now = DateTime.utc_now
+    now = DateTime.utc_now()
+
     case DateTime.compare(task.ts, now) do
       :gt ->
         next_ts = DateTime.to_unix(task.ts, :milliseconds)
@@ -77,20 +78,28 @@ defmodule Aida.Scheduler.Server do
   defp next_delay(nil), do: @max_delay
 
   defp next_delay(next_ts) do
-    now = DateTime.utc_now
+    now = DateTime.utc_now()
     delay = next_ts - (now |> DateTime.to_unix(:milliseconds))
+
     delay
     |> max(0)
     |> min(@max_delay)
   end
 
   defp run_task(%Task{name: name, ts: ts, handler: handler} = task) do
-    task |> Task.delete
+    task |> Task.delete()
+
     try do
       handler.handle_scheduled_task(name, ts)
     rescue
       error ->
-        capture_exception("Error executing task '#{name}'", error, task_name: name, task_ts: ts, task_handler: handler)
+        capture_exception(
+          "Error executing task '#{name}'",
+          error,
+          task_name: name,
+          task_ts: ts,
+          task_handler: handler
+        )
     end
   end
 end

@@ -11,8 +11,6 @@ defmodule AidaWeb.BotView do
   end
 
   def render("bot.json", %{bot: bot}) do
-    %{id: bot.id,
-      manifest: bot.manifest,
-      temp: bot.temp}
+    %{id: bot.id, manifest: bot.manifest, temp: bot.temp}
   end
 end

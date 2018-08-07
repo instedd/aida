@@ -2,15 +2,15 @@ defmodule Aida.Skill.Survey.SelectQuestion do
   alias Aida.{Message, Skill.Survey.Choice}
 
   @type t :: %__MODULE__{
-    type: :select_one | :select_many,
-    choices: [Choice.t],
-    name: String.t,
-    encrypt: boolean(),
-    relevant: nil | Aida.Expr.t,
-    message: Aida.Bot.message,
-    constraint_message: nil | Aida.Bot.message,
-    choice_filter: nil | Aida.Expr.t
-  }
+          type: :select_one | :select_many,
+          choices: [Choice.t()],
+          name: String.t(),
+          encrypt: boolean(),
+          relevant: nil | Aida.Expr.t(),
+          message: Aida.Bot.message(),
+          constraint_message: nil | Aida.Bot.message(),
+          choice_filter: nil | Aida.Expr.t()
+        }
   @enforce_keys [:type]
 
   defstruct type: nil,
@@ -25,7 +25,7 @@ defmodule Aida.Skill.Survey.SelectQuestion do
   defimpl Aida.Skill.Survey.Question, for: __MODULE__ do
     def valid_answer?(%{type: :select_one} = question, message) do
       language = message |> Message.language()
-      response = Message.text_content(message) |> String.downcase
+      response = Message.text_content(message) |> String.downcase()
       choices = available_choices(question, message)
 
       choice_exists?(choices, response, language)
@@ -33,10 +33,17 @@ defmodule Aida.Skill.Survey.SelectQuestion do
 
     def valid_answer?(%{type: :select_many} = question, message) do
       language = message |> Message.language()
-      responses = Message.text_content(message) |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
+
+      responses =
+        Message.text_content(message)
+        |> String.downcase()
+        |> String.split(",")
+        |> Enum.map(&String.trim/1)
+
       choices = available_choices(question, message)
 
-      responses |> Enum.all?(fn(response) ->
+      responses
+      |> Enum.all?(fn response ->
         choice_exists?(choices, response, language)
       end)
     end
@@ -51,20 +58,22 @@ defmodule Aida.Skill.Survey.SelectQuestion do
     end
 
     def find_choice(choices, response, language) do
-      choices |> Enum.find(fn(choice) ->
+      choices
+      |> Enum.find(fn choice ->
         choice.labels[language]
-          |> Enum.map(&String.downcase/1)
-          |> Enum.member?(response)
+        |> Enum.map(&String.downcase/1)
+        |> Enum.member?(response)
       end)
     end
 
     def accept_answer(%{type: :select_one} = question, message) do
       if question |> valid_answer?(message) do
         language = message |> Message.language()
-        response = Message.text_content(message) |> String.downcase
+        response = Message.text_content(message) |> String.downcase()
 
-        choice = find_choice(question.choices, response, language)
-        |> Choice.name
+        choice =
+          find_choice(question.choices, response, language)
+          |> Choice.name()
 
         {:ok, choice}
       else
@@ -75,12 +84,20 @@ defmodule Aida.Skill.Survey.SelectQuestion do
     def accept_answer(%{type: :select_many} = question, message) do
       if question |> valid_answer?(message) do
         language = message |> Message.language()
-        responses = Message.text_content(message) |> String.downcase |> String.split(",") |> Enum.map(&String.trim/1)
 
-        choices = responses |> Enum.map(fn(response) ->
-          find_choice(question.choices, response, language)
-          |> Choice.name
-        end)
+        responses =
+          Message.text_content(message)
+          |> String.downcase()
+          |> String.split(",")
+          |> Enum.map(&String.trim/1)
+
+        choices =
+          responses
+          |> Enum.map(fn response ->
+            find_choice(question.choices, response, language)
+            |> Choice.name()
+          end)
+
         {:ok, choices}
       else
         :error

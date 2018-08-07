@@ -2,9 +2,9 @@ defmodule Aida.Recurrence.Daily do
   alias __MODULE__
 
   @type t :: %__MODULE__{
-    start: DateTime.t,
-    every: pos_integer
-  }
+          start: DateTime.t(),
+          every: pos_integer
+        }
 
   defstruct start: nil,
             every: 1

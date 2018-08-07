@@ -63,6 +63,5 @@ defmodule Aida.Recurrence.Monthly do
           months_diff
       end
     end
-
   end
 end

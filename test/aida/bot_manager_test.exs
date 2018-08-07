@@ -9,9 +9,9 @@ defmodule Aida.BotManagerTest do
 
   describe "with BotManager running" do
     setup do
-      ChannelRegistry.start_link
-      BotManager.start_link
-      Scheduler.start_link
+      ChannelRegistry.start_link()
+      BotManager.start_link()
+      Scheduler.start_link()
       :ok
     end
 
@@ -64,12 +64,12 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+      with_mock Bot, wake_up: fn _bot, _skill_id, _data -> :ok end do
         BotManager.schedule_wake_up(bot, skill, within(hours: 1))
-        refute called Bot.wake_up(bot, "skill_id", nil)
+        refute called(Bot.wake_up(bot, "skill_id", nil))
 
         time_travel(within(hours: 1)) do
-          assert called Bot.wake_up(bot, "skill_id", nil)
+          assert called(Bot.wake_up(bot, "skill_id", nil))
         end
       end
     end
@@ -79,11 +79,11 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+      with_mock Bot, wake_up: fn _bot, _skill_id, _data -> :ok end do
         BotManager.schedule_wake_up(bot, skill, "foo", within(hours: 1))
 
         time_travel(within(hours: 1)) do
-          assert called Bot.wake_up(bot, "skill_id", "foo")
+          assert called(Bot.wake_up(bot, "skill_id", "foo"))
         end
       end
     end
@@ -93,17 +93,17 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+      with_mock Bot, wake_up: fn _bot, _skill_id, _data -> :ok end do
         BotManager.schedule_wake_up(bot, skill, within(hours: 1))
         BotManager.schedule_wake_up(bot, skill, within(hours: 2))
-        refute called Bot.wake_up(bot, "skill_id", nil)
+        refute called(Bot.wake_up(bot, "skill_id", nil))
 
         time_travel(within(hours: 1)) do
-          refute called Bot.wake_up(bot, "skill_id", nil)
+          refute called(Bot.wake_up(bot, "skill_id", nil))
         end
 
         time_travel(within(hours: 2)) do
-          assert called Bot.wake_up(bot, "skill_id", nil)
+          assert called(Bot.wake_up(bot, "skill_id", nil))
         end
       end
     end
@@ -113,12 +113,12 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> :ok end] do
+      with_mock Bot, wake_up: fn _bot, _skill_id, _data -> :ok end do
         BotManager.schedule_wake_up(bot, skill, within(hours: 1))
         BotManager.stop(bot.id)
 
         time_travel(within(hours: 1)) do
-          refute called Bot.wake_up(:_, :_, :_)
+          refute called(Bot.wake_up(:_, :_, :_))
         end
       end
     end
@@ -128,12 +128,12 @@ defmodule Aida.BotManagerTest do
       skill = %{id: "skill_id"}
       BotManager.start(bot)
 
-      with_mock Bot, [wake_up: fn(_bot, _skill_id, _data) -> raise "error" end] do
+      with_mock Bot, wake_up: fn _bot, _skill_id, _data -> raise "error" end do
         BotManager.schedule_wake_up(bot, skill, within(hours: 1))
 
         without_logging do
           time_travel(within(hours: 1)) do
-            assert called Bot.wake_up(bot, "skill_id", nil)
+            assert called(Bot.wake_up(bot, "skill_id", nil))
             assert GenServer.whereis({:global, BotManager})
           end
         end
@@ -142,73 +142,75 @@ defmodule Aida.BotManagerTest do
   end
 
   test "loads existing bots when it starts" do
-    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
     {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
 
     {:ok, bot} = BotParser.parse(db_bot.id, manifest)
 
-    ChannelRegistry.start_link
-    BotManager.start_link
+    ChannelRegistry.start_link()
+    BotManager.start_link()
 
     assert BotManager.find(bot.id) == bot
   end
 
   test "loads valid bots and skips invalid ones on start" do
-    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
     {:ok, db_bot} = DB.create_bot(%{manifest: manifest})
     {:ok, bot} = BotParser.parse(db_bot.id, manifest)
 
-    invalid_manifest = manifest
-        |> Map.put("skills", [
-          %{
-            "type" => "keyword_responder",
-            "id" => "this is the same id",
-            "name" => "Food menu",
-            "explanation" => %{
-              "en" => "I can give you information about our menu",
-              "es" => "Te puedo dar información sobre nuestro menu"
-            },
-            "clarification" => %{
-              "en" => "For menu options, write 'menu'",
-              "es" => "Para información sobre nuestro menu, escribe 'menu'"
-            },
-            "keywords" => %{
-              "en" => ["menu","food"],
-              "es" => ["menu","comida"]
-            },
-            "response" => %{
-              "en" => "We have {food_options}",
-              "es" => "Tenemos {food_options}"
-            }
+    invalid_manifest =
+      manifest
+      |> Map.put("skills", [
+        %{
+          "type" => "keyword_responder",
+          "id" => "this is the same id",
+          "name" => "Food menu",
+          "explanation" => %{
+            "en" => "I can give you information about our menu",
+            "es" => "Te puedo dar información sobre nuestro menu"
           },
-          %{
-            "type" => "keyword_responder",
-            "id" => "this is the same id",
-            "name" => "Opening hours",
-            "explanation" => %{
-              "en" => "I can give you information about our opening hours",
-              "es" => "Te puedo dar información sobre nuestro horario"
-            },
-            "clarification" => %{
-              "en" => "For opening hours say 'hours'",
-              "es" => "Para información sobre nuestro horario escribe 'horario'"
-            },
-            "keywords" => %{
-              "en" => ["hours","time"],
-              "es" => ["horario","hora"]
-            },
-            "response" => %{
-              "en" => "We are open every day from 7pm to 11pm",
-              "es" => "Abrimos todas las noches de 19 a 23"
-            }
+          "clarification" => %{
+            "en" => "For menu options, write 'menu'",
+            "es" => "Para información sobre nuestro menu, escribe 'menu'"
+          },
+          "keywords" => %{
+            "en" => ["menu", "food"],
+            "es" => ["menu", "comida"]
+          },
+          "response" => %{
+            "en" => "We have {food_options}",
+            "es" => "Tenemos {food_options}"
           }
-        ])
+        },
+        %{
+          "type" => "keyword_responder",
+          "id" => "this is the same id",
+          "name" => "Opening hours",
+          "explanation" => %{
+            "en" => "I can give you information about our opening hours",
+            "es" => "Te puedo dar información sobre nuestro horario"
+          },
+          "clarification" => %{
+            "en" => "For opening hours say 'hours'",
+            "es" => "Para información sobre nuestro horario escribe 'horario'"
+          },
+          "keywords" => %{
+            "en" => ["hours", "time"],
+            "es" => ["horario", "hora"]
+          },
+          "response" => %{
+            "en" => "We are open every day from 7pm to 11pm",
+            "es" => "Abrimos todas las noches de 19 a 23"
+          }
+        }
+      ])
+
     {:ok, invalid_bot} = DB.create_bot(%{manifest: invalid_manifest})
 
-    ChannelRegistry.start_link
+    ChannelRegistry.start_link()
 
     without_logging do
-      BotManager.start_link
+      BotManager.start_link()
 
       assert BotManager.find(bot.id) == bot
       assert BotManager.find(invalid_bot.id) == :not_found

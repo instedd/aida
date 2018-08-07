@@ -14,4 +14,3 @@ defmodule Aida.Expr.Literal do
     end
   end
 end
-

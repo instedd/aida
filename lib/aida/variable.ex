@@ -3,10 +3,10 @@ defmodule Aida.Variable do
   use Aida.ErrorLog
 
   @type t :: %__MODULE__{
-    name: String.t,
-    values: Bot.message,
-    overrides: [Override.t]
-  }
+          name: String.t(),
+          values: Bot.message(),
+          overrides: [Override.t()]
+        }
 
   defstruct name: nil,
             values: %{},
@@ -14,20 +14,21 @@ defmodule Aida.Variable do
 
   defmodule Override do
     @type t :: %__MODULE__{
-      relevant: Aida.Expr.t,
-      values: Bot.message
-    }
+            relevant: Aida.Expr.t(),
+            values: Bot.message()
+          }
     defstruct relevant: nil,
               values: %{}
   end
 
-  @spec resolve_value(t, Session.t) :: Bot.message
+  @spec resolve_value(t, Session.t()) :: Bot.message()
   def resolve_value(variable, message) do
     override =
       variable.overrides
       |> Enum.find(fn override ->
         try do
-          override.relevant |> Aida.Expr.eval(message |> Message.expr_context(lookup_raises: true))
+          override.relevant
+          |> Aida.Expr.eval(message |> Message.expr_context(lookup_raises: true))
         rescue
           error ->
             ErrorLog.write(Exception.message(error))

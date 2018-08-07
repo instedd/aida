@@ -30,6 +30,7 @@ defmodule AidaWeb.SessionController do
 
   def send_message(conn, %{"bot_id" => bot_id, "session_id" => session_id, "message" => message}) do
     session = Session.get(session_id)
+
     if session.bot_id != bot_id do
       conn |> put_status(422) |> json(%{errors: "Unknown session"}) |> halt
     else
@@ -41,14 +42,16 @@ defmodule AidaWeb.SessionController do
   end
 
   def attachment(conn, %{"bot_id" => bot_id, "session_id" => session_id, "file" => file}) do
-    if (String.starts_with? file.content_type, "image/") do
+    if String.starts_with?(file.content_type, "image/") do
       {:ok, binary} = File.read(file.path)
+
       image_attrs = %{
         binary: binary,
         binary_type: file.content_type,
         bot_id: bot_id,
         session_id: session_id
       }
+
       {:ok, image} = DB.create_image(image_attrs)
       render(conn, "attachment.json", attachment_id: image.uuid)
     else

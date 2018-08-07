@@ -1,7 +1,7 @@
 defmodule Aida.Crypto do
   alias Aida.Crypto.Box
 
-  @spec box(binary, list(Kcl.key())) :: Box.t
+  @spec box(binary, list(Kcl.key())) :: Box.t()
   def box(data, recipient_pks) do
     server_pair = Kcl.generate_key_pair()
     Box.build(data, server_pair, recipient_pks)

@@ -21,7 +21,10 @@ defmodule Aida.ChoiceTest do
     refute available?(message, "foo = ${foo}")
     refute available?(message, "foo = foo")
     assert available?(message, ". = 'foo'", %Choice{name: "foo"})
-    assert available?(message, "language = ${language}", %Choice{attributes: %{"language" => "en"}})
+
+    assert available?(message, "language = ${language}", %Choice{
+             attributes: %{"language" => "en"}
+           })
   end
 
   test "error handling", %{message: message} do

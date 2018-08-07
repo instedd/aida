@@ -11,21 +11,23 @@ defmodule Aida.Application do
       # Start the Ecto repository
       supervisor(Aida.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(AidaWeb.Endpoint, []),
+      supervisor(AidaWeb.Endpoint, [])
       # Start your own worker by calling: Aida.Worker.start_link(arg1, arg2, arg3)
       # worker(Aida.Worker, [arg1, arg2, arg3]),
     ]
 
-    children = if Mix.env != :test && !IEx.started? do
-      children ++ [
-        worker(Aida.JsonSchema, []),
-        worker(Aida.ChannelRegistry, []),
-        worker(Aida.BotManager, []),
-        worker(Aida.Scheduler, [])
-      ]
-    else
-      children
-    end
+    children =
+      if Mix.env() != :test && !IEx.started?() do
+        children ++
+          [
+            worker(Aida.JsonSchema, []),
+            worker(Aida.ChannelRegistry, []),
+            worker(Aida.BotManager, []),
+            worker(Aida.Scheduler, [])
+          ]
+      else
+        children
+      end
 
     # Capture all errors and report to Sentry
     # https://github.com/getsentry/sentry-elixir#capture-all-exceptions

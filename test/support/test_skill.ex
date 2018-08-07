@@ -1,9 +1,7 @@
 defmodule Aida.TestSkill do
-  defstruct [
-    encrypt: false,
-    response: "This is a test",
-    relevant: nil
-  ]
+  defstruct encrypt: false,
+            response: "This is a test",
+            relevant: nil
 
   defimpl Aida.Skill, for: __MODULE__ do
     alias Aida.Message
@@ -16,7 +14,8 @@ defmodule Aida.TestSkill do
 
     def confidence(_skill, _msg), do: :threshold
 
-    def put_response(%{response: response}, msg), do: msg |> Message.respond(response) |> Message.mark_sensitive
+    def put_response(%{response: response}, msg),
+      do: msg |> Message.respond(response) |> Message.mark_sensitive()
 
     def id(_skill), do: "test_skill"
 

@@ -3,7 +3,7 @@ defmodule Aida.ChannelRegistryTest do
   use ExUnit.Case
 
   setup do
-    ChannelRegistry.start_link
+    ChannelRegistry.start_link()
     :ok
   end
 
@@ -12,7 +12,7 @@ defmodule Aida.ChannelRegistryTest do
   end
 
   test "register and unregister channel" do
-    channel = TestChannel.new
+    channel = TestChannel.new()
 
     assert ChannelRegistry.register({:test, 123}, channel) == :ok
     assert ChannelRegistry.find({:test, 123}) == channel

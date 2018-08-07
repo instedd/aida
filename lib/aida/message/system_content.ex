@@ -21,4 +21,3 @@ defmodule Aida.Message.SystemContent do
     end
   end
 end
-

@@ -18,12 +18,13 @@ defmodule Aida.JsonSchema do
   end
 
   def init([]), do: init(["schema.json"])
+
   def init([schema_path]) do
     schema_path = Application.app_dir(:aida) <> "/priv/" <> schema_path
     schema_mtime = File.stat!(schema_path).mtime
     schema = load_schema(schema_path)
 
-    if Mix.env == :dev do
+    if Mix.env() == :dev do
       :timer.send_interval(:timer.seconds(1), :reload)
     end
 
@@ -38,19 +39,20 @@ defmodule Aida.JsonSchema do
   def handle_info(:reload, state) do
     mtime = File.stat!(state.schema_path).mtime
 
-    state = if mtime > state.schema_mtime do
-      try do
-        schema = load_schema(state.schema_path)
-        Logger.info "Schema reloaded!"
-        %{state | schema_mtime: mtime, schema: schema}
-      rescue
-        e ->
-          Logger.info "Error during schema reloading: #{inspect e}"
-          %{state | schema_mtime: mtime}
+    state =
+      if mtime > state.schema_mtime do
+        try do
+          schema = load_schema(state.schema_path)
+          Logger.info("Schema reloaded!")
+          %{state | schema_mtime: mtime, schema: schema}
+        rescue
+          e ->
+            Logger.info("Error during schema reloading: #{inspect(e)}")
+            %{state | schema_mtime: mtime}
+        end
+      else
+        state
       end
-    else
-      state
-    end
 
     {:noreply, state}
   end
@@ -60,23 +62,24 @@ defmodule Aida.JsonSchema do
   end
 
   def errors_to_json(errors) do
-    errors |> Enum.map(fn ({msg, cols}) -> "#{msg}: #{inspect cols}" end)
+    errors |> Enum.map(fn {msg, cols} -> "#{msg}: #{inspect(cols)}" end)
   end
 
   defp load_schema(schema_path) do
     File.read!(schema_path)
-    |> Poison.decode!
-    |> ExJsonSchema.Schema.resolve
+    |> Poison.decode!()
+    |> ExJsonSchema.Schema.resolve()
   end
 
   defp get_validation_errors(object, type, schema) do
     type_string = type |> to_string
     type_schema = schema.schema["definitions"][type_string]
 
-    not_a_struct = case object do
-      %{__struct__: _} -> Map.from_struct(object)
-      _ -> object
-    end
+    not_a_struct =
+      case object do
+        %{__struct__: _} -> Map.from_struct(object)
+        _ -> object
+      end
 
     string_keyed_object = ensure_key_strings(not_a_struct)
 
@@ -91,12 +94,14 @@ defmodule Aida.JsonSchema do
 
   defp ensure_key_strings(x) do
     cond do
-      is_map x ->
-        Enum.reduce x, %{}, fn({k,v}, acc) ->
-          Map.put acc, to_string(k), ensure_key_strings(v)
-        end
-      is_list x ->
-        Enum.map(x, fn (v) -> ensure_key_strings(v) end)
+      is_map(x) ->
+        Enum.reduce(x, %{}, fn {k, v}, acc ->
+          Map.put(acc, to_string(k), ensure_key_strings(v))
+        end)
+
+      is_list(x) ->
+        Enum.map(x, fn v -> ensure_key_strings(v) end)
+
       true ->
         x
     end

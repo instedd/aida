@@ -12,63 +12,68 @@ defmodule Aida.SessionTest do
 
   test "create new session", %{bot_id: bot_id} do
     session = Session.new({bot_id, @provider, @provider_key})
+
     assert %Session{
-      bot_id: ^bot_id,
-      provider: @provider,
-      provider_key: @provider_key,
-      is_new: true,
-      do_not_disturb: false,
-      data: %{}
-    } = session
+             bot_id: ^bot_id,
+             provider: @provider,
+             provider_key: @provider_key,
+             is_new: true,
+             do_not_disturb: false,
+             data: %{}
+           } = session
   end
 
   test "save existing session", %{bot_id: bot_id} do
     session = Session.new({bot_id, @provider, @provider_key})
     session_id = session.id
-    session = session |> Session.merge(%{"foo" => "bar"}) |> Session.save
+    session = session |> Session.merge(%{"foo" => "bar"}) |> Session.save()
+
     assert %Session{
-      id: ^session_id,
-      bot_id: ^bot_id,
-      provider: @provider,
-      provider_key: @provider_key,
-      data: %{"foo" => "bar"}
-    } = session
+             id: ^session_id,
+             bot_id: ^bot_id,
+             provider: @provider,
+             provider_key: @provider_key,
+             data: %{"foo" => "bar"}
+           } = session
   end
 
   describe "persisted in database" do
     test "return new session when it doesn't exist", %{bot_id: bot_id} do
       loaded_session = Session.find_or_create(bot_id, @provider, @provider_key)
+
       assert %Session{
-        bot_id: ^bot_id,
-        provider: @provider,
-        provider_key: @provider_key,
-        is_new: true,
-        do_not_disturb: false,
-        data: %{}
-      } = loaded_session
+               bot_id: ^bot_id,
+               provider: @provider,
+               provider_key: @provider_key,
+               is_new: true,
+               do_not_disturb: false,
+               data: %{}
+             } = loaded_session
     end
 
     test "load persisted session", %{bot_id: bot_id} do
       Session.new({bot_id, @provider, @provider_key})
-        |> Session.merge(%{"foo" => "bar"})
-        |> Session.save
+      |> Session.merge(%{"foo" => "bar"})
+      |> Session.save()
 
       loaded_session = Session.find_or_create(bot_id, @provider, @provider_key)
-      assert %Session{
-        bot_id: ^bot_id,
-        provider: @provider,
-        provider_key: @provider_key,
-        is_new: true,
-        do_not_disturb: false,
-        data: %{"foo" => "bar"}
-      } = loaded_session
-    end
 
+      assert %Session{
+               bot_id: ^bot_id,
+               provider: @provider,
+               provider_key: @provider_key,
+               is_new: true,
+               do_not_disturb: false,
+               data: %{"foo" => "bar"}
+             } = loaded_session
+    end
   end
 
   describe "value store" do
     test "get", %{bot_id: bot_id} do
-      session = Session.new({bot_id, @provider, @provider_key}) |> Session.merge(%{"foo" => "bar"})
+      session =
+        Session.new({bot_id, @provider, @provider_key}) |> Session.merge(%{"foo" => "bar"})
+
       assert session |> Session.get_value("foo") == "bar"
     end
 

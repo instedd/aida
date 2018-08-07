@@ -1,16 +1,27 @@
 defmodule Aida.FrontDesk do
   alias __MODULE__
-  alias Aida.{Bot, Message, Message.TextContent, Skill, DB.SkillUsage, DB.Session, Unsubscribe, Skill.Utils}
+
+  alias Aida.{
+    Bot,
+    Message,
+    Message.TextContent,
+    Skill,
+    DB.SkillUsage,
+    DB.Session,
+    Unsubscribe,
+    Skill.Utils
+  }
+
   use Aida.ErrorLog
 
   @type t :: %__MODULE__{
-    threshold: float,
-    greeting: Bot.message,
-    introduction: Bot.message,
-    not_understood: Bot.message,
-    clarification: Bot.message,
-    unsubscribe: Unsubscribe.t
-  }
+          threshold: float,
+          greeting: Bot.message(),
+          introduction: Bot.message(),
+          not_understood: Bot.message(),
+          clarification: Bot.message(),
+          unsubscribe: Unsubscribe.t()
+        }
 
   defstruct threshold: 0.5,
             greeting: %{},
@@ -23,53 +34,54 @@ defmodule Aida.FrontDesk do
     threshold
   end
 
-  @spec greet(message :: Message.t) :: Message.t
+  @spec greet(message :: Message.t()) :: Message.t()
   def greet(%Message{} = message) do
-    %{message.session | is_new: false} |> Session.save
+    %{message.session | is_new: false} |> Session.save()
 
     message
-      |> Message.respond(message.bot.front_desk.greeting)
-      |> introduction()
+    |> Message.respond(message.bot.front_desk.greeting)
+    |> introduction()
   end
 
-  @spec introduction(message :: Message.t) :: Message.t
+  @spec introduction(message :: Message.t()) :: Message.t()
   def introduction(message) do
     log_usage(message.bot.id, message.session.id)
 
     message
-      |> Message.respond(message.bot.front_desk.introduction)
-      |> skills_intro
-      |> Message.respond(message.bot.front_desk.unsubscribe.introduction_message)
+    |> Message.respond(message.bot.front_desk.introduction)
+    |> skills_intro
+    |> Message.respond(message.bot.front_desk.unsubscribe.introduction_message)
   end
 
-  @spec skills_intro(message :: Message.t) :: Message.t
+  @spec skills_intro(message :: Message.t()) :: Message.t()
   defp skills_intro(message) do
     Bot.relevant_skills(message)
-      |> Enum.reduce(message, fn(skill, message) ->
-        ErrorLog.context(skill_id: Skill.id(skill)) do
-          Skill.explain(skill, message)
-        end
-      end)
+    |> Enum.reduce(message, fn skill, message ->
+      ErrorLog.context skill_id: Skill.id(skill) do
+        Skill.explain(skill, message)
+      end
+    end)
   end
 
   def clarification(message, skills) do
-    message = message
+    message =
+      message
       |> Message.respond(message.bot.front_desk.clarification)
 
     log_usage(message.bot.id, message.session.id)
 
     skills
-      |> Enum.reduce(message, fn(skill, message) ->
-        ErrorLog.context(skill_id: Skill.id(skill)) do
-          Skill.clarify(skill, message)
-        end
-      end)
+    |> Enum.reduce(message, fn skill, message ->
+      ErrorLog.context skill_id: Skill.id(skill) do
+        Skill.clarify(skill, message)
+      end
+    end)
   end
 
   def not_understood(message) do
     message
-      |> Message.respond(message.bot.front_desk.not_understood)
-      |> introduction()
+    |> Message.respond(message.bot.front_desk.not_understood)
+    |> introduction()
   end
 
   defp log_usage(bot_id, session_id) do

@@ -2,14 +2,14 @@ defmodule Aida.Skill.Survey.InputQuestion do
   alias Aida.{Expr, Message, Message.ImageContent}
 
   @type t :: %__MODULE__{
-    type: :decimal | :integer | :text | :image,
-    name: String.t,
-    encrypt: boolean(),
-    relevant: nil | Expr.t,
-    message: Aida.Bot.message,
-    constraint: nil | Expr.t,
-    constraint_message: nil | Aida.Bot.message
-  }
+          type: :decimal | :integer | :text | :image,
+          name: String.t(),
+          encrypt: boolean(),
+          relevant: nil | Expr.t(),
+          message: Aida.Bot.message(),
+          constraint: nil | Expr.t(),
+          constraint_message: nil | Aida.Bot.message()
+        }
 
   defstruct type: "",
             name: "",
@@ -66,7 +66,9 @@ defmodule Aida.Skill.Survey.InputQuestion do
           else
             :error
           end
-        :error -> :error
+
+        :error ->
+          :error
       end
     end
 
@@ -78,7 +80,9 @@ defmodule Aida.Skill.Survey.InputQuestion do
           else
             :error
           end
-        _ -> :error
+
+        _ ->
+          :error
       end
     end
 

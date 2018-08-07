@@ -7,17 +7,17 @@ defmodule Aida.TestChannel do
 
   def find_channel(session) do
     pid = session.provider_key
-    new(pid |> String.to_atom)
+    new(pid |> String.to_atom())
   end
 
   defimpl Aida.Channel, for: __MODULE__ do
     def start(channel) do
-      send channel.pid, {:start, channel}
+      send(channel.pid, {:start, channel})
       :ok
     end
 
     def stop(channel) do
-      send channel.pid, {:stop, channel}
+      send(channel.pid, {:stop, channel})
       :ok
     end
 
@@ -26,7 +26,7 @@ defmodule Aida.TestChannel do
     end
 
     def send_message(channel, messages, session) do
-      send channel.pid, {:send_message, messages, session.id}
+      send(channel.pid, {:send_message, messages, session.id})
     end
   end
 end
