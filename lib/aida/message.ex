@@ -25,7 +25,7 @@ defmodule Aida.Message do
     new(content, bot, session, DateTime.utc_now)
   end
 
-  @spec new(content :: String.t, bot :: Bot.t, session :: Session.t) :: t
+  @spec new(content :: String.t, bot :: Bot.t, session :: Session.t, timestamp :: DateTime.t) :: t
   def new(content, %Bot{} = bot, session, timestamp) do
     %Message{
       session: session,
