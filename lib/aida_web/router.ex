@@ -48,6 +48,7 @@ defmodule AidaWeb.Router do
     pipe_through :browser
     get "/callback/:provider", CallbackController, :callback
     post "/callback/:provider", CallbackController, :callback
+    post "/callback/:provider/:bot_id", CallbackController, :callback
     get "/content/image/:uuid", ImageController, :image
   end
 

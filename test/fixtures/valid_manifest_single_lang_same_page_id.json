@@ -1,0 +1,95 @@
+{
+  "version": "1",
+  "languages": ["en"],
+  "notifications_url": "https://example.com/some/notification/endpoint",
+  "front_desk": {
+    "greeting": {
+      "message": {
+        "en": "Hello, I'm not a Restaurant bot"
+      }
+    },
+    "introduction": {
+      "message": {
+        "en": "I can do a number of different things"
+      }
+    },
+    "not_understood": {
+      "message": {
+        "en": "Sorry, I didn't understand that"
+      }
+    },
+    "clarification": {
+      "message": {
+        "en": "I'm not sure exactly what you need."
+      }
+    },
+    "unsubscribe": {
+      "introduction_message": {
+        "message": {
+          "en": "Send UNSUBSCRIBE to stop receiving messages"
+        }
+      },
+      "keywords": {
+        "en": ["UNSUBSCRIBE"]
+      },
+      "acknowledge_message": {
+        "message": {
+          "en": "I won't send you any further messages"
+        }
+      }
+    },
+    "threshold": 0.2
+  },
+  "skills": [
+    {
+      "type": "keyword_responder",
+      "id": "this is a string id",
+      "name": "Food menu",
+      "explanation": {
+        "en": "I can give you information about our menu"
+      },
+      "clarification": {
+        "en": "For menu options, write 'menu'"
+      },
+      "keywords": {
+        "en": ["menu","food"]
+      },
+      "response": {
+        "en": "We have {food_options}"
+      }
+    },
+    {
+      "type": "keyword_responder",
+      "id": "this is a different id",
+      "name": "Opening hours",
+      "explanation": {
+        "en": "I can give you information about our opening hours"
+      },
+      "clarification": {
+        "en": "For opening hours say 'hours'"
+      },
+      "keywords": {
+        "en": ["hours","time"]
+      },
+      "response": {
+        "en": "We are open every day from 7pm to 11pm"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "food_options",
+      "values": {
+        "en": "barbecue and pasta"
+      }
+    }
+  ],
+  "channels": [
+    {
+      "type": "facebook",
+      "page_id": "1234567890",
+      "verify_token": "qwertyuiopasdfghjklzxcvbnm",
+      "access_token": "QWERTYUIOPASDFGHJKLZXCVBNM"
+    }
+  ]
+}

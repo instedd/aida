@@ -206,6 +206,35 @@ defmodule Aida.Channel.FacebookConnTest do
       end
     end
 
+    test "incoming facebook message targets specific bot", %{bot: bot} do
+
+      another_manifest = File.read!("test/fixtures/valid_manifest_single_lang_same_page_id.json") |> Poison.decode!
+      {:ok, another_db_bot} = DB.create_bot(%{manifest: another_manifest})
+      {:ok, another_bot} = BotParser.parse(another_db_bot.id, another_manifest)
+      [another_bot: another_bot]
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_message)
+          |> Facebook.callback()
+
+        assert response(conn, 200) == "ok"
+
+        assert_message_sent("Hello, I'm not a Restaurant bot")
+        assert_message_sent("I can do a number of different things")
+      end
+
+      with_mock FacebookApi, [:passthrough], @fb_api_mock do
+        conn = build_conn(:post, "/callback/facebook", @incoming_message)
+          |> Facebook.callback(bot.id)
+
+        assert response(conn, 200) == "ok"
+
+        assert_message_sent("Hello, I'm a Restaurant bot")
+        assert_message_sent("I can do a number of things")
+      end
+
+    end
+
     test "incoming system session id message", %{bot: bot} do
       recipient_id = Session.encrypt_id("1234", bot.id)
       with_mock FacebookApi, [:passthrough], @fb_api_mock do

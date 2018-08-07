@@ -26,9 +26,29 @@ defmodule Aida.Channel.Facebook do
     %Facebook{}
   end
 
-  @spec find_channel_for_page_id(page_id :: String.t) :: t | :not_found
-  def find_channel_for_page_id(page_id) do
+  @spec find_channel_for_page_id(page_id :: String.t, bot_id :: String.t | nil) :: t | :not_found
+  def find_channel_for_page_id(page_id, bot_id \\ nil)
+
+  def find_channel_for_page_id(page_id, nil) do
     ChannelRegistry.find({:facebook, page_id})
+  end
+
+  def find_channel_for_page_id(page_id, bot_id) do
+    case BotManager.find(bot_id) do
+      :not_found ->
+        :not_found
+      bot ->
+        bot.channels |> find_channel_in_channels_for_page_id(page_id)
+    end
+  end
+
+  defp find_channel_in_channels_for_page_id(channels, page_id) do
+    case Enum.find(channels, fn (channel) -> Map.get(channel, :page_id) == page_id end) do
+        nil ->
+        :not_found
+      channel ->
+        channel
+    end
   end
 
   def find_channel(session) do
@@ -49,10 +69,11 @@ defmodule Aida.Channel.Facebook do
     |> Plug.Conn.send_resp(200, body)
   end
 
-  def callback(conn) do
+  def callback(conn, bot_id \\ nil) do
     try do
       page_id = get_page_id_from_params(conn.params)
-      case find_channel_for_page_id(page_id) do
+
+      case find_channel_for_page_id(page_id, bot_id) do
         :not_found -> conn |> Plug.Conn.send_resp(200, "ok")
         channel -> channel |> Aida.Channel.callback(conn)
       end
