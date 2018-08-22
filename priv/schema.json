@@ -10,6 +10,7 @@
       "properties": {
         "version": { "enum": ["1"] },
         "notifications_url": {"$ref": "#/definitions/non_empty_string"},
+        "natural_language_interface": {"$ref": "#/definitions/natural_language_interface"},
         "languages": {
           "type": "array",
           "minItems": 1,
@@ -73,6 +74,16 @@
       },
       "additionalProperties": false,
       "required": ["name", "columns", "data"]
+    },
+
+    "natural_language_interface": {
+      "type": "object",
+      "properties": {
+        "provider": {"$ref": "#/definitions/non_empty_string"},
+        "auth_token": {"$ref": "#/definitions/non_empty_string"}
+      },
+      "additionalProperties": false,
+      "required": ["provider", "auth_token"]
     },
 
     "front_desk": {

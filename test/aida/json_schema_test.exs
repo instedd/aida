@@ -278,10 +278,15 @@ defmodule Aida.JsonSchemaTest do
       [3, "", "", ""]
     ]
   })
+  @valid_natural_language_interface ~s({
+    "provider" : "wit_ai",
+    "auth_token" : "ASDHDEAWREARTDJFHZDGSFEDFGAFD"
+  })
   @valid_manifest ~s({
     "version" : "1",
     "languages" : ["en"],
     "notifications_url": "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+    "natural_language_interface" : #{@valid_natural_language_interface},
     "front_desk" : #{@valid_front_desk},
     "skills" : [
       #{@valid_keyword_responder},
