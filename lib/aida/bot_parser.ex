@@ -14,7 +14,9 @@ defmodule Aida.BotParser do
     Channel.Facebook,
     Channel.WebSocket,
     Recurrence,
-    Unsubscribe
+    Unsubscribe,
+    WitAi,
+    Engine.WitAIEngine
   }
 
   @spec parse(id :: String.t(), manifest :: map) ::
@@ -30,7 +32,9 @@ defmodule Aida.BotParser do
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
         channels: manifest["channels"] |> Enum.map(&parse_channel(id, &1)),
         public_keys: parse_public_keys(manifest["public_keys"]),
-        data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1)
+        data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1),
+        natural_language_interface:
+          parse_natural_language_interface(manifest["natural_language_interface"])
       }
       |> validate()
     rescue
@@ -43,6 +47,18 @@ defmodule Aida.BotParser do
       {:ok, bot} -> bot
       {:error, reason} -> raise reason
     end
+  end
+
+  @spec parse_natural_language_interface(natural_language_interface :: map) :: WitAi.t()
+
+  defp parse_natural_language_interface(%{"auth_token" => auth_token, "provider" => "wit_ai"}) do
+    %WitAi{
+      auth_token: auth_token
+    }
+  end
+
+  defp parse_natural_language_interface(_) do
+    nil
   end
 
   @spec parse_front_desk(front_desk :: map) :: FrontDesk.t()
@@ -361,7 +377,8 @@ defmodule Aida.BotParser do
 
   defp validate(bot) do
     with :ok <- validate_skill_id_uniqueness(bot),
-         :ok <- validate_required_public_keys(bot) do
+         :ok <- validate_required_public_keys(bot),
+         :ok <- validate_natural_language_interface_credentials(bot) do
       {:ok, bot}
     else
       err -> err
@@ -392,6 +409,36 @@ defmodule Aida.BotParser do
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
     end
+  end
+
+  def validate_natural_language_interface_credentials(%Aida.Bot{
+        :natural_language_interface => nil
+      }) do
+    :ok
+  end
+
+  def validate_natural_language_interface_credentials(%Aida.Bot{
+        natural_language_interface: %Aida.WitAi{auth_token: _} = natural_language_interface
+      }) do
+    case WitAIEngine.check_credentials(natural_language_interface) do
+      :ok ->
+        :ok
+
+      _ ->
+        {:error,
+         %{
+           "message" => "Invalid wit ai credentials in manifest",
+           "path" => "#/natural_language_interface"
+         }}
+    end
+  end
+
+  def validate_natural_language_interface_credentials(_) do
+    {:error,
+     %{
+       "message" => "Invalid natural language interface in manifest",
+       "path" => "#/natural_language_interface"
+     }}
   end
 
   def validate_required_public_keys(%{skills: skills, public_keys: []}) do

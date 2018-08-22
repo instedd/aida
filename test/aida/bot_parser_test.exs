@@ -20,8 +20,12 @@ defmodule Aida.BotParserTest do
     Skill.DecisionTree,
     Variable,
     Recurrence,
-    Unsubscribe
+    Unsubscribe,
+    WitAi,
+    Engine.WitAIEngine
   }
+
+  import Mock
 
   alias Aida.Channel.{Facebook, WebSocket}
 
@@ -568,6 +572,7 @@ defmodule Aida.BotParserTest do
              languages: ["en", "es"],
              notifications_url:
                "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+             natural_language_interface: nil,
              front_desk: %FrontDesk{
                threshold: 0.3,
                greeting: %{
@@ -878,6 +883,51 @@ defmodule Aida.BotParserTest do
                }
              ]
            } = bot
+  end
+
+  test "parse manifest with wit ai" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
+    valid_auth_token = "a valid auth_token"
+
+    manifest =
+      manifest
+      |> Map.put("natural_language_interface", %{
+        "provider" => "wit_ai",
+        "auth_token" => "a valid auth_token"
+      })
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{
+        natural_language_interface: %WitAi{
+          auth_token: auth_token
+        }
+      } = bot
+
+      assert auth_token == valid_auth_token
+    end
+  end
+
+  test "raise when parsing manifest with wit ai invalid credentials" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
+
+    manifest =
+      manifest
+      |> Map.put("natural_language_interface", %{
+        "provider" => "wit_ai",
+        "auth_token" => "an invalid auth_token"
+      })
+
+    with_mock WitAIEngine,
+      check_credentials: fn _invalid_auth_token -> "any other response" end do
+      assert {:error,
+              %{
+                "message" => "Invalid wit ai credentials in manifest",
+                "path" => "#/natural_language_interface"
+              }} = BotParser.parse(@uuid, manifest)
+    end
   end
 
   test "parse manifest with duplicated skill id" do
