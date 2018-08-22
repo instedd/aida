@@ -144,7 +144,7 @@
         "relevant": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
-      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "response"]
+      "required": ["type", "id", "name", "explanation", "clarification", "response"]
     },
 
     "human_override": {

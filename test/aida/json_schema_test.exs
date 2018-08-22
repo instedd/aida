@@ -55,7 +55,6 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "explanation": #{@valid_empty_localized_string},
     "clarification": #{@valid_empty_localized_string},
-    "keywords": #{@valid_localized_keywords},
     "response": #{@valid_localized_string}
   })
   @valid_human_override ~s({
@@ -542,7 +541,6 @@ defmodule Aida.JsonSchemaTest do
     assert_required("explanation", :keyword_responder)
     assert_required("clarification", :keyword_responder)
     assert_required("response", :keyword_responder)
-    assert_required("keywords", :keyword_responder)
     assert_required("name", :keyword_responder)
     assert_non_empty_string("name", :keyword_responder)
     assert_required("id", :keyword_responder)
