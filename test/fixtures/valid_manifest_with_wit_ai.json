@@ -1,0 +1,75 @@
+{
+  "version": "1",
+  "languages": ["en", "es"],
+  "notifications_url": "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+  "natural_language_interface": {
+    "provider": "wit_ai",
+    "auth_token": "valid auth_token"
+  },
+  "front_desk": {
+    "greeting": {
+      "message": {
+        "en": "Hello, I'm a Restaurant bot",
+        "es": "Hola, soy un bot de Restaurant"
+      }
+    },
+    "introduction": {
+      "message": {
+        "en": "I can do a number of things",
+        "es": "Puedo ayudarte con varias cosas"
+      }
+    },
+    "not_understood": {
+      "message": {
+        "en": "Sorry, I didn't understand that",
+        "es": "Perdón, no entendí lo que dijiste"
+      }
+    },
+    "clarification": {
+      "message": {
+        "en": "I'm not sure exactly what you need.",
+        "es": "Perdón, no estoy seguro de lo que necesitás."
+      }
+    },
+    "unsubscribe": {
+      "introduction_message": {
+        "message": {
+          "en": "Send UNSUBSCRIBE to stop receiving messages",
+          "es": "Enviá DESUSCRIBIR para dejar de recibir mensajes"
+        }
+      },
+      "keywords": {
+        "en": ["UNSUBSCRIBE"],
+        "es": ["DESUSCRIBIR"]
+      },
+      "acknowledge_message": {
+        "message": {
+          "en": "I won't send you any further messages",
+          "es": "No te enviaré más mensajes"
+        }
+      }
+    },
+    "threshold": 0.3
+  },
+  "skills": [
+    {
+      "type": "keyword_responder",
+      "id": "this is a string id",
+      "name": "Food menu",
+      "explanation": {
+        "en": "I can give you information about our menu"
+      },
+      "clarification": {
+        "en": "For menu options, write 'menu'"
+      },
+      "training_sentences" : {
+        "en": ["I need some menu information", "What food do you serve?"]
+      },
+      "response": {
+        "en": "We have {food_options}"
+      }
+    }
+  ],
+  "channels": [],
+  "variables": []
+}
