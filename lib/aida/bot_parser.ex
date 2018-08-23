@@ -387,6 +387,7 @@ defmodule Aida.BotParser do
   defp validate(bot) do
     with :ok <- validate_skill_id_uniqueness(bot),
          :ok <- validate_required_public_keys(bot),
+         :ok <- validate_natural_language_interface_presence(bot),
          :ok <- validate_natural_language_interface_credentials(bot) do
       {:ok, bot}
     else
@@ -418,6 +419,33 @@ defmodule Aida.BotParser do
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
     end
+  end
+
+  def validate_natural_language_interface_presence(%Aida.Bot{
+        :natural_language_interface => nil,
+        :skills => skills
+      }) do
+    case Enum.any?(
+           skills,
+           &match?(
+             %{:training_sentences => training_sentences} when training_sentences != nil,
+             &1
+           )
+         ) do
+      true ->
+        {:error,
+         %{
+           "message" => "Missing natural_language_interface in manifest",
+           "path" => "#/natural_language_interface"
+         }}
+
+      _ ->
+        :ok
+    end
+  end
+
+  def validate_natural_language_interface_presence(_) do
+    :ok
   end
 
   def validate_natural_language_interface_credentials(%Aida.Bot{
