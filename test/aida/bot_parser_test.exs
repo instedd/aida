@@ -910,6 +910,21 @@ defmodule Aida.BotParserTest do
     end
   end
 
+  test "parse manifest with training_sentences in keyword_responder" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [%KeywordResponder{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => ["I need some menu information", "What food do you serve?"]
+             }
+    end
+  end
+
   test "raise when parsing manifest with wit ai invalid credentials" do
     manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
 

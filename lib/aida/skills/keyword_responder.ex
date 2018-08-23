@@ -8,6 +8,7 @@ defmodule Aida.Skill.KeywordResponder do
           bot_id: String.t(),
           name: String.t(),
           keywords: nil | %{},
+          training_sentences: nil | %{},
           response: %{},
           relevant: nil | Aida.Expr.t()
         }
@@ -18,6 +19,7 @@ defmodule Aida.Skill.KeywordResponder do
             bot_id: "",
             name: "",
             keywords: nil,
+            training_sentences: nil,
             response: %{},
             relevant: nil
 

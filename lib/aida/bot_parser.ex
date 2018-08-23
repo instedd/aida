@@ -132,6 +132,7 @@ defmodule Aida.BotParser do
       id: skill["id"],
       name: skill["name"],
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       response: skill["response"],
       relevant: parse_expr(skill["relevant"])
     }
@@ -362,17 +363,25 @@ defmodule Aida.BotParser do
     |> Enum.map(&Base.decode64!/1)
   end
 
-  defp parse_string_list_map(string_list_map) do
+  defp parse_string_list_map(string_list_map, downcase \\ true) do
     if string_list_map do
       string_list_map
-      |> Enum.map(fn {key, value} -> {key, parse_string_list(value)} end)
+      |> Enum.map(fn {key, value} -> {key, parse_string_list(value, downcase)} end)
       |> Enum.into(%{})
     end
   end
 
-  defp parse_string_list(string_list) do
+  defp parse_string_list(string_list, downcase) do
     string_list
-    |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
+    |> Enum.map(&(&1 |> String.trim() |> downcase_string(downcase)))
+  end
+
+  defp downcase_string(string, true) do
+    string |> String.downcase()
+  end
+
+  defp downcase_string(string, _) do
+    string
   end
 
   defp validate(bot) do
