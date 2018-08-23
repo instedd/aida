@@ -388,7 +388,8 @@ defmodule Aida.BotParser do
     with :ok <- validate_skill_id_uniqueness(bot),
          :ok <- validate_required_public_keys(bot),
          :ok <- validate_natural_language_interface_presence(bot),
-         :ok <- validate_natural_language_interface_credentials(bot) do
+         :ok <- validate_natural_language_interface_credentials(bot),
+         :ok <- validate_keywords_and_training_sentences(bot) do
       {:ok, bot}
     else
       err -> err
@@ -418,6 +419,43 @@ defmodule Aida.BotParser do
           end)
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
+    end
+  end
+
+  defp validate_keywords_and_training_sentences(%{skills: skills}) do
+    keywords_and_training_sentences_skill =
+      skills
+      |> Enum.find(
+        &match?(
+          %{
+            :training_sentences => training_sentences,
+            :keywords => keywords
+          }
+          when training_sentences != nil and keywords != nil,
+          &1
+        )
+      )
+
+    case keywords_and_training_sentences_skill do
+      nil ->
+        :ok
+
+      %{:id => id} ->
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}/keywords", "#/skills/#{index}/training_sentences"], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
+
+        {:error,
+         %{
+           "message" => "Keywords and training_sentences in the same skill",
+           "path" => paths
+         }}
     end
   end
 

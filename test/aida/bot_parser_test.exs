@@ -967,6 +967,52 @@ defmodule Aida.BotParserTest do
     end
   end
 
+  test "raise when parsing manifest with training_sentences and keywords" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "clarification" => %{
+                  "en" => "For menu options, write 'menu'",
+                  "es" => "Para información sobre nuestro menu, escribe 'menu'"
+                },
+                "explanation" => %{
+                  "en" => "I can give you information about our menu",
+                  "es" => "Te puedo dar información sobre nuestro menu"
+                },
+                "id" => "this is a different string id",
+                "training_sentences" => %{
+                  en: ["I need some menu information", "What food do you serve?"]
+                },
+                "keywords" => %{
+                  "en" => ["menu", "food"],
+                  "es" => ["menu", "comida"]
+                },
+                "name" => "Food menu",
+                "response" => %{
+                  "en" => "We have ${food_options}",
+                  "es" => "Tenemos ${food_options}"
+                },
+                "type" => "keyword_responder"
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "Keywords and training_sentences in the same skill",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
   test "raise when parsing manifest with wit ai invalid credentials" do
     manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
 
