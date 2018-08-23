@@ -389,7 +389,8 @@ defmodule Aida.BotParser do
          :ok <- validate_required_public_keys(bot),
          :ok <- validate_natural_language_interface_presence(bot),
          :ok <- validate_natural_language_interface_credentials(bot),
-         :ok <- validate_keywords_and_training_sentences(bot) do
+         :ok <- validate_keywords_and_training_sentences(bot),
+         :ok <- validate_keywords_or_training_sentences(bot) do
       {:ok, bot}
     else
       err -> err
@@ -419,6 +420,44 @@ defmodule Aida.BotParser do
           end)
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
+    end
+  end
+
+  defp validate_keywords_or_training_sentences(%{skills: skills}) do
+    neither_keywords_nor_training_sentences_skill =
+      skills
+      |> Enum.find(
+        &match?(
+          %type{
+            :training_sentences => training_sentences,
+            :keywords => keywords
+          }
+          when training_sentences == nil and keywords == nil and
+                 type in [Aida.Skill.KeywordResponder],
+          &1
+        )
+      )
+
+    case neither_keywords_nor_training_sentences_skill do
+      nil ->
+        :ok
+
+      %{:id => id} ->
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}/keywords", "#/skills/#{index}/training_sentences"], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
+
+        {:error,
+         %{
+           "message" => "One of keywords or training_sentences required",
+           "path" => paths
+         }}
     end
   end
 
