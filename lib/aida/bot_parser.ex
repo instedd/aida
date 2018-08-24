@@ -390,7 +390,8 @@ defmodule Aida.BotParser do
          :ok <- validate_natural_language_interface_presence(bot),
          :ok <- validate_natural_language_interface_credentials(bot),
          :ok <- validate_keywords_and_training_sentences(bot),
-         :ok <- validate_keywords_or_training_sentences(bot) do
+         :ok <- validate_keywords_or_training_sentences(bot),
+         :ok <- validate_only_english_training_sentences(bot) do
       {:ok, bot}
     else
       err -> err
@@ -420,6 +421,46 @@ defmodule Aida.BotParser do
           end)
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
+    end
+  end
+
+  defp validate_only_english_training_sentences(%{skills: skills}) do
+    not_only_english_training_sentences_skill =
+      skills
+      |> Enum.filter(
+        &match?(
+          %{
+            :training_sentences => training_sentences
+          }
+          when training_sentences != nil,
+          &1
+        )
+      )
+      |> Enum.find(fn %{:training_sentences => training_sentences} ->
+        Map.get(training_sentences, "en") == nil or
+          Map.keys(training_sentences) |> Kernel.length() > 1
+      end)
+
+    case not_only_english_training_sentences_skill do
+      nil ->
+        :ok
+
+      %{:id => id} ->
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}/training_sentences"], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
+
+        {:error,
+         %{
+           "message" => "Training_sentences are valid only in english",
+           "path" => paths
+         }}
     end
   end
 
