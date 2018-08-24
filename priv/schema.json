@@ -157,6 +157,7 @@
         "explanation": {"$ref": "#/definitions/localized_string_or_empty"},
         "clarification": {"$ref": "#/definitions/localized_string_or_empty"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "training_sentences" : {"$ref": "#/definitions/localized_sentences"},
         "in_hours_response": {"$ref": "#/definitions/localized_string"},
         "off_hours_response": {"$ref": "#/definitions/localized_string"},
         "in_hours": {
@@ -181,7 +182,7 @@
         "relevant": {"$ref": "#/definitions/non_empty_string"}
       },
       "additionalProperties": false,
-      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "in_hours_response", "off_hours_response", "in_hours"]
+      "required": ["type", "id", "name", "explanation", "clarification", "in_hours_response", "off_hours_response", "in_hours"]
     },
 
     "language_detector": {

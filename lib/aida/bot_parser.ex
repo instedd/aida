@@ -202,6 +202,7 @@ defmodule Aida.BotParser do
       explanation: skill["explanation"],
       clarification: skill["clarification"],
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       relevant: parse_expr(skill["relevant"]),
       in_hours_response: skill["in_hours_response"],
       off_hours_response: skill["off_hours_response"],
@@ -474,7 +475,10 @@ defmodule Aida.BotParser do
             :keywords => keywords
           }
           when training_sentences == nil and keywords == nil and
-                 type in [Aida.Skill.KeywordResponder],
+                 type in [
+                   Aida.Skill.KeywordResponder,
+                   Aida.Skill.HumanOverride
+                 ],
           &1
         )
       )

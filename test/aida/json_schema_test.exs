@@ -562,7 +562,6 @@ defmodule Aida.JsonSchemaTest do
     assert_required("clarification", :human_override)
     assert_required("in_hours_response", :human_override)
     assert_required("off_hours_response", :human_override)
-    assert_required("keywords", :human_override)
     assert_required("name", :human_override)
     assert_non_empty_string("name", :human_override)
     assert_required("id", :human_override)

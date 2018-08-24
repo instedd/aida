@@ -925,6 +925,88 @@ defmodule Aida.BotParserTest do
     end
   end
 
+  test "parse manifest with training_sentences in human_override" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "human_override",
+                "id" => "human_override_skill",
+                "name" => "Human override",
+                "explanation" => %{
+                  "en" => "I can give you information about our availabilty",
+                  "es" => "Te puedo dar información sobre nuestra disponibilidad"
+                },
+                "clarification" => %{
+                  "en" => "To know our availabilty, write 'availabilty'",
+                  "es" =>
+                    "Para información sobre nuestro disponibilidad, escribe 'disponibilidad'"
+                },
+                "training_sentences" => %{
+                  "en" => [
+                    "Do you have any available?",
+                    "Do you have any availability",
+                    "Do you have a table for 4?"
+                  ]
+                },
+                "in_hours_response" => %{
+                  "en" =>
+                    "Let me ask the manager for availability - I'll come back to you in a few minutes",
+                  "es" =>
+                    "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
+                },
+                "off_hours_response" => %{
+                  "en" =>
+                    "Sorry, but we are not taking reservations right now. I'll let you know about tomorrow.",
+                  "es" =>
+                    "Perdón, pero no estamos tomando reservas en este momento. Mañana le haré saber nuestra disponibilidad."
+                },
+                "in_hours" => %{
+                  "hours" => [
+                    %{
+                      "day" => "mon",
+                      "since" => "9:30",
+                      "until" => "18:00"
+                    },
+                    %{
+                      "day" => "mon",
+                      "since" => "20:00"
+                    },
+                    %{
+                      "day" => "tue",
+                      "until" => "03:00"
+                    },
+                    %{
+                      "day" => "wed"
+                    }
+                  ],
+                  "timezone" => "America/Buenos_Aires"
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [_, %HumanOverride{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => [
+                 "Do you have any available?",
+                 "Do you have any availability",
+                 "Do you have a table for 4?"
+               ]
+             }
+    end
+  end
+
   test "raise when parsing manifest with training_sentences but no natural_language_interface" do
     manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
 
@@ -1059,7 +1141,7 @@ defmodule Aida.BotParserTest do
     end
   end
 
-  test "raise when parsing manifest with neither training_sentences nor keywords" do
+  test "raise when parsing manifest with neither training_sentences nor keywords in keyword_responder" do
     manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
 
     manifest =
@@ -1084,6 +1166,75 @@ defmodule Aida.BotParserTest do
                   "es" => "Tenemos ${food_options}"
                 },
                 "type" => "keyword_responder"
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "One of keywords or training_sentences required",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with neither training_sentences nor keywords in human_override" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "human_override",
+                "id" => "human_override_skill",
+                "name" => "Human override",
+                "explanation" => %{
+                  "en" => "I can give you information about our availabilty",
+                  "es" => "Te puedo dar información sobre nuestra disponibilidad"
+                },
+                "clarification" => %{
+                  "en" => "To know our availabilty, write 'availabilty'",
+                  "es" =>
+                    "Para información sobre nuestro disponibilidad, escribe 'disponibilidad'"
+                },
+                "in_hours_response" => %{
+                  "en" =>
+                    "Let me ask the manager for availability - I'll come back to you in a few minutes",
+                  "es" =>
+                    "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
+                },
+                "off_hours_response" => %{
+                  "en" =>
+                    "Sorry, but we are not taking reservations right now. I'll let you know about tomorrow.",
+                  "es" =>
+                    "Perdón, pero no estamos tomando reservas en este momento. Mañana le haré saber nuestra disponibilidad."
+                },
+                "in_hours" => %{
+                  "hours" => [
+                    %{
+                      "day" => "mon",
+                      "since" => "9:30",
+                      "until" => "18:00"
+                    },
+                    %{
+                      "day" => "mon",
+                      "since" => "20:00"
+                    },
+                    %{
+                      "day" => "tue",
+                      "until" => "03:00"
+                    },
+                    %{
+                      "day" => "wed"
+                    }
+                  ],
+                  "timezone" => "America/Buenos_Aires"
+                }
               }
             ])
       )
