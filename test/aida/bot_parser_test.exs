@@ -1007,6 +1007,169 @@ defmodule Aida.BotParserTest do
     end
   end
 
+  test "parse manifest with training_sentences in decision_tree" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "decision_tree",
+                "id" => "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+                "name" => "Food menu",
+                "explanation" => %{
+                  "en" => "I can help you choose a meal that fits your dietary restrictions",
+                  "es" =>
+                    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+                },
+                "clarification" => %{
+                  "en" => "To get a meal recommendation write 'meal recommendation'",
+                  "es" => "Para recibir una recomendación escribe 'recomendación'"
+                },
+                "training_sentences" => %{
+                  "en" => ["I'd like a meal recommendation", "Is there anything you recommend?"]
+                },
+                "tree" => %{
+                  "id" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
+                  "question" => %{
+                    "en" => "Do you want to eat a main course or a dessert?",
+                    "es" => "Querés comer un primer plato o un postre?"
+                  },
+                  "responses" => [
+                    %{
+                      "keywords" => %{
+                        "en" => ["main", "course", "Main"],
+                        "es" => ["primer", "plato"]
+                      },
+                      "next" => %{
+                        "id" => "c038e08e-6095-4897-9184-eae929aba8c6",
+                        "question" => %{
+                          "en" => "Are you a vegetarian?",
+                          "es" => "Sos vegetariano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes"],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "031d9a25-f457-4b21-b83b-13e00ece6cc0",
+                              "answer" => %{
+                                "en" => "Go with Risotto",
+                                "es" => "Clavate un risotto"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["No"],
+                              "es" => ["no"]
+                            },
+                            "next" => %{
+                              "id" => "e530d33b-3720-4431-836a-662b26851424",
+                              "answer" => %{
+                                "en" => "Go with barbecue",
+                                "es" => "Comete un asado"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    %{
+                      "keywords" => %{
+                        "en" => ["dessert"],
+                        "es" => ["postre"]
+                      },
+                      "next" => %{
+                        "id" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b",
+                        "question" => %{
+                          "en" => "Are you vegan?",
+                          "es" => "Sos vegano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes "],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "3d5d6819-ae31-45b6-b8f6-13d62b092730",
+                              "answer" => %{
+                                "en" => "Go with a carrot cake",
+                                "es" => "Come una torta de zanahoria"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["no"],
+                              "es" => [" no"]
+                            },
+                            "next" => %{
+                              "id" => "5d79bf1c-4863-401f-8f08-89ffb3af33cf",
+                              "question" => %{
+                                "en" => "Are you lactose intolerant?",
+                                "es" => "Sos intolerante a la lactosa?"
+                              },
+                              "responses" => [
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["yes"],
+                                    "es" => ["si"]
+                                  },
+                                  "next" => %{
+                                    "id" => "f00f115f-4a0b-45e1-a123-ac1756616be7",
+                                    "answer" => %{
+                                      "en" => "Go with a chocolate mousse",
+                                      "es" => "Comete una mousse de chocolate"
+                                    }
+                                  }
+                                },
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["no"],
+                                    "es" => ["no"]
+                                  },
+                                  "next" => %{
+                                    "id" => "75f04293-f561-462f-9e74-a0d011e1594a",
+                                    "answer" => %{
+                                      "en" => "Go with an ice cream",
+                                      "es" => "Comete un helado"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [_, %DecisionTree{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => [
+                 "I'd like a meal recommendation",
+                 "Is there anything you recommend?"
+               ]
+             }
+    end
+  end
+
   test "raise when parsing manifest with training_sentences but no natural_language_interface" do
     manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
 
@@ -1234,6 +1397,161 @@ defmodule Aida.BotParserTest do
                     }
                   ],
                   "timezone" => "America/Buenos_Aires"
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "One of keywords or training_sentences required",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with neither training_sentences nor keywords in decision_tree" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "decision_tree",
+                "id" => "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+                "name" => "Food menu",
+                "explanation" => %{
+                  "en" => "I can help you choose a meal that fits your dietary restrictions",
+                  "es" =>
+                    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+                },
+                "clarification" => %{
+                  "en" => "To get a meal recommendation write 'meal recommendation'",
+                  "es" => "Para recibir una recomendación escribe 'recomendación'"
+                },
+                "tree" => %{
+                  "id" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
+                  "question" => %{
+                    "en" => "Do you want to eat a main course or a dessert?",
+                    "es" => "Querés comer un primer plato o un postre?"
+                  },
+                  "responses" => [
+                    %{
+                      "keywords" => %{
+                        "en" => ["main", "course", "Main"],
+                        "es" => ["primer", "plato"]
+                      },
+                      "next" => %{
+                        "id" => "c038e08e-6095-4897-9184-eae929aba8c6",
+                        "question" => %{
+                          "en" => "Are you a vegetarian?",
+                          "es" => "Sos vegetariano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes"],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "031d9a25-f457-4b21-b83b-13e00ece6cc0",
+                              "answer" => %{
+                                "en" => "Go with Risotto",
+                                "es" => "Clavate un risotto"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["No"],
+                              "es" => ["no"]
+                            },
+                            "next" => %{
+                              "id" => "e530d33b-3720-4431-836a-662b26851424",
+                              "answer" => %{
+                                "en" => "Go with barbecue",
+                                "es" => "Comete un asado"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    %{
+                      "keywords" => %{
+                        "en" => ["dessert"],
+                        "es" => ["postre"]
+                      },
+                      "next" => %{
+                        "id" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b",
+                        "question" => %{
+                          "en" => "Are you vegan?",
+                          "es" => "Sos vegano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes "],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "3d5d6819-ae31-45b6-b8f6-13d62b092730",
+                              "answer" => %{
+                                "en" => "Go with a carrot cake",
+                                "es" => "Come una torta de zanahoria"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["no"],
+                              "es" => [" no"]
+                            },
+                            "next" => %{
+                              "id" => "5d79bf1c-4863-401f-8f08-89ffb3af33cf",
+                              "question" => %{
+                                "en" => "Are you lactose intolerant?",
+                                "es" => "Sos intolerante a la lactosa?"
+                              },
+                              "responses" => [
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["yes"],
+                                    "es" => ["si"]
+                                  },
+                                  "next" => %{
+                                    "id" => "f00f115f-4a0b-45e1-a123-ac1756616be7",
+                                    "answer" => %{
+                                      "en" => "Go with a chocolate mousse",
+                                      "es" => "Comete una mousse de chocolate"
+                                    }
+                                  }
+                                },
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["no"],
+                                    "es" => ["no"]
+                                  },
+                                  "next" => %{
+                                    "id" => "75f04293-f561-462f-9e74-a0d011e1594a",
+                                    "answer" => %{
+                                      "en" => "Go with an ice cream",
+                                      "es" => "Comete un helado"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 }
               }
             ])

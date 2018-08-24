@@ -365,11 +365,12 @@
         "explanation": {"$ref": "#/definitions/localized_string_or_empty"},
         "clarification": {"$ref": "#/definitions/localized_string_or_empty"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "training_sentences" : {"$ref": "#/definitions/localized_sentences"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
         "tree": {"$ref": "#/definitions/tree_question"}
       },
       "additionalProperties": false,
-      "required": ["type", "id", "name", "explanation", "clarification", "keywords", "tree"]
+      "required": ["type", "id", "name", "explanation", "clarification", "tree"]
     },
 
     "tree_question":{

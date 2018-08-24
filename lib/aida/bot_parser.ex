@@ -188,6 +188,7 @@ defmodule Aida.BotParser do
       explanation: skill["explanation"],
       clarification: skill["clarification"],
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       relevant: parse_expr(skill["relevant"]),
       root_id: skill["tree"]["id"],
       tree: DecisionTree.flatten(skill["tree"])
@@ -477,7 +478,8 @@ defmodule Aida.BotParser do
           when training_sentences == nil and keywords == nil and
                  type in [
                    Aida.Skill.KeywordResponder,
-                   Aida.Skill.HumanOverride
+                   Aida.Skill.HumanOverride,
+                   Aida.Skill.DecisionTree
                  ],
           &1
         )

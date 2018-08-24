@@ -766,7 +766,6 @@ defmodule Aida.JsonSchemaTest do
     assert_required("tree", :decision_tree)
     assert_required("explanation", :decision_tree)
     assert_required("clarification", :decision_tree)
-    assert_required("keywords", :decision_tree)
     assert_optional("relevant", "${age} > 18", :decision_tree)
 
     @valid_decision_tree
