@@ -1007,6 +1007,204 @@ defmodule Aida.BotParserTest do
     end
   end
 
+  test "parse manifest with training_sentences in survey" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "survey",
+                "id" => "food_preferences",
+                "name" => "Food Preferences",
+                "training_sentences" => %{
+                  "en" => [
+                    "Please ask me about my food preferences",
+                    "I want you to know about my food preferences"
+                  ]
+                },
+                "questions" => [
+                  %{
+                    "type" => "note",
+                    "name" => "introduction",
+                    "message" => %{
+                      "en" =>
+                        "I would like to ask you a few questions to better cater for your food preferences.",
+                      "es" =>
+                        "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida."
+                    }
+                  },
+                  %{
+                    "type" => "select_one",
+                    "choices" => "yes_no",
+                    "name" => "opt_in",
+                    "message" => %{
+                      "en" => "May I ask you now?",
+                      "es" => "Puedo preguntarte ahora?"
+                    },
+                    "constraint_message" => %{
+                      "en" => "Please answer 'yes' or 'no'",
+                      "es" => "Por favor responda 'si' o 'no'"
+                    }
+                  },
+                  %{
+                    "type" => "integer",
+                    "name" => "age",
+                    "message" => %{
+                      "en" => "How old are you?",
+                      "es" => "Qué edad tenés?"
+                    }
+                  },
+                  %{
+                    "type" => "decimal",
+                    "name" => "wine_temp",
+                    "relevant" => "${age} >= 18",
+                    "constraint" => ". < 100",
+                    "constraint_message" => %{
+                      "en" => "Invalid temperature",
+                      "es" => "Temperatura inválida"
+                    },
+                    "message" => %{
+                      "en" => "At what temperature do your like red wine the best?",
+                      "es" => "A qué temperatura preferís tomar el vino tinto?"
+                    }
+                  },
+                  %{
+                    "type" => "select_many",
+                    "name" => "wine_grapes",
+                    "relevant" => "${age} >= 18",
+                    "choices" => "grapes",
+                    "message" => %{
+                      "en" => "What are your favorite wine grapes?",
+                      "es" => "Que variedades de vino preferís?"
+                    },
+                    "constraint_message" => %{
+                      "en" => "I don't know that wine",
+                      "es" => "No conozco ese vino"
+                    },
+                    "choice_filter" => "type = 'red' or type = 'white'"
+                  },
+                  %{
+                    "type" => "image",
+                    "name" => "picture",
+                    "message" => %{
+                      "en" => "Can we see your home?",
+                      "es" => "Podemos ver tu casa?"
+                    }
+                  },
+                  %{
+                    "type" => "note",
+                    "name" => "nice",
+                    "message" => %{
+                      "en" => "Nice!",
+                      "es" => "Muy linda!"
+                    }
+                  },
+                  %{
+                    "type" => "text",
+                    "name" => "request",
+                    "message" => %{
+                      "en" => "Any particular requests for your dinner?",
+                      "es" => "Algún pedido especial para tu cena?"
+                    }
+                  },
+                  %{
+                    "type" => "note",
+                    "name" => "thanks",
+                    "message" => %{
+                      "en" => "Thank you!",
+                      "es" => "Gracias!"
+                    }
+                  }
+                ],
+                "choice_lists" => [
+                  %{
+                    "name" => "yes_no",
+                    "choices" => [
+                      %{
+                        "name" => "yes",
+                        "labels" => %{
+                          "en" => [" Yes", "Sure ", "Ok"],
+                          "es" => ["Si", "OK", "Dale"]
+                        }
+                      },
+                      %{
+                        "name" => "no",
+                        "labels" => %{
+                          "en" => ["No", "Nope", "Later"],
+                          "es" => ["No", "Luego", "Nop"]
+                        }
+                      }
+                    ]
+                  },
+                  %{
+                    "name" => "grapes",
+                    "choices" => [
+                      %{
+                        "name" => "merlot",
+                        "labels" => %{
+                          "en" => ["merlot"],
+                          "es" => ["merlot"]
+                        },
+                        "attributes" => %{
+                          "type" => "red"
+                        }
+                      },
+                      %{
+                        "name" => "syrah",
+                        "labels" => %{
+                          "en" => ["syrah"],
+                          "es" => ["syrah"]
+                        },
+                        "attributes" => %{
+                          "type" => "red"
+                        }
+                      },
+                      %{
+                        "name" => "malbec",
+                        "labels" => %{
+                          "en" => ["malbec"],
+                          "es" => ["malbec"]
+                        },
+                        "attributes" => %{
+                          "type" => "red"
+                        }
+                      },
+                      %{
+                        "name" => "chardonnay",
+                        "labels" => %{
+                          "en" => ["chardonnay"],
+                          "es" => ["chardonnay"]
+                        },
+                        "attributes" => %{
+                          "type" => "white"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [_, %Survey{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => [
+                 "Please ask me about my food preferences",
+                 "I want you to know about my food preferences"
+               ]
+             }
+    end
+  end
+
   test "parse manifest with training_sentences in decision_tree" do
     manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
 
