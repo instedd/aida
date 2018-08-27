@@ -10,7 +10,8 @@ defmodule Aida.Skill.DecisionTree do
           name: String.t(),
           explanation: Bot.message(),
           clarification: Bot.message(),
-          keywords: %{},
+          keywords: nil | %{},
+          training_sentences: nil | %{},
           relevant: nil | Aida.Expr.t(),
           root_id: String.t(),
           tree: [Question.t() | Answer.t()]
@@ -21,7 +22,8 @@ defmodule Aida.Skill.DecisionTree do
             name: "",
             explanation: %{},
             clarification: %{},
-            keywords: %{},
+            keywords: nil,
+            training_sentences: nil,
             relevant: nil,
             root_id: "",
             tree: %{}

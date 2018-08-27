@@ -12,6 +12,7 @@ defmodule Aida.Skill.Survey do
           schedule: DateTime.t(),
           relevant: nil | Aida.Expr.t(),
           keywords: nil | %{},
+          training_sentences: nil | %{},
           questions: [SelectQuestion.t() | InputQuestion.t()]
         }
 
@@ -21,6 +22,7 @@ defmodule Aida.Skill.Survey do
             schedule: nil,
             relevant: nil,
             keywords: nil,
+            training_sentences: nil,
             questions: []
 
   def scheduled_start_survey(survey, bot, session_id) do

@@ -14,7 +14,9 @@ defmodule Aida.BotParser do
     Channel.Facebook,
     Channel.WebSocket,
     Recurrence,
-    Unsubscribe
+    Unsubscribe,
+    WitAi,
+    Engine.WitAIEngine
   }
 
   @spec parse(id :: String.t(), manifest :: map) ::
@@ -30,7 +32,9 @@ defmodule Aida.BotParser do
         variables: manifest["variables"] |> Enum.map(&parse_variable/1),
         channels: manifest["channels"] |> Enum.map(&parse_channel(id, &1)),
         public_keys: parse_public_keys(manifest["public_keys"]),
-        data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1)
+        data_tables: (manifest["data_tables"] || []) |> Enum.map(&parse_data_table/1),
+        natural_language_interface:
+          parse_natural_language_interface(manifest["natural_language_interface"])
       }
       |> validate()
     rescue
@@ -43,6 +47,18 @@ defmodule Aida.BotParser do
       {:ok, bot} -> bot
       {:error, reason} -> raise reason
     end
+  end
+
+  @spec parse_natural_language_interface(natural_language_interface :: map) :: WitAi.t()
+
+  defp parse_natural_language_interface(%{"auth_token" => auth_token, "provider" => "wit_ai"}) do
+    %WitAi{
+      auth_token: auth_token
+    }
+  end
+
+  defp parse_natural_language_interface(_) do
+    nil
   end
 
   @spec parse_front_desk(front_desk :: map) :: FrontDesk.t()
@@ -116,6 +132,7 @@ defmodule Aida.BotParser do
       id: skill["id"],
       name: skill["name"],
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       response: skill["response"],
       relevant: parse_expr(skill["relevant"])
     }
@@ -158,6 +175,7 @@ defmodule Aida.BotParser do
       name: skill["name"],
       schedule: schedule,
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       relevant: parse_expr(skill["relevant"]),
       questions: skill["questions"] |> Enum.map(&parse_survey_question(&1, choice_lists))
     }
@@ -171,6 +189,7 @@ defmodule Aida.BotParser do
       explanation: skill["explanation"],
       clarification: skill["clarification"],
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       relevant: parse_expr(skill["relevant"]),
       root_id: skill["tree"]["id"],
       tree: DecisionTree.flatten(skill["tree"])
@@ -185,6 +204,7 @@ defmodule Aida.BotParser do
       explanation: skill["explanation"],
       clarification: skill["clarification"],
       keywords: parse_string_list_map(skill["keywords"]),
+      training_sentences: parse_string_list_map(skill["training_sentences"], false),
       relevant: parse_expr(skill["relevant"]),
       in_hours_response: skill["in_hours_response"],
       off_hours_response: skill["off_hours_response"],
@@ -346,22 +366,35 @@ defmodule Aida.BotParser do
     |> Enum.map(&Base.decode64!/1)
   end
 
-  defp parse_string_list_map(string_list_map) do
+  defp parse_string_list_map(string_list_map, downcase \\ true) do
     if string_list_map do
       string_list_map
-      |> Enum.map(fn {key, value} -> {key, parse_string_list(value)} end)
+      |> Enum.map(fn {key, value} -> {key, parse_string_list(value, downcase)} end)
       |> Enum.into(%{})
     end
   end
 
-  defp parse_string_list(string_list) do
+  defp parse_string_list(string_list, downcase) do
     string_list
-    |> Enum.map(&(&1 |> String.trim() |> String.downcase()))
+    |> Enum.map(&(&1 |> String.trim() |> downcase_string(downcase)))
+  end
+
+  defp downcase_string(string, true) do
+    string |> String.downcase()
+  end
+
+  defp downcase_string(string, _) do
+    string
   end
 
   defp validate(bot) do
     with :ok <- validate_skill_id_uniqueness(bot),
-         :ok <- validate_required_public_keys(bot) do
+         :ok <- validate_required_public_keys(bot),
+         :ok <- validate_natural_language_interface_presence(bot),
+         :ok <- validate_natural_language_interface_credentials(bot),
+         :ok <- validate_keywords_and_training_sentences(bot),
+         :ok <- validate_keywords_or_training_sentences(bot),
+         :ok <- validate_only_english_training_sentences(bot) do
       {:ok, bot}
     else
       err -> err
@@ -392,6 +425,182 @@ defmodule Aida.BotParser do
 
         {:error, %{"message" => "Duplicated skills (#{id})", "path" => paths}}
     end
+  end
+
+  defp validate_only_english_training_sentences(%{skills: skills}) do
+    not_only_english_training_sentences_skill =
+      skills
+      |> Enum.filter(
+        &match?(
+          %{
+            :training_sentences => training_sentences
+          }
+          when training_sentences != nil,
+          &1
+        )
+      )
+      |> Enum.find(fn %{:training_sentences => training_sentences} ->
+        Map.get(training_sentences, "en") == nil or
+          Map.keys(training_sentences) |> Kernel.length() > 1
+      end)
+
+    case not_only_english_training_sentences_skill do
+      nil ->
+        :ok
+
+      %{:id => id} ->
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}/training_sentences"], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
+
+        {:error,
+         %{
+           "message" => "Training_sentences are valid only in english",
+           "path" => paths
+         }}
+    end
+  end
+
+  defp validate_keywords_or_training_sentences(%{skills: skills}) do
+    neither_keywords_nor_training_sentences_skill =
+      skills
+      |> Enum.find(
+        &match?(
+          %type{
+            :training_sentences => training_sentences,
+            :keywords => keywords
+          }
+          when training_sentences == nil and keywords == nil and
+                 type in [
+                   Aida.Skill.KeywordResponder,
+                   Aida.Skill.HumanOverride,
+                   Aida.Skill.DecisionTree
+                 ],
+          &1
+        )
+      )
+
+    case neither_keywords_nor_training_sentences_skill do
+      nil ->
+        :ok
+
+      %{:id => id} ->
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}/keywords", "#/skills/#{index}/training_sentences"], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
+
+        {:error,
+         %{
+           "message" => "One of keywords or training_sentences required",
+           "path" => paths
+         }}
+    end
+  end
+
+  defp validate_keywords_and_training_sentences(%{skills: skills}) do
+    keywords_and_training_sentences_skill =
+      skills
+      |> Enum.find(
+        &match?(
+          %{
+            :training_sentences => training_sentences,
+            :keywords => keywords
+          }
+          when training_sentences != nil and keywords != nil,
+          &1
+        )
+      )
+
+    case keywords_and_training_sentences_skill do
+      nil ->
+        :ok
+
+      %{:id => id} ->
+        [paths, _] =
+          skills
+          |> Enum.reduce([[], 0], fn skill, [paths, index] ->
+            if skill |> Skill.id() == id do
+              [["#/skills/#{index}/keywords", "#/skills/#{index}/training_sentences"], index + 1]
+            else
+              [paths, index + 1]
+            end
+          end)
+
+        {:error,
+         %{
+           "message" => "Keywords and training_sentences in the same skill",
+           "path" => paths
+         }}
+    end
+  end
+
+  def validate_natural_language_interface_presence(%Aida.Bot{
+        :natural_language_interface => nil,
+        :skills => skills
+      }) do
+    case Enum.any?(
+           skills,
+           &match?(
+             %{:training_sentences => training_sentences} when training_sentences != nil,
+             &1
+           )
+         ) do
+      true ->
+        {:error,
+         %{
+           "message" => "Missing natural_language_interface in manifest",
+           "path" => "#/natural_language_interface"
+         }}
+
+      _ ->
+        :ok
+    end
+  end
+
+  def validate_natural_language_interface_presence(_) do
+    :ok
+  end
+
+  def validate_natural_language_interface_credentials(%Aida.Bot{
+        :natural_language_interface => nil
+      }) do
+    :ok
+  end
+
+  def validate_natural_language_interface_credentials(%Aida.Bot{
+        natural_language_interface: %Aida.WitAi{auth_token: _} = natural_language_interface
+      }) do
+    case WitAIEngine.check_credentials(natural_language_interface) do
+      :ok ->
+        :ok
+
+      _ ->
+        {:error,
+         %{
+           "message" => "Invalid wit ai credentials in manifest",
+           "path" => "#/natural_language_interface"
+         }}
+    end
+  end
+
+  def validate_natural_language_interface_credentials(_) do
+    {:error,
+     %{
+       "message" => "Invalid natural language interface in manifest",
+       "path" => "#/natural_language_interface"
+     }}
   end
 
   def validate_required_public_keys(%{skills: skills, public_keys: []}) do

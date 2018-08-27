@@ -55,7 +55,6 @@ defmodule Aida.JsonSchemaTest do
     "name": "a",
     "explanation": #{@valid_empty_localized_string},
     "clarification": #{@valid_empty_localized_string},
-    "keywords": #{@valid_localized_keywords},
     "response": #{@valid_localized_string}
   })
   @valid_human_override ~s({
@@ -278,10 +277,15 @@ defmodule Aida.JsonSchemaTest do
       [3, "", "", ""]
     ]
   })
+  @valid_natural_language_interface ~s({
+    "provider" : "wit_ai",
+    "auth_token" : "ASDHDEAWREARTDJFHZDGSFEDFGAFD"
+  })
   @valid_manifest ~s({
     "version" : "1",
     "languages" : ["en"],
     "notifications_url": "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+    "natural_language_interface" : #{@valid_natural_language_interface},
     "front_desk" : #{@valid_front_desk},
     "skills" : [
       #{@valid_keyword_responder},
@@ -514,6 +518,9 @@ defmodule Aida.JsonSchemaTest do
     File.read!("test/fixtures/valid_manifest_with_human_override.json")
     |> assert_valid(:manifest_v1)
 
+    File.read!("test/fixtures/valid_manifest_with_wit_ai.json")
+    |> assert_valid(:manifest_v1)
+
     File.read!("test/fixtures/valid_manifest.json")
     |> assert_valid(:manifest_v1)
   end
@@ -537,7 +544,6 @@ defmodule Aida.JsonSchemaTest do
     assert_required("explanation", :keyword_responder)
     assert_required("clarification", :keyword_responder)
     assert_required("response", :keyword_responder)
-    assert_required("keywords", :keyword_responder)
     assert_required("name", :keyword_responder)
     assert_non_empty_string("name", :keyword_responder)
     assert_required("id", :keyword_responder)
@@ -556,7 +562,6 @@ defmodule Aida.JsonSchemaTest do
     assert_required("clarification", :human_override)
     assert_required("in_hours_response", :human_override)
     assert_required("off_hours_response", :human_override)
-    assert_required("keywords", :human_override)
     assert_required("name", :human_override)
     assert_non_empty_string("name", :human_override)
     assert_required("id", :human_override)
@@ -761,7 +766,6 @@ defmodule Aida.JsonSchemaTest do
     assert_required("tree", :decision_tree)
     assert_required("explanation", :decision_tree)
     assert_required("clarification", :decision_tree)
-    assert_required("keywords", :decision_tree)
     assert_optional("relevant", "${age} > 18", :decision_tree)
 
     @valid_decision_tree

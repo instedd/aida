@@ -20,8 +20,12 @@ defmodule Aida.BotParserTest do
     Skill.DecisionTree,
     Variable,
     Recurrence,
-    Unsubscribe
+    Unsubscribe,
+    WitAi,
+    Engine.WitAIEngine
   }
+
+  import Mock
 
   alias Aida.Channel.{Facebook, WebSocket}
 
@@ -568,6 +572,7 @@ defmodule Aida.BotParserTest do
              languages: ["en", "es"],
              notifications_url:
                "https://example.com/notifications/065e4d1b437d17ec982d42976a8015aa2ee687a13ede7890dca76ae73ccb6e2f",
+             natural_language_interface: nil,
              front_desk: %FrontDesk{
                threshold: 0.3,
                greeting: %{
@@ -878,6 +883,906 @@ defmodule Aida.BotParserTest do
                }
              ]
            } = bot
+  end
+
+  test "parse manifest with wit ai" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
+    valid_auth_token = "a valid auth_token"
+
+    manifest =
+      manifest
+      |> Map.put("natural_language_interface", %{
+        "provider" => "wit_ai",
+        "auth_token" => "a valid auth_token"
+      })
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{
+        natural_language_interface: %WitAi{
+          auth_token: auth_token
+        }
+      } = bot
+
+      assert auth_token == valid_auth_token
+    end
+  end
+
+  test "parse manifest with training_sentences in keyword_responder" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [%KeywordResponder{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => ["I need some menu information", "What food do you serve?"]
+             }
+    end
+  end
+
+  test "parse manifest with training_sentences in human_override" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "human_override",
+                "id" => "human_override_skill",
+                "name" => "Human override",
+                "explanation" => %{
+                  "en" => "I can give you information about our availabilty",
+                  "es" => "Te puedo dar información sobre nuestra disponibilidad"
+                },
+                "clarification" => %{
+                  "en" => "To know our availabilty, write 'availabilty'",
+                  "es" =>
+                    "Para información sobre nuestro disponibilidad, escribe 'disponibilidad'"
+                },
+                "training_sentences" => %{
+                  "en" => [
+                    "Do you have any available?",
+                    "Do you have any availability",
+                    "Do you have a table for 4?"
+                  ]
+                },
+                "in_hours_response" => %{
+                  "en" =>
+                    "Let me ask the manager for availability - I'll come back to you in a few minutes",
+                  "es" =>
+                    "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
+                },
+                "off_hours_response" => %{
+                  "en" =>
+                    "Sorry, but we are not taking reservations right now. I'll let you know about tomorrow.",
+                  "es" =>
+                    "Perdón, pero no estamos tomando reservas en este momento. Mañana le haré saber nuestra disponibilidad."
+                },
+                "in_hours" => %{
+                  "hours" => [
+                    %{
+                      "day" => "mon",
+                      "since" => "9:30",
+                      "until" => "18:00"
+                    },
+                    %{
+                      "day" => "mon",
+                      "since" => "20:00"
+                    },
+                    %{
+                      "day" => "tue",
+                      "until" => "03:00"
+                    },
+                    %{
+                      "day" => "wed"
+                    }
+                  ],
+                  "timezone" => "America/Buenos_Aires"
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [_, %HumanOverride{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => [
+                 "Do you have any available?",
+                 "Do you have any availability",
+                 "Do you have a table for 4?"
+               ]
+             }
+    end
+  end
+
+  test "parse manifest with training_sentences in survey" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "survey",
+                "id" => "food_preferences",
+                "name" => "Food Preferences",
+                "training_sentences" => %{
+                  "en" => [
+                    "Please ask me about my food preferences",
+                    "I want you to know about my food preferences"
+                  ]
+                },
+                "questions" => [
+                  %{
+                    "type" => "note",
+                    "name" => "introduction",
+                    "message" => %{
+                      "en" =>
+                        "I would like to ask you a few questions to better cater for your food preferences.",
+                      "es" =>
+                        "Me gustaría hacerte algunas preguntas para poder adecuarnos mejor a tus preferencias de comida."
+                    }
+                  },
+                  %{
+                    "type" => "select_one",
+                    "choices" => "yes_no",
+                    "name" => "opt_in",
+                    "message" => %{
+                      "en" => "May I ask you now?",
+                      "es" => "Puedo preguntarte ahora?"
+                    },
+                    "constraint_message" => %{
+                      "en" => "Please answer 'yes' or 'no'",
+                      "es" => "Por favor responda 'si' o 'no'"
+                    }
+                  },
+                  %{
+                    "type" => "integer",
+                    "name" => "age",
+                    "message" => %{
+                      "en" => "How old are you?",
+                      "es" => "Qué edad tenés?"
+                    }
+                  },
+                  %{
+                    "type" => "decimal",
+                    "name" => "wine_temp",
+                    "relevant" => "${age} >= 18",
+                    "constraint" => ". < 100",
+                    "constraint_message" => %{
+                      "en" => "Invalid temperature",
+                      "es" => "Temperatura inválida"
+                    },
+                    "message" => %{
+                      "en" => "At what temperature do your like red wine the best?",
+                      "es" => "A qué temperatura preferís tomar el vino tinto?"
+                    }
+                  },
+                  %{
+                    "type" => "select_many",
+                    "name" => "wine_grapes",
+                    "relevant" => "${age} >= 18",
+                    "choices" => "grapes",
+                    "message" => %{
+                      "en" => "What are your favorite wine grapes?",
+                      "es" => "Que variedades de vino preferís?"
+                    },
+                    "constraint_message" => %{
+                      "en" => "I don't know that wine",
+                      "es" => "No conozco ese vino"
+                    },
+                    "choice_filter" => "type = 'red' or type = 'white'"
+                  },
+                  %{
+                    "type" => "image",
+                    "name" => "picture",
+                    "message" => %{
+                      "en" => "Can we see your home?",
+                      "es" => "Podemos ver tu casa?"
+                    }
+                  },
+                  %{
+                    "type" => "note",
+                    "name" => "nice",
+                    "message" => %{
+                      "en" => "Nice!",
+                      "es" => "Muy linda!"
+                    }
+                  },
+                  %{
+                    "type" => "text",
+                    "name" => "request",
+                    "message" => %{
+                      "en" => "Any particular requests for your dinner?",
+                      "es" => "Algún pedido especial para tu cena?"
+                    }
+                  },
+                  %{
+                    "type" => "note",
+                    "name" => "thanks",
+                    "message" => %{
+                      "en" => "Thank you!",
+                      "es" => "Gracias!"
+                    }
+                  }
+                ],
+                "choice_lists" => [
+                  %{
+                    "name" => "yes_no",
+                    "choices" => [
+                      %{
+                        "name" => "yes",
+                        "labels" => %{
+                          "en" => [" Yes", "Sure ", "Ok"],
+                          "es" => ["Si", "OK", "Dale"]
+                        }
+                      },
+                      %{
+                        "name" => "no",
+                        "labels" => %{
+                          "en" => ["No", "Nope", "Later"],
+                          "es" => ["No", "Luego", "Nop"]
+                        }
+                      }
+                    ]
+                  },
+                  %{
+                    "name" => "grapes",
+                    "choices" => [
+                      %{
+                        "name" => "merlot",
+                        "labels" => %{
+                          "en" => ["merlot"],
+                          "es" => ["merlot"]
+                        },
+                        "attributes" => %{
+                          "type" => "red"
+                        }
+                      },
+                      %{
+                        "name" => "syrah",
+                        "labels" => %{
+                          "en" => ["syrah"],
+                          "es" => ["syrah"]
+                        },
+                        "attributes" => %{
+                          "type" => "red"
+                        }
+                      },
+                      %{
+                        "name" => "malbec",
+                        "labels" => %{
+                          "en" => ["malbec"],
+                          "es" => ["malbec"]
+                        },
+                        "attributes" => %{
+                          "type" => "red"
+                        }
+                      },
+                      %{
+                        "name" => "chardonnay",
+                        "labels" => %{
+                          "en" => ["chardonnay"],
+                          "es" => ["chardonnay"]
+                        },
+                        "attributes" => %{
+                          "type" => "white"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [_, %Survey{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => [
+                 "Please ask me about my food preferences",
+                 "I want you to know about my food preferences"
+               ]
+             }
+    end
+  end
+
+  test "parse manifest with training_sentences in decision_tree" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "decision_tree",
+                "id" => "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+                "name" => "Food menu",
+                "explanation" => %{
+                  "en" => "I can help you choose a meal that fits your dietary restrictions",
+                  "es" =>
+                    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+                },
+                "clarification" => %{
+                  "en" => "To get a meal recommendation write 'meal recommendation'",
+                  "es" => "Para recibir una recomendación escribe 'recomendación'"
+                },
+                "training_sentences" => %{
+                  "en" => ["I'd like a meal recommendation", "Is there anything you recommend?"]
+                },
+                "tree" => %{
+                  "id" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
+                  "question" => %{
+                    "en" => "Do you want to eat a main course or a dessert?",
+                    "es" => "Querés comer un primer plato o un postre?"
+                  },
+                  "responses" => [
+                    %{
+                      "keywords" => %{
+                        "en" => ["main", "course", "Main"],
+                        "es" => ["primer", "plato"]
+                      },
+                      "next" => %{
+                        "id" => "c038e08e-6095-4897-9184-eae929aba8c6",
+                        "question" => %{
+                          "en" => "Are you a vegetarian?",
+                          "es" => "Sos vegetariano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes"],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "031d9a25-f457-4b21-b83b-13e00ece6cc0",
+                              "answer" => %{
+                                "en" => "Go with Risotto",
+                                "es" => "Clavate un risotto"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["No"],
+                              "es" => ["no"]
+                            },
+                            "next" => %{
+                              "id" => "e530d33b-3720-4431-836a-662b26851424",
+                              "answer" => %{
+                                "en" => "Go with barbecue",
+                                "es" => "Comete un asado"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    %{
+                      "keywords" => %{
+                        "en" => ["dessert"],
+                        "es" => ["postre"]
+                      },
+                      "next" => %{
+                        "id" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b",
+                        "question" => %{
+                          "en" => "Are you vegan?",
+                          "es" => "Sos vegano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes "],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "3d5d6819-ae31-45b6-b8f6-13d62b092730",
+                              "answer" => %{
+                                "en" => "Go with a carrot cake",
+                                "es" => "Come una torta de zanahoria"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["no"],
+                              "es" => [" no"]
+                            },
+                            "next" => %{
+                              "id" => "5d79bf1c-4863-401f-8f08-89ffb3af33cf",
+                              "question" => %{
+                                "en" => "Are you lactose intolerant?",
+                                "es" => "Sos intolerante a la lactosa?"
+                              },
+                              "responses" => [
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["yes"],
+                                    "es" => ["si"]
+                                  },
+                                  "next" => %{
+                                    "id" => "f00f115f-4a0b-45e1-a123-ac1756616be7",
+                                    "answer" => %{
+                                      "en" => "Go with a chocolate mousse",
+                                      "es" => "Comete una mousse de chocolate"
+                                    }
+                                  }
+                                },
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["no"],
+                                    "es" => ["no"]
+                                  },
+                                  "next" => %{
+                                    "id" => "75f04293-f561-462f-9e74-a0d011e1594a",
+                                    "answer" => %{
+                                      "en" => "Go with an ice cream",
+                                      "es" => "Comete un helado"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      {:ok, bot} = BotParser.parse(@uuid, manifest)
+
+      %Bot{skills: [_, %DecisionTree{training_sentences: training_sentences}]} = bot
+
+      assert training_sentences == %{
+               "en" => [
+                 "I'd like a meal recommendation",
+                 "Is there anything you recommend?"
+               ]
+             }
+    end
+  end
+
+  test "raise when parsing manifest with training_sentences but no natural_language_interface" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "clarification" => %{
+                  "en" => "For menu options, write 'menu'",
+                  "es" => "Para información sobre nuestro menu, escribe 'menu'"
+                },
+                "explanation" => %{
+                  "en" => "I can give you information about our menu",
+                  "es" => "Te puedo dar información sobre nuestro menu"
+                },
+                "id" => "this is another different string id",
+                "training_sentences" => %{
+                  en: ["I need some menu information", "What food do you serve?"]
+                },
+                "name" => "Food menu",
+                "response" => %{
+                  "en" => "We have ${food_options}",
+                  "es" => "Tenemos ${food_options}"
+                },
+                "type" => "keyword_responder"
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "Missing natural_language_interface in manifest",
+                "path" => "#/natural_language_interface"
+              }} = BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with training_sentences in other languages" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "clarification" => %{
+                  "en" => "For menu options, write 'menu'",
+                  "es" => "Para información sobre nuestro menu, escribe 'menu'"
+                },
+                "explanation" => %{
+                  "en" => "I can give you information about our menu",
+                  "es" => "Te puedo dar información sobre nuestro menu"
+                },
+                "id" => "this is a different string id",
+                "training_sentences" => %{
+                  "en" => ["I need some menu information", "What food do you serve?"],
+                  "es" => [
+                    "Quisiera información sobre el menú",
+                    "Qué opciones tienen para comer?"
+                  ]
+                },
+                "name" => "Food menu",
+                "response" => %{
+                  "en" => "We have ${food_options}",
+                  "es" => "Tenemos ${food_options}"
+                },
+                "type" => "keyword_responder"
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "Training_sentences are valid only in english",
+                "path" => ["#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with training_sentences and keywords" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "clarification" => %{
+                  "en" => "For menu options, write 'menu'",
+                  "es" => "Para información sobre nuestro menu, escribe 'menu'"
+                },
+                "explanation" => %{
+                  "en" => "I can give you information about our menu",
+                  "es" => "Te puedo dar información sobre nuestro menu"
+                },
+                "id" => "this is a different string id",
+                "training_sentences" => %{
+                  en: ["I need some menu information", "What food do you serve?"]
+                },
+                "keywords" => %{
+                  "en" => ["menu", "food"],
+                  "es" => ["menu", "comida"]
+                },
+                "name" => "Food menu",
+                "response" => %{
+                  "en" => "We have ${food_options}",
+                  "es" => "Tenemos ${food_options}"
+                },
+                "type" => "keyword_responder"
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "Keywords and training_sentences in the same skill",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with neither training_sentences nor keywords in keyword_responder" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "clarification" => %{
+                  "en" => "For menu options, write 'menu'",
+                  "es" => "Para información sobre nuestro menu, escribe 'menu'"
+                },
+                "explanation" => %{
+                  "en" => "I can give you information about our menu",
+                  "es" => "Te puedo dar información sobre nuestro menu"
+                },
+                "id" => "this is a different string id",
+                "name" => "Food menu",
+                "response" => %{
+                  "en" => "We have ${food_options}",
+                  "es" => "Tenemos ${food_options}"
+                },
+                "type" => "keyword_responder"
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "One of keywords or training_sentences required",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with neither training_sentences nor keywords in human_override" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "human_override",
+                "id" => "human_override_skill",
+                "name" => "Human override",
+                "explanation" => %{
+                  "en" => "I can give you information about our availabilty",
+                  "es" => "Te puedo dar información sobre nuestra disponibilidad"
+                },
+                "clarification" => %{
+                  "en" => "To know our availabilty, write 'availabilty'",
+                  "es" =>
+                    "Para información sobre nuestro disponibilidad, escribe 'disponibilidad'"
+                },
+                "in_hours_response" => %{
+                  "en" =>
+                    "Let me ask the manager for availability - I'll come back to you in a few minutes",
+                  "es" =>
+                    "Dejame consultar si hay mesas disponibles - te contestaré en unos minutos"
+                },
+                "off_hours_response" => %{
+                  "en" =>
+                    "Sorry, but we are not taking reservations right now. I'll let you know about tomorrow.",
+                  "es" =>
+                    "Perdón, pero no estamos tomando reservas en este momento. Mañana le haré saber nuestra disponibilidad."
+                },
+                "in_hours" => %{
+                  "hours" => [
+                    %{
+                      "day" => "mon",
+                      "since" => "9:30",
+                      "until" => "18:00"
+                    },
+                    %{
+                      "day" => "mon",
+                      "since" => "20:00"
+                    },
+                    %{
+                      "day" => "tue",
+                      "until" => "03:00"
+                    },
+                    %{
+                      "day" => "wed"
+                    }
+                  ],
+                  "timezone" => "America/Buenos_Aires"
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "One of keywords or training_sentences required",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with neither training_sentences nor keywords in decision_tree" do
+    manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
+
+    manifest =
+      Map.update!(
+        manifest,
+        "skills",
+        &(&1 ++
+            [
+              %{
+                "type" => "decision_tree",
+                "id" => "2a516ba3-2e7b-48bf-b4c0-9b8cd55e003f",
+                "name" => "Food menu",
+                "explanation" => %{
+                  "en" => "I can help you choose a meal that fits your dietary restrictions",
+                  "es" =>
+                    "Te puedo ayudar a elegir una comida que se adapte a tus restricciones alimentarias"
+                },
+                "clarification" => %{
+                  "en" => "To get a meal recommendation write 'meal recommendation'",
+                  "es" => "Para recibir una recomendación escribe 'recomendación'"
+                },
+                "tree" => %{
+                  "id" => "c5cc5c83-922b-428b-ad84-98a5c4da64e8",
+                  "question" => %{
+                    "en" => "Do you want to eat a main course or a dessert?",
+                    "es" => "Querés comer un primer plato o un postre?"
+                  },
+                  "responses" => [
+                    %{
+                      "keywords" => %{
+                        "en" => ["main", "course", "Main"],
+                        "es" => ["primer", "plato"]
+                      },
+                      "next" => %{
+                        "id" => "c038e08e-6095-4897-9184-eae929aba8c6",
+                        "question" => %{
+                          "en" => "Are you a vegetarian?",
+                          "es" => "Sos vegetariano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes"],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "031d9a25-f457-4b21-b83b-13e00ece6cc0",
+                              "answer" => %{
+                                "en" => "Go with Risotto",
+                                "es" => "Clavate un risotto"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["No"],
+                              "es" => ["no"]
+                            },
+                            "next" => %{
+                              "id" => "e530d33b-3720-4431-836a-662b26851424",
+                              "answer" => %{
+                                "en" => "Go with barbecue",
+                                "es" => "Comete un asado"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    %{
+                      "keywords" => %{
+                        "en" => ["dessert"],
+                        "es" => ["postre"]
+                      },
+                      "next" => %{
+                        "id" => "42cc898f-42c3-4d39-84a3-651dbf7dfd5b",
+                        "question" => %{
+                          "en" => "Are you vegan?",
+                          "es" => "Sos vegano?"
+                        },
+                        "responses" => [
+                          %{
+                            "keywords" => %{
+                              "en" => ["yes "],
+                              "es" => ["si"]
+                            },
+                            "next" => %{
+                              "id" => "3d5d6819-ae31-45b6-b8f6-13d62b092730",
+                              "answer" => %{
+                                "en" => "Go with a carrot cake",
+                                "es" => "Come una torta de zanahoria"
+                              }
+                            }
+                          },
+                          %{
+                            "keywords" => %{
+                              "en" => ["no"],
+                              "es" => [" no"]
+                            },
+                            "next" => %{
+                              "id" => "5d79bf1c-4863-401f-8f08-89ffb3af33cf",
+                              "question" => %{
+                                "en" => "Are you lactose intolerant?",
+                                "es" => "Sos intolerante a la lactosa?"
+                              },
+                              "responses" => [
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["yes"],
+                                    "es" => ["si"]
+                                  },
+                                  "next" => %{
+                                    "id" => "f00f115f-4a0b-45e1-a123-ac1756616be7",
+                                    "answer" => %{
+                                      "en" => "Go with a chocolate mousse",
+                                      "es" => "Comete una mousse de chocolate"
+                                    }
+                                  }
+                                },
+                                %{
+                                  "keywords" => %{
+                                    "en" => ["no"],
+                                    "es" => ["no"]
+                                  },
+                                  "next" => %{
+                                    "id" => "75f04293-f561-462f-9e74-a0d011e1594a",
+                                    "answer" => %{
+                                      "en" => "Go with an ice cream",
+                                      "es" => "Comete un helado"
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ])
+      )
+
+    with_mock WitAIEngine,
+      check_credentials: fn _valid_auth_token -> :ok end do
+      assert {:error,
+              %{
+                "message" => "One of keywords or training_sentences required",
+                "path" => ["#/skills/1/keywords", "#/skills/1/training_sentences"]
+              }} == BotParser.parse(@uuid, manifest)
+    end
+  end
+
+  test "raise when parsing manifest with wit ai invalid credentials" do
+    manifest = File.read!("test/fixtures/valid_manifest.json") |> Poison.decode!()
+
+    manifest =
+      manifest
+      |> Map.put("natural_language_interface", %{
+        "provider" => "wit_ai",
+        "auth_token" => "an invalid auth_token"
+      })
+
+    with_mock WitAIEngine,
+      check_credentials: fn _invalid_auth_token -> "any other response" end do
+      assert {:error,
+              %{
+                "message" => "Invalid wit ai credentials in manifest",
+                "path" => "#/natural_language_interface"
+              }} = BotParser.parse(@uuid, manifest)
+    end
   end
 
   test "parse manifest with duplicated skill id" do

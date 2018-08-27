@@ -11,7 +11,8 @@ defmodule Aida.Bot do
     Message,
     Skill,
     Variable,
-    FrontDesk
+    FrontDesk,
+    WitAi
   }
 
   alias Aida.Message.SystemContent
@@ -32,7 +33,8 @@ defmodule Aida.Bot do
           variables: [Variable.t()],
           channels: [Channel.t()],
           public_keys: [binary],
-          data_tables: [DataTable.t()]
+          data_tables: [DataTable.t()],
+          natural_language_interface: WitAi.t()
         }
 
   defstruct id: nil,
@@ -43,7 +45,8 @@ defmodule Aida.Bot do
             variables: [],
             channels: [],
             public_keys: [],
-            data_tables: []
+            data_tables: [],
+            natural_language_interface: nil
 
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do
