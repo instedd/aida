@@ -227,5 +227,7 @@ defmodule Aida.Skill.Survey do
     def uses_encryption?(%{questions: questions}) do
       questions |> Enum.any?(&Question.encrypt?/1)
     end
+
+    def training_sentences(%{training_sentences: training_sentences}), do: training_sentences
   end
 end

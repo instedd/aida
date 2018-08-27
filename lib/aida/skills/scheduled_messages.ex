@@ -215,5 +215,7 @@ defmodule Aida.Skill.ScheduledMessages do
     def relevant(skill), do: skill.relevant
 
     def uses_encryption?(_), do: false
+
+    def training_sentences(_), do: nil
   end
 end

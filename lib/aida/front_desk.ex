@@ -116,5 +116,7 @@ defmodule Aida.FrontDesk do
     def relevant(skill), do: skill.relevant
 
     def uses_encryption?(_), do: false
+
+    def training_sentences(_), do: nil
   end
 end

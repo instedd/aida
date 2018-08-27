@@ -11,8 +11,7 @@ defmodule Aida.Bot do
     Message,
     Skill,
     Variable,
-    FrontDesk,
-    WitAi
+    FrontDesk
   }
 
   alias Aida.Message.SystemContent
@@ -34,7 +33,7 @@ defmodule Aida.Bot do
           channels: [Channel.t()],
           public_keys: [binary],
           data_tables: [DataTable.t()],
-          natural_language_interface: WitAi.t()
+          natural_language_interface: Aida.Engine.t() | nil
         }
 
   defstruct id: nil,

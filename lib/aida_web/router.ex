@@ -53,7 +53,7 @@ defmodule AidaWeb.Router do
 
     get("/image/:uuid", ImageController, :image)
     get("/version", VersionController, :version)
-    get("/check_credentials", WitAIController, :check_credentials)
+    get("/check_credentials", WitAiController, :check_credentials)
   end
 
   scope "/", AidaWeb do

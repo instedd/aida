@@ -36,6 +36,9 @@ defprotocol Aida.Skill do
 
   @spec uses_encryption?(skill :: t) :: boolean
   def uses_encryption?(skill)
+
+  @spec training_sentences(skill :: t) :: %{} | nil
+  def training_sentences(skill)
 end
 
 defmodule Aida.Skill.Utils do

@@ -26,5 +26,7 @@ defmodule Aida.TestSkill do
     def relevant(%{relevant: relevant}), do: relevant
 
     def uses_encryption?(%{encrypt: encrypt}), do: encrypt
+
+    def training_sentences(_), do: nil
   end
 end

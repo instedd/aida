@@ -1,10 +1,10 @@
-defmodule AidaWeb.WitAIController do
+defmodule AidaWeb.WitAiController do
   use AidaWeb, :controller
 
-  alias Aida.Engine.WitAIEngine
+  alias Aida.Engine.WitAi
 
   def check_credentials(conn, %{"provider" => "wit_ai"} = params) do
-    with :ok <- WitAIEngine.check_credentials(params) do
+    with :ok <- WitAi.check_credentials(params) do
       conn |> send_resp(200, "")
     else
       {:error, response} ->

@@ -21,8 +21,7 @@ defmodule Aida.BotParserTest do
     Variable,
     Recurrence,
     Unsubscribe,
-    WitAi,
-    Engine.WitAIEngine
+    Engine.WitAi
   }
 
   import Mock
@@ -896,8 +895,7 @@ defmodule Aida.BotParserTest do
         "auth_token" => "a valid auth_token"
       })
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       {:ok, bot} = BotParser.parse(@uuid, manifest)
 
       %Bot{
@@ -913,8 +911,7 @@ defmodule Aida.BotParserTest do
   test "parse manifest with training_sentences in keyword_responder" do
     manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       {:ok, bot} = BotParser.parse(@uuid, manifest)
 
       %Bot{skills: [%KeywordResponder{training_sentences: training_sentences}]} = bot
@@ -991,8 +988,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       {:ok, bot} = BotParser.parse(@uuid, manifest)
 
       %Bot{skills: [_, %HumanOverride{training_sentences: training_sentences}]} = bot
@@ -1190,8 +1186,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       {:ok, bot} = BotParser.parse(@uuid, manifest)
 
       %Bot{skills: [_, %Survey{training_sentences: training_sentences}]} = bot
@@ -1353,8 +1348,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       {:ok, bot} = BotParser.parse(@uuid, manifest)
 
       %Bot{skills: [_, %DecisionTree{training_sentences: training_sentences}]} = bot
@@ -1400,8 +1394,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
                 "message" => "Missing natural_language_interface in manifest",
@@ -1446,8 +1439,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
                 "message" => "Training_sentences are valid only in english",
@@ -1492,8 +1484,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
                 "message" => "Keywords and training_sentences in the same skill",
@@ -1531,8 +1522,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
                 "message" => "One of keywords or training_sentences required",
@@ -1600,8 +1590,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
                 "message" => "One of keywords or training_sentences required",
@@ -1755,8 +1744,7 @@ defmodule Aida.BotParserTest do
             ])
       )
 
-    with_mock WitAIEngine,
-      check_credentials: fn _valid_auth_token -> :ok end do
+    with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
                 "message" => "One of keywords or training_sentences required",
@@ -1775,7 +1763,7 @@ defmodule Aida.BotParserTest do
         "auth_token" => "an invalid auth_token"
       })
 
-    with_mock WitAIEngine,
+    with_mock WitAi,
       check_credentials: fn _invalid_auth_token -> "any other response" end do
       assert {:error,
               %{
@@ -2035,5 +2023,14 @@ defmodule Aida.BotParserTest do
       ])
 
     [manifest: manifest]
+  end
+
+  defp wit_ai_mock() do
+    [
+      {:check_credentials, fn _valid_auth_token -> :ok end},
+      {:delete_existing_entity_if_any, fn _auth_token, _bot_id -> :ok end},
+      {:create_entity, fn _auth_token, _bot_id -> :ok end},
+      {:upload_sample, fn _auth_token, _training_sentences, _value -> :ok end}
+    ]
   end
 end
