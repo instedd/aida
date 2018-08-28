@@ -54,7 +54,7 @@
   "skills": [
     {
       "type": "keyword_responder",
-      "id": "this is a string id",
+      "id": "f4c74ff9-e393-4ae1-a53e-b1e98a4c0401",
       "name": "Food menu",
       "explanation": {
         "en": "I can give you information about our menu"

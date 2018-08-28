@@ -595,9 +595,9 @@ defmodule Aida.BotParser do
   end
 
   def validate_natural_language_interface_credentials(%Aida.Bot{
-        natural_language_interface: %WitAi{auth_token: _} = natural_language_interface
+        natural_language_interface: %WitAi{auth_token: auth_token}
       }) do
-    case WitAi.check_credentials(natural_language_interface) do
+    case WitAi.check_credentials(auth_token) do
       :ok ->
         :ok
 
@@ -608,14 +608,6 @@ defmodule Aida.BotParser do
            "path" => "#/natural_language_interface"
          }}
     end
-  end
-
-  def validate_natural_language_interface_credentials(_) do
-    {:error,
-     %{
-       "message" => "Invalid natural language interface in manifest",
-       "path" => "#/natural_language_interface"
-     }}
   end
 
   def validate_required_public_keys(%{skills: skills, public_keys: []}) do

@@ -2030,7 +2030,7 @@ defmodule Aida.BotParserTest do
       {:check_credentials, fn _valid_auth_token -> :ok end},
       {:delete_existing_entity_if_any, fn _auth_token, _bot_id -> :ok end},
       {:create_entity, fn _auth_token, _bot_id -> :ok end},
-      {:upload_sample, fn _auth_token, _training_sentences, _value -> :ok end}
+      {:upload_sample, fn _auth_token, _bot_id, _training_sentences, _value -> :ok end}
     ]
   end
 end

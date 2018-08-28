@@ -7,23 +7,75 @@ defmodule Aida.Engine.WitAi do
         }
 
   defstruct auth_token: nil
+  @api_version "20180815"
+  @base_wit_ai_api_url "https://api.wit.ai"
 
-  def check_credentials(%{"auth_token" => token}) do
-    url = "https://api.wit.ai/message?v=20180815&q=hello"
-    headers = %{"Authorization" => "Bearer #{token}"}
+  defp auth_headers(token) do
+    %{"Authorization" => "Bearer #{token}"}
+  end
 
-    case HTTPoison.get(url, headers) do
+  defp payload_headers(token) do
+    %{
+      "Authorization" => "Bearer #{token}",
+      "Content-Type" => "application/json"
+    }
+  end
+
+  def check_credentials(nil), do: {:error, "Authorization token expected"}
+
+  def check_credentials(token) do
+    url = "#{@base_wit_ai_api_url}/message?v=#{@api_version}&q=hello"
+
+    HTTPoison.get(url, auth_headers(token))
+    |> handle
+  end
+
+  def delete_existing_entity_if_any(token, bot_id) do
+    url = "#{@base_wit_ai_api_url}/entities/#{bot_id}?v=#{@api_version}"
+
+    HTTPoison.delete(url, auth_headers(token))
+
+    :ok
+  end
+
+  def create_entity(token, bot_id) do
+    url = "#{@base_wit_ai_api_url}/entities?v=#{@api_version}"
+
+    body = %{"id" => bot_id} |> Poison.encode!()
+
+    HTTPoison.post(url, body, payload_headers(token))
+    |> handle
+  end
+
+  def upload_sample(token, bot_id, training_sentences, skill_id) do
+    url = "#{@base_wit_ai_api_url}/samples?v=#{@api_version}"
+
+    body =
+      training_sentences
+      |> Enum.map(fn text ->
+        %{
+          "text" => text,
+          "entities" => [
+            %{
+              "entity" => bot_id,
+              "value" => skill_id
+            }
+          ]
+        }
+      end)
+      |> Poison.encode!()
+
+    HTTPoison.post(url, body, payload_headers(token))
+    |> handle
+  end
+
+  defp handle(response) do
+    case response do
       {:ok, %{status_code: 200}} -> :ok
       {:ok, response} -> {:error, response.body |> Poison.decode!()}
       response -> {:error, response}
     end
   end
-
-  def check_credentials(_), do: {:error, "Authorization token expected"}
-
-  def delete_existing_entity_if_any(_auth_token, _bot_id), do: :ok
-  def create_entity(_auth_token, _bot_id), do: :ok
-  def upload_sample(_auth_token, _training_sentences, _value), do: :ok
 
   defimpl Aida.Engine, for: __MODULE__ do
     def update_training_set(%WitAi{auth_token: auth_token}, %Bot{skills: skills} = bot) do
@@ -41,9 +93,10 @@ defmodule Aida.Engine.WitAi do
 
       WitAi.create_entity(auth_token, bot.id)
 
-      training_set |> Enum.each(fn {sentences, skill} ->
+      training_set
+      |> Enum.each(fn {sentences, skill} ->
         # only english is supported for now
-        WitAi.upload_sample(auth_token, sentences["en"], Skill.id(skill))
+        WitAi.upload_sample(auth_token, bot.id, sentences["en"], Skill.id(skill))
       end)
 
       :ok
