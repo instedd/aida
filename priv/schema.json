@@ -342,6 +342,7 @@
         "schedule": {"$ref": "#/definitions/timestamp"},
         "relevant": {"$ref": "#/definitions/non_empty_string"},
         "keywords": {"$ref": "#/definitions/localized_keywords"},
+        "training_sentences" : {"$ref": "#/definitions/localized_sentences"},
         "questions": {
           "type": "array",
           "minItems": 1,
@@ -559,15 +560,15 @@
 
     "localized_sentences": {
       "type": "object",
-      "patternProperties": {
-        "^[a-z]{2,3}$": {
+       "properties": {
+        "en": {
           "type": "array",
           "minItems": 1,
           "items": {"$ref": "#/definitions/non_empty_string"}
         }
       },
-      "minProperties": 1,
-      "additionalProperties": false
+      "additionalProperties": false,
+      "required": ["en"]
     },
 
     "localized_keywords": {

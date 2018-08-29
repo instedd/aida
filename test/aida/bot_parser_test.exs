@@ -894,6 +894,7 @@ defmodule Aida.BotParserTest do
         "provider" => "wit_ai",
         "auth_token" => "a valid auth_token"
       })
+      |> Map.put("languages", ["en"])
 
     with_mock WitAi, wit_ai_mock() do
       {:ok, bot} = BotParser.parse(@uuid, manifest)
@@ -1403,47 +1404,16 @@ defmodule Aida.BotParserTest do
     end
   end
 
-  test "raise when parsing manifest with training_sentences in other languages" do
+  test "raise when parsing manifest with wit.ai and multiple languages" do
     manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
 
-    manifest =
-      Map.update!(
-        manifest,
-        "skills",
-        &(&1 ++
-            [
-              %{
-                "clarification" => %{
-                  "en" => "For menu options, write 'menu'",
-                  "es" => "Para información sobre nuestro menu, escribe 'menu'"
-                },
-                "explanation" => %{
-                  "en" => "I can give you information about our menu",
-                  "es" => "Te puedo dar información sobre nuestro menu"
-                },
-                "id" => "this is a different string id",
-                "training_sentences" => %{
-                  "en" => ["I need some menu information", "What food do you serve?"],
-                  "es" => [
-                    "Quisiera información sobre el menú",
-                    "Qué opciones tienen para comer?"
-                  ]
-                },
-                "name" => "Food menu",
-                "response" => %{
-                  "en" => "We have ${food_options}",
-                  "es" => "Tenemos ${food_options}"
-                },
-                "type" => "keyword_responder"
-              }
-            ])
-      )
+    manifest = Map.put(manifest, "languages", ["en", "es"])
 
     with_mock WitAi, wit_ai_mock() do
       assert {:error,
               %{
-                "message" => "Training_sentences are valid only in english",
-                "path" => ["#/skills/1/training_sentences"]
+                "message" => "Wit.ai only works with english bots",
+                "path" => ["#/languages"]
               }} == BotParser.parse(@uuid, manifest)
     end
   end

@@ -57,16 +57,37 @@ defmodule Aida.JsonSchemaTest do
     "clarification": #{@valid_empty_localized_string},
     "response": #{@valid_localized_string}
   })
+  @valid_full_keyword_responder ~s({
+    "type": "keyword_responder",
+    "id": "1",
+    "name": "a",
+    "explanation": #{@valid_empty_localized_string},
+    "clarification": #{@valid_empty_localized_string},
+    "response": #{@valid_localized_string},
+    "keywords": #{@valid_localized_keywords},
+    "training_sentences": #{@valid_localized_keywords}
+  })
   @valid_human_override ~s({
     "type": "human_override",
     "id": "5",
     "name": "a",
     "explanation": #{@valid_empty_localized_string},
     "clarification": #{@valid_empty_localized_string},
-    "keywords": #{@valid_localized_keywords},
     "in_hours_response": #{@valid_localized_string},
     "off_hours_response": #{@valid_localized_string},
     "in_hours": #{@valid_in_hours}
+  })
+  @valid_full_human_override ~s({
+    "type": "human_override",
+    "id": "5",
+    "name": "a",
+    "explanation": #{@valid_empty_localized_string},
+    "clarification": #{@valid_empty_localized_string},
+    "in_hours_response": #{@valid_localized_string},
+    "off_hours_response": #{@valid_localized_string},
+    "in_hours": #{@valid_in_hours},
+    "keywords": #{@valid_localized_keywords},
+    "training_sentences": #{@valid_localized_keywords}
   })
   @valid_delayed_message ~s({
     "delay": 1,
@@ -187,8 +208,16 @@ defmodule Aida.JsonSchemaTest do
     "type": "survey",
     "id": "2",
     "name": "a",
+    "questions": [#{@valid_note}],
+    "choice_lists": []
+  })
+  @valid_full_survey ~s({
+    "type": "survey",
+    "id": "2",
+    "name": "a",
     "schedule": "2017-12-10T01:40:13.000-03:00",
     "keywords": #{@valid_localized_keywords},
+    "training_sentences": #{@valid_localized_keywords},
     "questions": [
       #{@valid_input_question},
       #{@valid_note},
@@ -241,9 +270,19 @@ defmodule Aida.JsonSchemaTest do
     "name": "n",
     "explanation": #{@valid_empty_localized_string},
     "clarification": #{@valid_empty_localized_string},
-    "keywords": #{@valid_localized_keywords},
     "tree": #{@valid_tree_question1}
   })
+  @valid_full_decision_tree ~s({
+    "type": "decision_tree",
+    "id": "t",
+    "name": "n",
+    "explanation": #{@valid_empty_localized_string},
+    "clarification": #{@valid_empty_localized_string},
+    "tree": #{@valid_tree_question1},
+    "keywords": #{@valid_localized_keywords},
+    "training_sentences": #{@valid_localized_keywords}
+  })
+
   @valid_variable ~s({
     "name": "a",
     "values": {
@@ -552,6 +591,9 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_keyword_responder
     |> assert_valid(:keyword_responder)
+
+    @valid_full_keyword_responder
+    |> assert_valid(:keyword_responder)
   end
 
   test "human_override" do
@@ -569,6 +611,9 @@ defmodule Aida.JsonSchemaTest do
     assert_optional("relevant", "${age} > 18", :human_override)
 
     @valid_human_override
+    |> assert_valid(:human_override)
+
+    @valid_full_human_override
     |> assert_valid(:human_override)
   end
 
@@ -703,6 +748,9 @@ defmodule Aida.JsonSchemaTest do
 
     @valid_survey
     |> assert_valid(:survey)
+
+    @valid_full_survey
+    |> assert_valid(:survey)
   end
 
   test "tree_response" do
@@ -769,6 +817,9 @@ defmodule Aida.JsonSchemaTest do
     assert_optional("relevant", "${age} > 18", :decision_tree)
 
     @valid_decision_tree
+    |> assert_valid(:decision_tree)
+
+    @valid_full_decision_tree
     |> assert_valid(:decision_tree)
   end
 
