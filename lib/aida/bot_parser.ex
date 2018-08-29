@@ -15,7 +15,6 @@ defmodule Aida.BotParser do
     Channel.WebSocket,
     Recurrence,
     Unsubscribe,
-    Engine,
     Engine.WitAi
   }
 
@@ -37,7 +36,6 @@ defmodule Aida.BotParser do
           parse_natural_language_interface(manifest["natural_language_interface"])
       }
       |> validate()
-      |> publish_natural_language_interface_training_set()
     rescue
       error -> {:error, Exception.message(error)}
     end
@@ -61,20 +59,6 @@ defmodule Aida.BotParser do
   defp parse_natural_language_interface(_) do
     nil
   end
-
-  defp publish_natural_language_interface_training_set(
-         {:ok, %Bot{natural_language_interface: nil}} = result
-       ),
-       do: result
-
-  defp publish_natural_language_interface_training_set({:ok, bot} = result) do
-    case Engine.update_training_set(bot.natural_language_interface, bot) do
-      :ok -> result
-      error -> error
-    end
-  end
-
-  defp publish_natural_language_interface_training_set(error), do: error
 
   @spec parse_front_desk(front_desk :: map) :: FrontDesk.t()
   defp parse_front_desk(front_desk) do

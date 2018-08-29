@@ -3,7 +3,7 @@ defmodule Aida.WitAiTest do
   use Aida.SessionHelper
   import Mock
 
-  alias Aida.{BotParser, Engine.WitAi}
+  alias Aida.{Bot, BotParser, Engine.WitAi}
 
   @auth_token "CFF627A3548C4EDABE7CAC9FF91BC98B"
   @bot_id "f905a698-310f-473f-b2d0-00d30ad58b0c"
@@ -140,7 +140,8 @@ defmodule Aida.WitAiTest do
     ] do
       manifest = File.read!("test/fixtures/valid_manifest_with_wit_ai.json") |> Poison.decode!()
 
-      {:ok, _bot} = BotParser.parse(@bot_id, manifest)
+      {:ok, bot} = BotParser.parse(@bot_id, manifest)
+      Bot.init(bot)
 
       assert called(WitAi.delete_existing_entity_if_any("valid auth_token", @bot_id))
       assert called(WitAi.create_entity("valid auth_token", @bot_id))

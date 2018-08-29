@@ -6,12 +6,12 @@ defmodule Aida.Bot do
     DataTable,
     DB.MessageLog,
     DB.MessagesPerDay,
+    Engine,
     ErrorHandler,
     FrontDesk,
     Message,
     Skill,
-    Variable,
-    FrontDesk
+    Variable
   }
 
   alias Aida.Message.SystemContent
@@ -49,6 +49,8 @@ defmodule Aida.Bot do
 
   @spec init(bot :: t) :: {:ok, t}
   def init(bot) do
+    publish_natural_language_interface(bot)
+
     skills =
       bot.skills
       |> Enum.map(fn skill ->
@@ -92,6 +94,12 @@ defmodule Aida.Bot do
       |> log_outgoing
       |> save_session
     end
+  end
+
+  defp publish_natural_language_interface(%Bot{natural_language_interface: nil}), do: :ok
+
+  defp publish_natural_language_interface(bot) do
+    Engine.update_training_set(bot.natural_language_interface, bot)
   end
 
   defp policy_enforcement_message("block", %{"reason" => reason}) do
