@@ -1028,4 +1028,27 @@ defmodule Aida.JsonSchemaTest do
       :manifest_v1
     )
   end
+
+  test "multiple languages in training_sentences" do
+    manifest = ~s({
+      "channels": [],
+      "front_desk": #{@valid_front_desk},
+      "languages": ["en", "es"],
+      "notifications_url": "valid url",
+      "skills": [
+        {
+          "clarification": {"en": "a", "es": "a"},
+          "explanation": {"en": "a", "es": "a"},
+          "id": "1",
+          "name": "Keyword responder",
+          "response": {"en": "a", "es": "a"},
+          "training_sentences": {"en": ["a"], "es": ["a"]},
+          "type": "keyword_responder"
+        }
+      ],
+      "variables": [],
+      "version": "1"
+    })
+    assert_valid(manifest, :manifest_v1)
+  end
 end
