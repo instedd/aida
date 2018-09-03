@@ -57,6 +57,8 @@ defmodule AidaWeb.SessionView do
 
   def render("attachment.json", %{attachment_id: attachment_id}), do: %{id: attachment_id}
 
+  def render("forward_messages.json", %{forward_messages_id: forward_messages_id}), do: %{forward_messages_id: forward_messages_id}
+
   def render(template_name, %{sessions: sessions}) do
     %{data: render_many(sessions, SessionView, template_name)}
   end

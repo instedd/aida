@@ -41,6 +41,24 @@ defmodule AidaWeb.SessionController do
     end
   end
 
+  def forward_messages(conn, %{
+        "bot_id" => bot_id,
+        "session_id" => session_id,
+        "forward_messages_id" => forward_messages_id
+      }) do
+    session = Session.get(session_id)
+
+    if session.bot_id != bot_id do
+      conn |> put_status(422) |> json(%{errors: "Unknown session"}) |> halt
+    else
+      session
+      |> Session.put("forward_messages_id", forward_messages_id)
+      |> Session.save()
+
+      render(conn, "forward_messages.json", forward_messages_id: forward_messages_id)
+    end
+  end
+
   def attachment(conn, %{"bot_id" => bot_id, "session_id" => session_id, "file" => file}) do
     if String.starts_with?(file.content_type, "image/") do
       {:ok, binary} = File.read(file.path)

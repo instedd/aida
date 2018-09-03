@@ -350,6 +350,53 @@ defmodule AidaWeb.SessionControllerTest do
     end
   end
 
+  describe "forward messages" do
+    test "updates forward_messages_id", %{conn: conn, bot: bot, session: session} do
+      in_forward_messages_id = Ecto.UUID.generate()
+      path = bot_session_session_path(conn, :forward_messages, bot.id, session.id)
+      conn = conn |> put(path, %{:forward_messages_id => in_forward_messages_id})
+
+      %{"forward_messages_id" => out_forward_messages_id} = json_response(conn, 200)
+      assert in_forward_messages_id = out_forward_messages_id
+
+      session_forward_messages_id =
+        Session.get(session.id)
+        |> Session.get_value("forward_messages_id")
+
+      assert session_forward_messages_id == in_forward_messages_id
+    end
+
+    test "updates forward_messages_id when nil", %{conn: conn, bot: bot, session: session} do
+      session
+      |> Session.put("forward_messages_id", Ecto.UUID.generate())
+      |> Session.save()
+
+      path = bot_session_session_path(conn, :forward_messages, bot.id, session.id)
+      conn = conn |> put(path, %{:forward_messages_id => nil})
+
+      %{"forward_messages_id" => out_forward_messages_id} = json_response(conn, 200)
+      refute out_forward_messages_id
+
+      session_forward_messages_id =
+        Session.get(session.id)
+        |> Session.get_value("forward_messages_id")
+
+      refute session_forward_messages_id
+    end
+
+    test "raise error when unknown session", %{conn: conn, bot: _, session: session} do
+      session
+      |> Session.put("forward_messages_id", Ecto.UUID.generate())
+      |> Session.save()
+
+      path = bot_session_session_path(conn, :forward_messages, Ecto.UUID.generate(), session.id)
+      conn = conn |> put(path, %{:forward_messages_id => nil})
+
+      %{"errors" => error} = json_response(conn, 422)
+      assert error == "Unknown session"
+    end
+  end
+
   describe "attachment" do
     test "sends an image to a session", %{conn: conn, bot: bot, session: session} do
       upload = %Plug.Upload{

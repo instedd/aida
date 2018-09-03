@@ -44,6 +44,7 @@ defmodule AidaWeb.Router do
         get("/log", SessionController, :log)
         post("/send_message", SessionController, :send_message)
         post("/attachment", SessionController, :attachment)
+        put("/forward_messages", SessionController, :forward_messages)
       end
 
       resources("/error_logs", ErrorLogController, only: [:index])
