@@ -6,12 +6,12 @@ defmodule Aida.Bot do
     DataTable,
     DB.MessageLog,
     DB.MessagesPerDay,
-    Engine,
     ErrorHandler,
     FrontDesk,
     Message,
     Skill,
-    Variable
+    Variable,
+    WitAi
   }
 
   alias Aida.Message.SystemContent
@@ -33,7 +33,7 @@ defmodule Aida.Bot do
           channels: [Channel.t()],
           public_keys: [binary],
           data_tables: [DataTable.t()],
-          natural_language_interface: Aida.Engine.t() | nil
+          natural_language_interface: Aida.WitAi.t() | nil
         }
 
   defstruct id: nil,
@@ -99,7 +99,7 @@ defmodule Aida.Bot do
   defp publish_natural_language_interface(%Bot{natural_language_interface: nil}), do: :ok
 
   defp publish_natural_language_interface(bot) do
-    Engine.update_training_set(bot.natural_language_interface, bot)
+    WitAi.update_training_set(bot.natural_language_interface, bot)
   end
 
   defp policy_enforcement_message("block", %{"reason" => reason}) do
@@ -256,13 +256,18 @@ defmodule Aida.Bot do
   end
 
   defp handle(message) do
-    skills_sorted =
+    skills =
       [message.bot.front_desk | relevant_skills(message)]
       |> Enum.map(&evaluate_confidence(&1, message))
       |> Enum.reject(&is_nil/1)
+
+    wit_ai_skills = WitAi.confidence(message)
+
+    sorted_skills =
+      (skills ++ wit_ai_skills)
       |> Enum.sort_by(fn skill -> skill.confidence end, &>=/2)
 
-    case skills_sorted do
+    case sorted_skills do
       [] ->
         ErrorLog.context skill_id: "front_desk" do
           if Message.new_session?(message) do

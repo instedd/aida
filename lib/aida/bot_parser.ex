@@ -15,7 +15,7 @@ defmodule Aida.BotParser do
     Channel.WebSocket,
     Recurrence,
     Unsubscribe,
-    Engine.WitAi
+    WitAi
   }
 
   @spec parse(id :: String.t(), manifest :: map) ::
@@ -554,7 +554,7 @@ defmodule Aida.BotParser do
         natural_language_interface: %WitAi{auth_token: auth_token}
       }) do
     case WitAi.check_credentials(auth_token) do
-      :ok ->
+      {:ok, _} ->
         :ok
 
       _ ->

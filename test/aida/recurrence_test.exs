@@ -267,7 +267,6 @@ defmodule Aida.RecurrenceTest do
 
   defp assert_recurrence(recurrence, start, step, [goal | goals] = all_goals) do
     next = Recurrence.next(recurrence, start)
-    # IO.puts "#{start} -> #{next}"
     assert next == goal,
            "next of #{start} gives #{next} instead of #{goal}\n" <>
              "assert Recurrence.next(recurrence, ~U[#{start |> DateTime.to_naive()}]) == ~U[#{

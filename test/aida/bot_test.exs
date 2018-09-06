@@ -2,6 +2,7 @@ defmodule Aida.BotTest do
   use Aida.DataCase
   use Aida.SessionHelper
   alias Aida.DB.{Session}
+  import Mock
 
   alias Aida.{
     Bot,
@@ -84,7 +85,6 @@ defmodule Aida.BotTest do
       manifest =
         File.read!("test/fixtures/valid_manifest_single_lang.json")
         |> Poison.decode!()
-        |> Map.put("languages", ["en"])
 
       {:ok, bot} = DB.create_bot(%{manifest: manifest})
       {:ok, bot} = BotParser.parse(bot.id, manifest)
@@ -987,6 +987,72 @@ defmodule Aida.BotTest do
              |> Repo.all()
              |> Enum.filter(&(&1.direction == "outgoing"))
              |> Enum.count() > 0
+    end
+  end
+
+  describe "wit.ai bot" do
+    setup do
+      manifest =
+        File.read!("test/fixtures/valid_manifest_with_wit_ai.json")
+        |> Poison.decode!()
+
+      {:ok, bot} = DB.create_bot(%{manifest: manifest})
+
+      {:ok, bot} =
+        with_mock HTTPoison,
+          get: fn _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end do
+          BotParser.parse(bot.id, manifest)
+        end
+
+      s = Session.new({bot.id, @provider, @provider_key})
+      initial_session = Repo.get(Session, s.id)
+
+      %{bot: bot, initial_session: initial_session}
+    end
+
+    test "asks wit.ai for confidence when matching skills", %{
+      bot: bot,
+      initial_session: initial_session
+    } do
+      with_mock HTTPoison,
+        post: fn _, _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end,
+        delete: fn _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end,
+        get: fn
+          "https://api.wit.ai/message?v=20180815&q=what's%20your%20menu?", _ ->
+            {:ok,
+             %{
+               status_code: 200,
+               body:
+                 %{
+                   _text: "what's your menu?",
+                   entities: %{
+                     bot.id => [
+                       %{confidence: 1, value: "f4c74ff9-e393-4ae1-a53e-b1e98a4c0401"}
+                     ]
+                   },
+                   msg_id: "1LJTMxcssBF6P4Viv"
+                 }
+                 |> Poison.encode!()
+             }}
+
+          "https://api.wit.ai/message?v=20180815&q=Hi!", _ ->
+            {:ok,
+             %{
+               status_code: 200,
+               body:
+                 %{_text: "what's your menu?", entities: %{}, msg_id: "1LJTMxcssBF6P4Viv"}
+                 |> Poison.encode!()
+             }}
+        end do
+
+        response = Bot.chat(Message.new("Hi!", bot, initial_session))
+
+        assert response.reply == ["Hello, I'm a Restaurant bot", "I can do a number of things", "I can give you information about our menu", "Send UNSUBSCRIBE to stop receiving messages"]
+
+        output = Bot.chat(Message.new("what's your menu?", bot, response.session))
+
+        assert output.reply == ["We have pizza"]
+      end
     end
   end
 

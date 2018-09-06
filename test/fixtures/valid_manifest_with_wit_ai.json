@@ -59,7 +59,7 @@
         "en": ["I need some menu information", "What food do you serve?"]
       },
       "response": {
-        "en": "We have {food_options}"
+        "en": "We have pizza"
       }
     }
   ],
