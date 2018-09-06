@@ -21,7 +21,7 @@ defmodule Aida.BotParserTest do
     Variable,
     Recurrence,
     Unsubscribe,
-    Engine.WitAi
+    WitAi
   }
 
   import Mock
@@ -1997,7 +1997,7 @@ defmodule Aida.BotParserTest do
 
   defp wit_ai_mock() do
     [
-      {:check_credentials, fn _valid_auth_token -> :ok end},
+      {:check_credentials, fn _valid_auth_token -> {:ok, %{}} end},
       {:delete_existing_entity_if_any, fn _auth_token, _bot_id -> :ok end},
       {:create_entity, fn _auth_token, _bot_id -> :ok end},
       {:upload_sample, fn _auth_token, _bot_id, _training_sentences, _value -> :ok end}
