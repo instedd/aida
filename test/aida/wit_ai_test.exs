@@ -12,7 +12,6 @@ defmodule Aida.WitAiTest do
     quote do
       with_mock HTTPoison,
         post: fn _, _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end,
-        delete: fn _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end,
         get: fn _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end do
         unquote(yield)
       end
@@ -25,7 +24,6 @@ defmodule Aida.WitAiTest do
 
       with_mock HTTPoison,
         post: fn _, _, _ -> {:ok, response} end,
-        delete: fn _, _ -> {:ok, response} end,
         get: fn _, _ -> {:ok, response} end do
         unquote(yield)
       end
@@ -39,32 +37,6 @@ defmodule Aida.WitAiTest do
       assert called(
                HTTPoison.get(
                  "https://api.wit.ai/message?v=20180815&q=hello",
-                 %{"Authorization" => "Bearer #{@auth_token}"}
-               )
-             )
-    end
-  end
-
-  test "delete existing entities" do
-    with_http_mock do
-      assert WitAi.delete_existing_entity_if_any(@auth_token, @bot_id) == :ok
-
-      assert called(
-               HTTPoison.delete(
-                 "https://api.wit.ai/entities/#{@bot_id}?v=20180815",
-                 %{"Authorization" => "Bearer #{@auth_token}"}
-               )
-             )
-    end
-  end
-
-  test "doesn't break when trying to delete unexisting entities" do
-    with_failing_http_mock do
-      assert WitAi.delete_existing_entity_if_any(@auth_token, @bot_id) == :ok
-
-      assert called(
-               HTTPoison.delete(
-                 "https://api.wit.ai/entities/#{@bot_id}?v=20180815",
                  %{"Authorization" => "Bearer #{@auth_token}"}
                )
              )
@@ -136,13 +108,6 @@ defmodule Aida.WitAiTest do
 
       {:ok, bot} = BotParser.parse(@bot_id, manifest)
       Bot.init(bot)
-
-      assert called(
-               HTTPoison.delete(
-                 "https://api.wit.ai/entities/#{@bot_id}?v=20180815",
-                 %{"Authorization" => "Bearer valid auth_token"}
-               )
-             )
 
       assert called(
                HTTPoison.post(

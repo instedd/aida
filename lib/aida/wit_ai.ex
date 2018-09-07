@@ -31,14 +31,6 @@ defmodule Aida.WitAi do
     |> parse
   end
 
-  def delete_existing_entity_if_any(token, bot_id) do
-    url = "#{@base_wit_ai_api_url}/entities/#{bot_id}?v=#{@api_version}"
-
-    HTTPoison.delete(url, auth_headers(token))
-
-    :ok
-  end
-
   def create_entity(token, bot_id) do
     url = "#{@base_wit_ai_api_url}/entities?v=#{@api_version}"
 
@@ -88,9 +80,6 @@ defmodule Aida.WitAi do
           sentences -> [{sentences, skill} | training_set]
         end
       end)
-
-    # Just to be sure that there is nothing there contaminating its behavior
-    delete_existing_entity_if_any(auth_token, bot.id)
 
     create_entity(auth_token, bot.id)
 
