@@ -1026,7 +1026,7 @@ defmodule Aida.BotTest do
                  %{
                    _text: "what's your menu?",
                    entities: %{
-                     bot.id => [
+                     String.replace(bot.id, "-", "_") => [
                        %{confidence: 1, value: "f4c74ff9-e393-4ae1-a53e-b1e98a4c0401"}
                      ]
                    },
@@ -1044,10 +1044,14 @@ defmodule Aida.BotTest do
                  |> Poison.encode!()
              }}
         end do
-
         response = Bot.chat(Message.new("Hi!", bot, initial_session))
 
-        assert response.reply == ["Hello, I'm a Restaurant bot", "I can do a number of things", "I can give you information about our menu", "Send UNSUBSCRIBE to stop receiving messages"]
+        assert response.reply == [
+                 "Hello, I'm a Restaurant bot",
+                 "I can do a number of things",
+                 "I can give you information about our menu",
+                 "Send UNSUBSCRIBE to stop receiving messages"
+               ]
 
         output = Bot.chat(Message.new("what's your menu?", bot, response.session))
 

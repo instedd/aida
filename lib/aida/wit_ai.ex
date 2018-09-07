@@ -113,7 +113,10 @@ defmodule Aida.WitAi do
            message |> Message.text_content()
          ) do
       {:ok, response} ->
-        translate_to_skill_confidences(response["entities"][bot.id], bot)
+        translate_to_skill_confidences(
+          response["entities"][String.replace(bot.id, "-", "_")],
+          bot
+        )
 
       {_, response} ->
         ErrorLog.write("Bad response from Wit.Ai: #{response}")
