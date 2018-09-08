@@ -34,9 +34,20 @@ defmodule Aida.WitAi do
   def delete_existing_entity_if_any(token, bot_id) do
     url = "#{@base_wit_ai_api_url}/entities/#{bot_id}?v=#{@api_version}"
 
-    HTTPoison.delete(url, auth_headers(token))
+    case HTTPoison.delete(url, auth_headers(token)) do
+      {:ok, %{status_code: 200}} ->
+        # this is a hack to give Wit.ai some time
+        # to delete the entity before re-creating it
+        # it won't always work as it's almost too short
+        # 1000 ms would be great
+        # but increasing this time above 700ms will
+        # provoke connection errors on the simulator
+        Process.sleep(600)
+        :ok
 
-    :ok
+      _ ->
+        :ok
+    end
   end
 
   def create_entity(token, bot_id) do
@@ -89,7 +100,8 @@ defmodule Aida.WitAi do
         end
       end)
 
-    # Just to be sure that there is nothing there contaminating its behavior
+    # To be sure that there is nothing there contaminating its behavior
+    # Old sentences won't otherwise be deleted when uploading the new sample
     delete_existing_entity_if_any(auth_token, bot.id)
 
     create_entity(auth_token, bot.id)
