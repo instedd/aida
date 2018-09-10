@@ -4,7 +4,7 @@ defmodule Aida.Mixfile do
   def project do
     [
       app: :aida,
-      version: "1.2.0",
+      version: "1.3.0",
       elixir: "~> 1.4",
       elixirc_paths: elixirc_paths(Mix.env),
       erlc_paths: elixirc_paths(Mix.env),
