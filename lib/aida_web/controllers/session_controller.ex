@@ -52,7 +52,7 @@ defmodule AidaWeb.SessionController do
       conn |> put_status(422) |> json(%{errors: "Unknown session"}) |> halt
     else
       session
-      |> Session.put("forward_messages_id", forward_messages_id)
+      |> Session.put(".forward_messages_id", forward_messages_id)
       |> Session.save()
 
       render(conn, "forward_messages.json", forward_messages_id: forward_messages_id)

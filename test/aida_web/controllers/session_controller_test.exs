@@ -361,14 +361,14 @@ defmodule AidaWeb.SessionControllerTest do
 
       session_forward_messages_id =
         Session.get(session.id)
-        |> Session.get_value("forward_messages_id")
+        |> Session.get_value(".forward_messages_id")
 
       assert session_forward_messages_id == in_forward_messages_id
     end
 
     test "updates forward_messages_id when nil", %{conn: conn, bot: bot, session: session} do
       session
-      |> Session.put("forward_messages_id", Ecto.UUID.generate())
+      |> Session.put(".forward_messages_id", Ecto.UUID.generate())
       |> Session.save()
 
       path = bot_session_session_path(conn, :forward_messages, bot.id, session.id)
@@ -379,14 +379,14 @@ defmodule AidaWeb.SessionControllerTest do
 
       session_forward_messages_id =
         Session.get(session.id)
-        |> Session.get_value("forward_messages_id")
+        |> Session.get_value(".forward_messages_id")
 
       refute session_forward_messages_id
     end
 
     test "raise error when unknown session", %{conn: conn, bot: _, session: session} do
       session
-      |> Session.put("forward_messages_id", Ecto.UUID.generate())
+      |> Session.put(".forward_messages_id", Ecto.UUID.generate())
       |> Session.save()
 
       path = bot_session_session_path(conn, :forward_messages, Ecto.UUID.generate(), session.id)
