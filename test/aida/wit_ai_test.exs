@@ -88,6 +88,29 @@ defmodule Aida.WitAiTest do
     end
   end
 
+  test "retry create entity if it already exists" do
+    # Wit won't delete the entity right away,
+    # so we retry the creation if the entity already exists
+
+    with_mock HTTPoison,
+      post: fn _, _, _ ->
+        {:ok, %{status_code: 409, body: %{} |> Poison.encode!()}}
+      end do
+      assert {:error, _} = WitAi.create_entity(@auth_token, @bot_id, 1)
+
+      assert called(
+               HTTPoison.post(
+                 "https://api.wit.ai/entities?v=20180815",
+                 %{"id" => @bot_id} |> Poison.encode!(),
+                 %{
+                   "Authorization" => "Bearer #{@auth_token}",
+                   "Content-Type" => "application/json"
+                 }
+               )
+             )
+    end
+  end
+
   test "upload sample" do
     with_http_mock do
       training_set = ["first training sentence", "second training sentence"]
