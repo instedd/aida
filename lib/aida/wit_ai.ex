@@ -39,13 +39,18 @@ defmodule Aida.WitAi do
     :ok
   end
 
-  def create_entity(token, bot_id) do
+  def create_entity(token, bot_id, retries \\ 5) do
     url = "#{@base_wit_ai_api_url}/entities?v=#{@api_version}"
 
     body = %{"id" => bot_id} |> Poison.encode!()
 
-    HTTPoison.post(url, body, payload_headers(token))
-    |> parse
+    case HTTPoison.post(url, body, payload_headers(token)) do
+      {:ok, %{status_code: 409}} when retries > 0 ->
+        create_entity(token, bot_id, retries - 1)
+
+      response ->
+        parse(response)
+    end
   end
 
   def upload_sample(token, bot_id, training_sentences, skill_id) do
@@ -89,7 +94,8 @@ defmodule Aida.WitAi do
         end
       end)
 
-    # Just to be sure that there is nothing there contaminating its behavior
+    # To be sure that there is nothing there contaminating its behavior
+    # Old sentences won't otherwise be deleted when uploading the new sample
     delete_existing_entity_if_any(auth_token, bot.id)
 
     create_entity(auth_token, bot.id)
