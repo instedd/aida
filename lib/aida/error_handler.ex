@@ -17,12 +17,20 @@ defmodule Aida.ErrorHandler do
   end
 
   def capture_message(message, extra \\ []) do
+    sentry_capture(message, extra)
+    Logger.warn("#{message} #{inspect(extra)}")
+  end
+
+  def log_error(message, extra \\ []) do
+    sentry_capture(message, extra)
+    ErrorLog.write(message)
+  end
+
+  defp sentry_capture(message, extra) do
     Sentry.capture_message(
       message,
       extra: Enum.into(extra, %{}),
       result: :none
     )
-
-    Logger.warn("#{message} #{inspect(extra)}")
   end
 end

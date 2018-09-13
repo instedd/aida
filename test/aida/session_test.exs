@@ -83,10 +83,25 @@ defmodule Aida.SessionTest do
     end
 
     test "put nil deletes key", %{bot_id: bot_id} do
-      session = Session.new({bot_id, @provider, @provider_key}) |> Session.put("foo", "bar")
-      session = session |> Session.put("foo", nil)
+      session =
+        Session.new({bot_id, @provider, @provider_key})
+        |> Session.put("foo1", "bar1")
+        |> Session.put("foo2", "bar2")
 
-      assert session.data == %{}
+      session = session |> Session.put("foo1", nil)
+
+      assert session.data == %{"foo2" => "bar2"}
+    end
+
+    test "put empty string deletes key", %{bot_id: bot_id} do
+      session =
+        Session.new({bot_id, @provider, @provider_key})
+        |> Session.put("foo1", "bar1")
+        |> Session.put("foo2", "bar2")
+
+      session = session |> Session.put("foo1", "")
+
+      assert session.data == %{"foo2" => "bar2"}
     end
   end
 end

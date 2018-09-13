@@ -11,7 +11,8 @@ defmodule Aida.Bot do
     Message,
     Skill,
     Variable,
-    WitAi
+    WitAi,
+    Message.TextContent
   }
 
   alias Aida.Message.SystemContent
@@ -81,6 +82,18 @@ defmodule Aida.Bot do
     end
   end
 
+  def chat(
+        %Message{
+          content: %TextContent{},
+          session: %Session{data: %{".forward_messages_id" => _}}
+        } = message
+      ) do
+    ErrorLog.context bot_id: message.bot.id, session_id: message.session.id do
+      post_notification_message(message)
+      log_incoming(message)
+    end
+  end
+
   def chat(%Message{} = message) do
     ErrorLog.context bot_id: message.bot.id, session_id: message.session.id do
       message
@@ -108,6 +121,42 @@ defmodule Aida.Bot do
 
   defp policy_enforcement_message(action, data) do
     "Policy Enforcement Notification - Unknown action: #{action}.\n\n#{Poison.encode!(data)}"
+  end
+
+  defp post_notification_message_url(notifications_url, forward_messages_id) do
+    "#{notifications_url}/messages/#{forward_messages_id}"
+  end
+
+  defp post_notification_message_body(text) do
+    %{type: "text", direction: "uto", content: text}
+  end
+
+  defp post_notification_message(message) do
+    url =
+      post_notification_message_url(
+        message.bot.notifications_url,
+        Session.get_value(message.session, ".forward_messages_id")
+      )
+
+    body = post_notification_message_body(message.content.text)
+
+    case HTTPoison.post(
+           url,
+           body
+           |> Poison.encode!()
+         ) do
+      {:ok, %{status_code: 200}} ->
+        :ok
+
+      other_response ->
+        ErrorHandler.log_error("Error forwarding message to remote endpoint", %{
+          post_url: url,
+          post_body: body,
+          response: other_response
+        })
+
+        :ok
+    end
   end
 
   defp post_notification(notifications_url, notification_type, data) do
