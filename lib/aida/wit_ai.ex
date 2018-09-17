@@ -138,6 +138,7 @@ defmodule Aida.WitAi do
       skill = bot.skills |> Enum.find(fn skill -> skill.id == skill_id end)
       %{confidence: confidence, skill: skill}
     end)
+    |> Enum.filter(fn %{skill: skill} -> Map.get(skill, :training_sentences) end)
   end
 
   defp interpret_message(token, message) do
