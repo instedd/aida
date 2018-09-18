@@ -1130,6 +1130,66 @@ defmodule Aida.BotTest do
         assert output.reply == ["We have pizza"]
       end
     end
+
+    test "discards wit.ai confidence when matching skill but disabled wit.ai", %{
+      bot: bot,
+      initial_session: initial_session
+    } do
+
+      skills = bot.skills |> Enum.map(&%{&1 | :training_sentences => nil})
+      bot = Map.put(bot, :skills, skills)
+
+      with_mock HTTPoison,
+        post: fn _, _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end,
+        delete: fn _, _ -> {:ok, %{status_code: 200, body: %{} |> Poison.encode!()}} end,
+        get: fn
+          "https://api.wit.ai/message?v=20180815&q=what's%20your%20menu?", _ ->
+            {:ok,
+             %{
+               status_code: 200,
+               body:
+                 %{
+                   _text: "what's your menu?",
+                   entities: %{
+                     String.replace(bot.id, "-", "_") => [
+                       %{confidence: 1, value: "f4c74ff9-e393-4ae1-a53e-b1e98a4c0401"}
+                     ]
+                   },
+                   msg_id: "1LJTMxcssBF6P4Viv"
+                 }
+                 |> Poison.encode!()
+             }}
+
+          "https://api.wit.ai/message?v=20180815&q=Hi!", _ ->
+            {:ok,
+             %{
+               status_code: 200,
+               body:
+                 %{_text: "what's your menu?", entities: %{}, msg_id: "1LJTMxcssBF6P4Viv"}
+                 |> Poison.encode!()
+             }}
+        end do
+
+        response = Bot.chat(Message.new("Hi!", bot, initial_session))
+
+        assert response.reply == [
+                 "Hello, I'm a Restaurant bot",
+                 "I can do a number of things",
+                 "I can give you information about our menu",
+                 "Send UNSUBSCRIBE to stop receiving messages"
+               ]
+
+        output = Bot.chat(Message.new("what's your menu?", bot, response.session))
+
+        assert output.reply == [
+            "Sorry, I didn't understand that",
+            "I can do a number of things",
+            "I can give you information about our menu",
+            "Send UNSUBSCRIBE to stop receiving messages"
+          ]
+ end
+    end
+
   end
 
   defp create_manifest_bot(_context) do
