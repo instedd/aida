@@ -210,6 +210,10 @@ defmodule Aida.DB.Session do
     %{session | data: Map.delete(data, key)}
   end
 
+  def put(%Session{data: data} = session, key, "") do
+    %{session | data: Map.delete(data, key)}
+  end
+
   def put(%Session{data: data} = session, key, value) do
     %{session | data: Map.put(data, key, value)}
   end

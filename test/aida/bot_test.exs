@@ -94,6 +94,60 @@ defmodule Aida.BotTest do
       %{bot: bot, initial_session: initial_session}
     end
 
+    test "forward text messages", %{
+      bot: bot,
+      initial_session: initial_session
+    } do
+      forward_messages_id = Ecto.UUID.generate()
+      session = initial_session |> Session.put(".forward_messages_id", forward_messages_id)
+
+      with_mock HTTPoison,
+        post: fn _url, _body -> {:ok, %HTTPoison.Response{status_code: 200}} end do
+        %{reply: reply} = Message.new("a message", bot, session) |> Bot.chat()
+
+        assert length(reply) == 0
+
+        assert MessageLog
+               |> Repo.all()
+               |> Enum.filter(&(&1.direction == "outgoing"))
+               |> Enum.count() == 0
+
+        assert MessageLog
+               |> Repo.all()
+               |> Enum.filter(&(&1.direction == "incoming"))
+               |> Enum.count() == 1
+
+        assert called(
+                 HTTPoison.post(
+                   "#{bot.notifications_url}/messages/#{forward_messages_id}",
+                   %{type: "text", direction: "uto", content: "a message"}
+                   |> Poison.encode!()
+                 )
+               )
+      end
+    end
+
+    test "does not forward other message types", %{
+      bot: bot,
+      initial_session: initial_session
+    } do
+      forward_messages_id = Ecto.UUID.generate()
+      session = initial_session |> Session.put(".forward_messages_id", forward_messages_id)
+
+      with_mock HTTPoison,
+        post: fn _url, _body -> {:ok, %HTTPoison.Response{status_code: 200}} end do
+        Message.new_unknown(bot, session) |> Bot.chat()
+
+        assert not called(
+                 HTTPoison.post(
+                   "#{bot.notifications_url}/messages/#{forward_messages_id}",
+                   %{type: "text", direction: "uto", content: "a message"}
+                   |> Poison.encode!()
+                 )
+               )
+      end
+    end
+
     test "replies with greeting on the first message", %{
       bot: bot,
       initial_session: initial_session
@@ -852,6 +906,24 @@ defmodule Aida.BotTest do
       assert error_log.session_id == session.id
       assert error_log.skill_id == ld_skill |> Aida.Skill.id()
       assert error_log.message == "Could not find attribute named 'bar'"
+    end
+
+    test "when post_notification_message fails", %{bot: bot, session: session} do
+      forward_messages_id = Ecto.UUID.generate()
+      session = session |> Session.put(".forward_messages_id", forward_messages_id)
+
+      response = {:ok, %HTTPoison.Response{status_code: 500}}
+
+      with_mock HTTPoison,
+        post: fn _url, _body -> response end do
+        Message.new("a message", bot, session) |> Bot.chat()
+
+        [error_log] = ErrorLog |> Repo.all()
+        assert error_log.bot_id == bot.id
+        assert error_log.session_id == session.id
+
+        assert error_log.message == "Error forwarding message to remote endpoint"
+      end
     end
   end
 
