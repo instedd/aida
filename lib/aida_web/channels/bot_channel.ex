@@ -10,7 +10,29 @@ defmodule AidaWeb.BotChannel do
         {:ok, socket}
 
       _ ->
-        {:error, %{reason: "unauthorized"}}
+        if web_channel_in_manifest(bot_id, access_token) do
+          {:error, %{reason: "starting", retry: true}}
+        else
+          {:error, %{reason: "unauthorized"}}
+        end
+    end
+  end
+
+  defp web_channel_in_manifest(bot_id, access_token) do
+    db_channels = db_channels(bot_id)
+
+    db_channels &&
+      Enum.any?(db_channels, fn %{"access_token" => channel_access_token} ->
+        channel_access_token == access_token
+      end)
+  end
+
+  defp db_channels(bot_id) do
+    db_bot = DB.get_bot(bot_id)
+
+    if db_bot do
+      %{manifest: %{"channels" => channels}} = db_bot
+      channels
     end
   end
 
