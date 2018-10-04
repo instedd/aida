@@ -22,7 +22,7 @@ defmodule AidaWeb.Channel.WebSocketTest do
     BotManager.start_link()
     BotManager.start(bot)
 
-    {:ok, bot: bot}
+    {:ok, bot: bot, db_bot: db_bot}
   end
 
   test "fail to join if the bot doesn't exist" do
@@ -33,10 +33,22 @@ defmodule AidaWeb.Channel.WebSocketTest do
              })
   end
 
-  test "fail to join if the bot doesn't have a websocket channel", %{bot: bot} do
+  test "fail to join with unauthorized if the bot doesn't have the websocket channel in manifest", %{bot: bot, db_bot: db_bot} do
+    %{manifest: manifest} = db_bot
+    DB.update_bot(db_bot, %{manifest: %{manifest | "channels" => []}})
     BotManager.start(%{bot | channels: []})
 
     assert {:error, %{reason: "unauthorized"}} =
+             socket()
+             |> subscribe_and_join(BotChannel, "bot:#{bot.id}", %{
+               "access_token" => "qwertyuiopasdfghjklzxcvbnm"
+             })
+  end
+
+  test "fail to join with starting if the bot has the websocket channel in manifest", %{bot: bot} do
+    BotManager.start(%{bot | channels: []})
+
+    assert {:error, %{reason: "starting"}} =
              socket()
              |> subscribe_and_join(BotChannel, "bot:#{bot.id}", %{
                "access_token" => "qwertyuiopasdfghjklzxcvbnm"
